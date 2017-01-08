@@ -27,7 +27,7 @@ It can be used for the following.
 1. Install [Java Runtime Environment](https://java.com/ja/download/), if it is not installed.
 2. Download JAR file 'Picto-X.X.X-all.jar' from [here](https://bintray.com/mozq/generic/picto/_latestVersion). (X.X.X is a version)
 3. Copy JAR file to any folder.
-4. Execute JAR file like `java -jar Picto-all-X.X.X.jar`.
+4. Execute JAR file like `java -jar Picto-X.X.X-all.jar`.
 
 
 ## Settings
