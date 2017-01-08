@@ -1,0 +1,168 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id 'edu.sc.seis.launch4j' version '2.1.0'
+    id 'edu.sc.seis.macAppBundle' version '2.1.6'
+    id 'com.jfrog.bintray' version '1.7'
+}
+
+
+repositories {
+    jcenter()
+    maven {
+        url 'https://repository.apache.org/content/repositories/snapshots/'
+    }
+}
+
+
+dependencies {
+    compile group: 'org.mifmi', name: 'mifmi-commons4j', version:'0.2.0'
+    compile 'org.apache.commons:commons-imaging:1.0-SNAPSHOT'
+    testCompile group: 'junit', name: 'junit', version:'4.12'
+}
+
+
+def ver = getVersionNum(getParam('releaseVersion', 'RELEASE_VERSION', '0.0.0-SNAPSHOT'))
+version = ver
+
+def getParam(propName, envName, defaultValue) {
+    if (propName != null && project.hasProperty(propName)) {
+        return project.property(propName)
+    } else if (envName != null && System.getenv(envName) != null) {
+        return System.getenv(envName)
+    } else {
+        return defaultValue
+    }
+}
+
+def getVersionNum(ver) {
+    return (ver.startsWith('v')) ? ver.substring(1) : ver
+}
+
+
+tasks.withType(JavaCompile) {
+	options.encoding = sourceEncoding
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
+}
+
+
+shadowJar {
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
+}
+
+launch4j {
+    mainClassName = project.mainClassName
+    copyConfigurable = project.tasks.shadowJar.outputs.files
+    jar = "lib/${project.tasks.shadowJar.archiveName}"
+    headerType = 'gui'
+    language = 'ENGLISH_US'
+    icon = "${project.projectDir}/src/build/resources/appicons/picto_appicon.ico"
+    version = project.version
+    textVersion = project.version
+    copyright = project.copyright
+}
+createExe.dependsOn shadowJar
+
+task zipWinApp(type: Zip, dependsOn: createExe) {
+    destinationDir = file("${project.buildDir}/${project.distsDirName}")
+    archiveName = "${project.name}-${project.version}-win.zip"
+    from "${project.buildDir}/${launch4j.outputDir}/${project.name}.exe"
+}
+
+
+macAppBundle {
+    mainClassName = project.mainClassName
+    icon = 'src/build/resources/appicons/picto_appicon.icns'
+    bundleIdentifier = project.identifier
+    bundlePackageType = 'APPL'
+    bundleJRE = true
+    javaProperties.put('apple.laf.useScreenMenuBar', 'true')
+    javaExtras.put('-Xdock:name', project.name)
+    bundleExtras.put('NSHumanReadableCopyright', project.copyright)
+    
+    volumeName = dmgName = "${project.name}-${project.version}-mac"
+    backgroundImage = 'src/build/resources/dmg/picto_dmg_background_500.png'
+    backgroundImageWidth = 500
+    backgroundImageHeight = 500
+    appIconX = 170
+    appIconY = 260
+    appFolderX = 330
+    appFolderY = 260
+    backgroundScript = """
+      tell application "Finder"
+        tell disk "\${VOL_NAME}"
+          open
+          delay 1
+          set current view of container window to icon view
+          set toolbar visible of container window to false
+          set statusbar visible of container window to false
+          set the bounds of container window to { 0, 0, \${IMAGE_WIDTH}, \${IMAGE_HEIGHT} }
+          set the position of the container window to {400, 100}
+          set viewOptions to the icon view options of container window
+          set arrangement of viewOptions to not arranged
+          set icon size of viewOptions to 72
+          set background picture of viewOptions to file ".background:\${DMG_BACKGROUND_IMG}"
+          set position of item "\${APP_NAME}.app" of container window to { \${APPICONX}, \${APPICONY} }
+          set position of item "Applications" of container window to { \${APPFOLDERX}, \${APPFOLDERY} }
+          set position of item ".background" of container window to { 10000, 10000 }
+          set position of item ".DS_Store" of container window to { 10000, 10000 }
+          set position of item ".fseventsd" of container window to { 10000, 10000 }
+          set position of item ".Trashes" of container window to { 10000, 10000 }
+          close
+          open
+          update without registering applications
+          delay 2
+        end tell
+      end tell
+"""
+}
+
+
+assemble.dependsOn zipWinApp
+
+artifacts {
+    archives shadowJar
+    archives sourcesJar
+    archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-mac.dmg")
+    archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-win.zip")
+}
+
+
+bintray {
+    user = getParam('bintrayUser', 'BINTRAY_USER', null)
+    key = getParam('bintrayApiKey', 'BINTRAY_API_KEY', null)
+    configurations = ['archives']
+    publish = false
+    dryRun = false
+    pkg {
+        userOrg = bintrayUserOrg
+        repo = bintrayRepository
+        name = bintrayPackage
+        version {
+            name = ver
+            released = new Date()
+            vcsTag = 'v' + ver
+            gpg {
+                sign = true
+            }
+        }
+    }
+}
