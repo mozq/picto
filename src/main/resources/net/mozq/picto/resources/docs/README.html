@@ -1,0 +1,687 @@
+<html>
+<head>
+<title></title>
+<style type="text/css">
+h2 {
+    border-top: 2px solid gray;
+}
+table, th, td {
+    border: 1px solid gray;
+}
+</style>
+</head>
+<body>
+
+<h1 id="picto">Picto</h1>
+<p>Picto is a desktop application for organizing photo files.</p>
+<p>It can be used for the following.</p>
+<ul>
+<li>Copy or move photos to another folder under a different name.<ul>
+<li>You can specify sub folders and file names freely at shooting date etc.</li>
+</ul>
+</li>
+<li>Change file date (Creation date, Modified date, Access date, Exif date).<ul>
+<li>Specified date and difference date can be set. It is effective when you forget to change the time zone of the camera.</li>
+</ul>
+</li>
+<li>Remove GPS or all Exif data.</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<h3 id="for-mac">for Mac</h3>
+<ol>
+<li>Download DMG file &#39;Picto-X.X.X-mac.dmg&#39; from <a href="https://bintray.com/mozq/generic/picto/_latestVersion">here</a>. (X.X.X is a version)</li>
+<li>Mount DMG and cop Picto.app to Applications folder.</li>
+<li>Execute Picto.app to start.</li>
+</ol>
+<h3 id="for-windows">for Windows</h3>
+<ol>
+<li>Install <a href="https://java.com/ja/download/">Java Runtime Environment</a>, if it is not installed.</li>
+<li>Download Zip file &#39;Picto-X.X.X-win.zip&#39; from <a href="https://bintray.com/mozq/generic/picto/_latestVersion">here</a>. (X.X.X is a version)</li>
+<li>Unzip and copy Picto.exe to any folder.</li>
+<li>Execute Picto.exe to start.</li>
+</ol>
+<h3 id="for-other-os">for other OS</h3>
+<ol>
+<li>Install <a href="https://java.com/ja/download/">Java Runtime Environment</a>, if it is not installed.</li>
+<li>Download JAR file &#39;Picto-X.X.X-all.jar&#39; from <a href="https://bintray.com/mozq/generic/picto/_latestVersion">here</a>. (X.X.X is a version)</li>
+<li>Copy JAR file to any folder.</li>
+<li>Execute JAR file like <code>java -jar Picto-all-X.X.X.jar</code>.</li>
+</ol>
+<h2 id="settings">Settings</h2>
+<h3 id="source">Source</h3>
+<h4 id="photo-s-folder">Photo&#39;s folder</h4>
+<p>Select folder contains picture and movie files.</p>
+<h4 id="file-pattern">File Pattern</h4>
+<p>Filter files by filename.
+You can use <a href="https://en.wikipedia.org/wiki/Glob_%28programming%29">Glob</a> or <a href="https://en.wikipedia.org/wiki/Regular_expression">Regular expression (Regex)</a> pattern.</p>
+<ul>
+<li>Glob: &quot;<em>.jpg&quot;, &quot;IMG_????.</em>&quot;</li>
+<li>Regex: &quot;.<em>\.jpg&quot;, &quot;IMG_[0-9]{4}\..</em>&quot;</li>
+</ul>
+<h4 id="contains-hidden-files-and-folders-">Contains hidden files and folders.</h4>
+<p>When check this option then contains hidden files and folders.</p>
+<h4 id="contains-sub-files-and-folders-">Contains sub files and folders.</h4>
+<p>When check this option then contains sub files and folders.</p>
+<h4 id="file-size">File Size</h4>
+<p>Filter files by file size.</p>
+<h4 id="creation-time">Creation Time</h4>
+<p>Filter files by creation time.</p>
+<h4 id="modified-time">Modified Time</h4>
+<p>Filter files by modified time.</p>
+<h3 id="destination">Destination</h3>
+<h4 id="operation">Operation</h4>
+<ul>
+<li>Copy -- Copy files in Photo&#39;s folder to Destination Folder.</li>
+<li>Move -- Move files in Photo&#39;s folder to Destination Folder.</li>
+<li>Overwrite -- Overwrite files in Photo&#39;s folder.</li>
+</ul>
+<h4 id="destination-folder">Destination Folder</h4>
+<p>Copy or move destination folder.</p>
+<h4 id="sub-path-pattern">Sub Path Pattern</h4>
+<p>File&#39;s sub path in Destination Folder.
+You can use following variables with &#39;${}&#39;.</p>
+<pre><code>e.g.)
+&quot;${ParentSubPath}/${PhotoTakenDate%yyyy/MM}/${FileName}&quot;
+-&gt; &quot;subpath/to/2012/01/IMG_0001.JPG&quot;
+</code></pre><table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Type</th>
+<th>Meaning</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Now</td>
+<td>Date</td>
+<td>Current date</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>ParentSubPath</td>
+<td>String</td>
+<td>File parent sub path</td>
+<td>subpath/to</td>
+</tr>
+<tr>
+<td>FileName</td>
+<td>String</td>
+<td>File name</td>
+<td>IMG_0001.JPG</td>
+</tr>
+<tr>
+<td>BaseName</td>
+<td>String</td>
+<td>File base name</td>
+<td>IMG_0001</td>
+</tr>
+<tr>
+<td>Extension</td>
+<td>String</td>
+<td>File extension</td>
+<td>.JPG</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>String</td>
+<td>File size</td>
+<td>10485760</td>
+</tr>
+<tr>
+<td>ContentType</td>
+<td>String</td>
+<td>File content type</td>
+<td>image/jpeg</td>
+</tr>
+<tr>
+<td>CreationDate</td>
+<td>Date</td>
+<td>File creation date</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>ModifiedDate</td>
+<td>Date</td>
+<td>File modified date</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>AccessDate</td>
+<td>Date</td>
+<td>File access date</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>PhotoTakenDate</td>
+<td>Date</td>
+<td>Exif date or file modified date</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>Width</td>
+<td>Integer</td>
+<td>Exif image width</td>
+<td>6000</td>
+</tr>
+<tr>
+<td>Height</td>
+<td>Integer</td>
+<td>Exif image height</td>
+<td>4000</td>
+</tr>
+<tr>
+<td>FNumber</td>
+<td>Decimal</td>
+<td>Exif FNumber</td>
+<td>8.0</td>
+</tr>
+<tr>
+<td>Aperture</td>
+<td>Decimal</td>
+<td>Exif aperture value</td>
+<td>6.0</td>
+</tr>
+<tr>
+<td>MaxAperture</td>
+<td>Decimal</td>
+<td>Exif max aperture value</td>
+<td>3.6</td>
+</tr>
+<tr>
+<td>ISO</td>
+<td>Integer</td>
+<td>Exif ISO</td>
+<td>100</td>
+</tr>
+<tr>
+<td>FocalLength</td>
+<td>Decimal</td>
+<td>Exif focal length</td>
+<td>26.0</td>
+</tr>
+<tr>
+<td>FocalLength35mm</td>
+<td>Decimal</td>
+<td>Exif focal length in 35mm format</td>
+<td>39.0</td>
+</tr>
+<tr>
+<td>ShutterSpeed</td>
+<td>Decimal</td>
+<td>Exif shutter speed value</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>ExposureTime</td>
+<td>Decimal</td>
+<td>Exif exposure time (Seconds)</td>
+<td>0.008</td>
+</tr>
+<tr>
+<td>ExposureMode</td>
+<td>Integer</td>
+<td>Exif exposure mode</td>
+<td>0: Auto exposure<br>1: Manual exposure<br>2: Auto bracket</td>
+</tr>
+<tr>
+<td>ExposureProgram</td>
+<td>Integer</td>
+<td>Exif exposure program</td>
+<td>0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority, 4<br>Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode</td>
+</tr>
+<tr>
+<td>Brightness</td>
+<td>Integer</td>
+<td>Exif brightness value</td>
+<td>2.21</td>
+</tr>
+<tr>
+<td>WhiteBalance</td>
+<td>Integer</td>
+<td>Exif white balance</td>
+<td>0: Auto<br>1: Manual</td>
+</tr>
+<tr>
+<td>LightSource</td>
+<td>Integer</td>
+<td>Exif light source</td>
+<td>0: Unknown<br>1: Daylight<br>2: Fluorescent<br>3: Tungsten (incandescent light)<br>4: Flash<br>9: Fine weather<br>10: Cloudy weather<br>11: Shade<br>12: Daylight fluorescent (D 5700 - 7100K)<br>13: Day white fluorescent (N 4600 - 5400K)<br>14: Cool white fluorescent (W 3900 - 4500K)<br>15: White fluorescent (WW 3200 - 3700K)<br>17: Standard light A<br>18: Standard light B<br>19: Standard light C<br>20: D55<br>21: D65<br>22: D75<br>23: D50<br>24: ISO studio tungsten<br>255: Other light source</td>
+</tr>
+<tr>
+<td>Orientation</td>
+<td>Integer</td>
+<td>Tiff orientation</td>
+<td>[0th Row, 0th Column]<br>1: top, left side<br>2: top, right side<br>3: bottom, right side<br>4: bottom, left side<br>5: left side, top<br>6: right side, top<br>7: right side, bottom<br>8: left side, bottom</td>
+</tr>
+<tr>
+<td>Lens</td>
+<td>String</td>
+<td>Exif lens</td>
+<td></td>
+</tr>
+<tr>
+<td>LensMake</td>
+<td>String</td>
+<td>Exif lens make</td>
+<td></td>
+</tr>
+<tr>
+<td>LensModel</td>
+<td>String</td>
+<td>Exif lens model</td>
+<td></td>
+</tr>
+<tr>
+<td>LensSerialNumber</td>
+<td>String</td>
+<td>Exif lens serial number</td>
+<td></td>
+</tr>
+<tr>
+<td>Make</td>
+<td>String</td>
+<td>Tiff make</td>
+<td>NIKON CORPORATION</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>String</td>
+<td>Tiff model</td>
+<td>NIKON D1</td>
+</tr>
+<tr>
+<td>Software</td>
+<td>String</td>
+<td>Exif software</td>
+<td>Capture NX-D 1.2.0 M</td>
+</tr>
+<tr>
+<td>ProcessingSoftware</td>
+<td>String</td>
+<td>Exif processing software</td>
+<td></td>
+</tr>
+<tr>
+<td>OwnerName</td>
+<td>String</td>
+<td>Exif owner name</td>
+<td></td>
+</tr>
+<tr>
+<td>CameraOwnerName</td>
+<td>String</td>
+<td>Exif camera owner name</td>
+<td></td>
+</tr>
+<tr>
+<td>GPSLat</td>
+<td>Decimal</td>
+<td>Exif GPS latitude degrees north</td>
+<td>35.658581</td>
+</tr>
+<tr>
+<td>GPSLatDeg</td>
+<td>Decimal</td>
+<td>Exif GPS latitude degrees</td>
+<td>35.0</td>
+</tr>
+<tr>
+<td>GPSLatMin</td>
+<td>Decimal</td>
+<td>Exif GPS latitude minutes</td>
+<td>39.0</td>
+</tr>
+<tr>
+<td>GPSLatSec</td>
+<td>Decimal</td>
+<td>Exif GPS latitude seconds</td>
+<td>30.89</td>
+</tr>
+<tr>
+<td>GPSLatRef</td>
+<td>String</td>
+<td>Exif GPS latitude reference</td>
+<td>N: North<br>S: South</td>
+</tr>
+<tr>
+<td>GPSLon</td>
+<td>Decimal</td>
+<td>Exif GPS longitude degrees east</td>
+<td>139.745433</td>
+</tr>
+<tr>
+<td>GPSLonDeg</td>
+<td>Decimal</td>
+<td>Exif GPS longitude degrees</td>
+<td>139.0</td>
+</tr>
+<tr>
+<td>GPSLonMin</td>
+<td>Decimal</td>
+<td>Exif GPS longitude minutes</td>
+<td>44.0</td>
+</tr>
+<tr>
+<td>GPSLonSec</td>
+<td>Decimal</td>
+<td>Exif GPS longitude seconds</td>
+<td>43.558</td>
+</tr>
+<tr>
+<td>GPSLonRef</td>
+<td>String</td>
+<td>Exif GPS longitude reference</td>
+<td>E: East<br>W: West</td>
+</tr>
+<tr>
+<td>GPSAlt</td>
+<td>Decimal</td>
+<td>Exif GPS altitude</td>
+<td>18.4</td>
+</tr>
+<tr>
+<td>GPSAltRef</td>
+<td>String</td>
+<td>Exif GPS altitude reference</td>
+<td>0: Above sea level<br>1: Below sea level</td>
+</tr>
+</tbody>
+</table>
+<p>You can format a variable value with &#39;%&#39; separator, like &#39;${FNumber%0.0}&#39;.</p>
+<h5 id="format-integer-or-decimal-type-value">format Integer or Decimal type value</h5>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Location</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Number</td>
+<td>Digit</td>
+</tr>
+<tr>
+<td>#</td>
+<td>Number</td>
+<td>Digit, zero shows as absent</td>
+</tr>
+<tr>
+<td>.</td>
+<td>Number</td>
+<td>Decimal separator or monetary decimal separator</td>
+</tr>
+<tr>
+<td>,</td>
+<td>Number</td>
+<td>Grouping separator</td>
+</tr>
+<tr>
+<td>;</td>
+<td>Subpattern boundary</td>
+<td>Separates positive and negative subpatterns</td>
+</tr>
+<tr>
+<td>%</td>
+<td>Prefix or suffix</td>
+<td>Multiply by 100 and show as percentage</td>
+</tr>
+</tbody>
+</table>
+<p>See more information: <a href="https://docs.oracle.com/javase/8/docs/api/java/text/DecimalFormat.html">https://docs.oracle.com/javase/8/docs/api/java/text/DecimalFormat.html</a></p>
+<pre><code>e.g.)
+&quot;${FNumber%0.0}&quot;
+-&gt; &quot;8.0&quot;, &quot;16.0&quot;
+
+&quot;${GPSLatDeg%0}°${GPSLatMin%0}&#39;${GPSLatSec%0.0#} ${GPSLatRef}&quot;
+-&gt; &quot;35°39&#39;30.89 N&quot;
+</code></pre><h5 id="format-date-type-value">format Date type value</h5>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Meaning</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G</td>
+<td>era</td>
+<td>AD; Anno Domini; A</td>
+</tr>
+<tr>
+<td>u</td>
+<td>year</td>
+<td>2004; 04</td>
+</tr>
+<tr>
+<td>y</td>
+<td>year-of-era</td>
+<td>2004; 04</td>
+</tr>
+<tr>
+<td>D</td>
+<td>day-of-year</td>
+<td>189</td>
+</tr>
+<tr>
+<td>M/L</td>
+<td>month-of-year</td>
+<td>7; 07; Jul; July; J</td>
+</tr>
+<tr>
+<td>d</td>
+<td>day-of-month</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Q/q</td>
+<td>quarter-of-year</td>
+<td>3; 03; Q3; 3rd quarter</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>week-based-year</td>
+<td>1996; 96</td>
+</tr>
+<tr>
+<td>w</td>
+<td>week-of-week-based-year</td>
+<td>27</td>
+</tr>
+<tr>
+<td>W</td>
+<td>week-of-month</td>
+<td>4</td>
+</tr>
+<tr>
+<td>E</td>
+<td>day-of-week</td>
+<td>Tue; Tuesday; T</td>
+</tr>
+<tr>
+<td>e/c</td>
+<td>localized day-of-week</td>
+<td>2; 02; Tue; Tuesday; T</td>
+</tr>
+<tr>
+<td>F</td>
+<td>week-of-month</td>
+<td>3</td>
+</tr>
+<tr>
+<td>a</td>
+<td>am-pm-of-day</td>
+<td>PM</td>
+</tr>
+<tr>
+<td>h</td>
+<td>clock-hour-of-am-pm (1-12)</td>
+<td>12</td>
+</tr>
+<tr>
+<td>K</td>
+<td>hour-of-am-pm (0-11)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>k</td>
+<td>clock-hour-of-am-pm (1-24)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>H</td>
+<td>hour-of-day (0-23)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>m</td>
+<td>minute-of-hour</td>
+<td>30</td>
+</tr>
+<tr>
+<td>s</td>
+<td>second-of-minute</td>
+<td>55</td>
+</tr>
+<tr>
+<td>S</td>
+<td>fraction-of-second</td>
+<td>978</td>
+</tr>
+<tr>
+<td>A</td>
+<td>milli-of-day</td>
+<td>1234</td>
+</tr>
+<tr>
+<td>n</td>
+<td>nano-of-second</td>
+<td>987654321</td>
+</tr>
+<tr>
+<td>N</td>
+<td>nano-of-day</td>
+<td>1234000000</td>
+</tr>
+<tr>
+<td>V</td>
+<td>time-zone ID</td>
+<td>America/Los_Angeles; Z; -08:30</td>
+</tr>
+<tr>
+<td>z</td>
+<td>time-zone name</td>
+<td>Pacific Standard Time; PST</td>
+</tr>
+<tr>
+<td>O</td>
+<td>localized zone-offset</td>
+<td>GMT+8; GMT+08:00; UTC-08:00;</td>
+</tr>
+<tr>
+<td>X</td>
+<td>zone-offset &#39;Z&#39; for zero</td>
+<td>Z; -08; -0830; -08:30; -083015; -08:30:15;</td>
+</tr>
+<tr>
+<td>x</td>
+<td>zone-offset</td>
+<td>+0000; -08; -0830; -08:30; -083015; -08:30:15;</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>zone-offset</td>
+<td>+0000; -0800; -08:00;</td>
+</tr>
+</tbody>
+</table>
+<p>See more information: <a href="https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html">https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html</a></p>
+<pre><code>e.g.)
+&quot;${PhotoTakenDate%uuuu/MMdd}&quot;
+-&gt; &quot;2012/0123&quot;
+</code></pre><h4 id="if-already-file-exists-">If already file exists ...</h4>
+<p>Specify processing when file of the same name exists.</p>
+<ul>
+<li>Confirm -- Display a confirmation dialog for each file</li>
+<li>Overwrite -- Overwrite a file</li>
+<li>Skip -- Skip processing for a file</li>
+<li>Terminate -- Terminate processing</li>
+</ul>
+<h4 id="validate-file-check-file-digest-">Validate file - Check file digest.</h4>
+<p>It checks whether the contents of the file were correctly copied.
+If you set an option to change the file, such as changing the date of the file, it will not be checked.</p>
+<h3 id="change-file-date">Change File Date</h3>
+<h4 id="change-">Change ...</h4>
+<p>Date of change target.</p>
+<ul>
+<li>Creation Date -- Change file creation date.</li>
+<li>Modified Date -- Change file modified date.</li>
+<li>Access Date -- Change file access date.</li>
+<li>Exif Date -- Change file exif date.</li>
+</ul>
+<h4 id="by-">by ...</h4>
+<p>Date to set.</p>
+<ul>
+<li>Current Date -- Change by current date.</li>
+<li>File Creation Date -- Change by file creation date.</li>
+<li>File Modified Date -- Change by file modified date.</li>
+<li>File Access Date -- Change by file access date.</li>
+<li>File Exif Date -- Change by file exif date.</li>
+<li>Specific Date -- Change by specific date. You can input it.</li>
+</ul>
+<h4 id="with-">with ...</h4>
+<p>Difference of set date.</p>
+<ul>
+<li>None</li>
+<li>Plus</li>
+<li>Minus</li>
+<li>Overwrite</li>
+</ul>
+<h3 id="change-exif">Change Exif</h3>
+<ul>
+<li>Remove GPS exif tags.</li>
+<li>Remove ALL exif tags.</li>
+</ul>
+<h3 id="others">Others</h3>
+<h4 id="dry-run">Dry Run</h4>
+<p>Simurate process.</p>
+<h2 id="license">License</h2>
+<p>Picto is open-sourced software licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+<h2 id="legal">Legal</h2>
+<p>Picto is built using open source software.</p>
+<h3 id="apache-commons-imaging-sanselan-">Apache Commons Imaging (Sanselan)</h3>
+<blockquote>
+<p>Apache Sanselan
+Copyright 2007-2009 The Apache Software Foundation.</p>
+<p>This product includes software developed at
+The Apache Software Foundation (<a href="http://www.apache.org/">http://www.apache.org/</a>).</p>
+</blockquote>
+<h3 id="mifmi-commons4j">mifmi-commons4j</h3>
+<blockquote>
+<p>The MIT License (MIT)</p>
+<p>Copyright (c) 2015 mifmi.org and other contributors</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+</blockquote>
+
+</body>
+</html>

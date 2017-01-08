@@ -1,0 +1,17 @@
+language: java
+os: osx
+sudo: false
+jdk:
+  - oraclejdk8
+
+env:
+  global:
+    - RELEASE_VERSION=${TRAVIS_TAG}
+
+deploy:
+  provider: script
+  script: ./gradlew bintrayUpload --stacktrace
+  on:
+    tags: true
+    all_branches: true
+    condition: "$TRAVIS_TAG =~ ^v[0-9].*$"
