@@ -28,13 +28,13 @@ dependencies {
 }
 
 
-def ver = getVersionNum(getParam('releaseVersion', 'RELEASE_VERSION', '0.0.0-SNAPSHOT'))
+def ver = getVersionNum(getParam('releaseVersion', 'RELEASE_VERSION', '0.0.0'))
 version = ver
 
 def getParam(propName, envName, defaultValue) {
     if (propName != null && project.hasProperty(propName)) {
         return project.property(propName)
-    } else if (envName != null && System.getenv(envName) != null) {
+    } else if (envName != null && System.getenv(envName) != null && !System.getenv(envName).isEmpty()) {
         return System.getenv(envName)
     } else {
         return defaultValue
@@ -75,8 +75,6 @@ launch4j {
     headerType = 'gui'
     language = 'ENGLISH_US'
     icon = "${project.projectDir}/src/build/resources/appicons/picto_appicon.ico"
-    version = project.version
-    textVersion = project.version
     copyright = project.copyright
 }
 createExe.dependsOn shadowJar

@@ -1,16 +1,21 @@
-language: java
 os: osx
 sudo: false
-jdk:
-  - oraclejdk8
 
 env:
   global:
     - RELEASE_VERSION=${TRAVIS_TAG}
 
+before_install:
+  - brew update
+  - brew install launch4j
+
+script:
+  - ./gradlew build --info
+
 deploy:
   provider: script
-  script: ./gradlew bintrayUpload --stacktrace
+  script: ./gradlew bintrayUpload --info
+  skip_cleanup: true
   on:
     tags: true
     all_branches: true
