@@ -16,6 +16,9 @@ It can be used for the following.
 1. Download DMG file 'Picto-X.X.X-mac.dmg' from [here](https://bintray.com/mozq/generic/picto/_latestVersion). (X.X.X is a version)
 2. Mount DMG and cop Picto.app to Applications folder.
 3. Execute Picto.app to start.
+    - If the warning dialog of "can’t be opened because it is from an unidentified developer" is shown, try the following procedure
+        1. Right-click (or control-click) the app and choose “Open”.
+        2. Click the “Open” button at the next dialog warning to launch the app anyway
 
 ### for Windows
 1. Install [Java Runtime Environment](https://java.com/ja/download/), if it is not installed.
