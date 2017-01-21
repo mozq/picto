@@ -88,7 +88,7 @@ You can use <a href="https://en.wikipedia.org/wiki/Glob_%28programming%29">Glob<
 <p>File&#39;s sub path in Destination Folder.
 You can use following variables with &#39;${}&#39;.</p>
 <pre><code>e.g.)
-&quot;${ParentSubPath}/${PhotoTakenDate%yyyy/MM}/${FileName}&quot;
+&quot;${ParentSubPath}/${PhotoTakenDate%uuuu/MM}/${FileName}&quot;
 -&gt; &quot;subpath/to/2012/01/IMG_0001.JPG&quot;
 </code></pre><table>
 <thead>
@@ -236,7 +236,7 @@ You can use following variables with &#39;${}&#39;.</p>
 <td>ExposureProgram</td>
 <td>Integer</td>
 <td>Exif exposure program</td>
-<td>0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority, 4<br>Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode</td>
+<td>0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority<br>4: Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode</td>
 </tr>
 <tr>
 <td>Brightness</td>
@@ -260,7 +260,7 @@ You can use following variables with &#39;${}&#39;.</p>
 <td>Orientation</td>
 <td>Integer</td>
 <td>Tiff orientation</td>
-<td>[0th Row, 0th Column]<br>1: top, left side<br>2: top, right side<br>3: bottom, right side<br>4: bottom, left side<br>5: left side, top<br>6: right side, top<br>7: right side, bottom<br>8: left side, bottom</td>
+<td>[0th Row, 0th Column]<br>1: Top, Left side<br>2: Top, Right side<br>3: Bottom, Right side<br>4: Bottom, Left side<br>5: Left side, Top<br>6: Right side, Top<br>7: Right side, Bottom<br>8: Left side, Bottom</td>
 </tr>
 <tr>
 <td>Lens</td>
@@ -396,8 +396,9 @@ You can use following variables with &#39;${}&#39;.</p>
 </tr>
 </tbody>
 </table>
-<p>You can format a variable value with &#39;%&#39; separator, like &#39;${FNumber%0.0}&#39;.</p>
-<h5 id="format-integer-or-decimal-type-value">format Integer or Decimal type value</h5>
+<h5 id="format-variable-values">Format variable values</h5>
+<p>You can format variable values with &#39;%&#39; separator, like &#39;${FNumber%0.0}&#39;.</p>
+<h6 id="format-integer-or-decimal-type-value">Format Integer or Decimal type value</h6>
 <table>
 <thead>
 <tr>
@@ -446,7 +447,7 @@ You can use following variables with &#39;${}&#39;.</p>
 
 &quot;${GPSLatDeg%0}°${GPSLatMin%0}&#39;${GPSLatSec%0.0#} ${GPSLatRef}&quot;
 -&gt; &quot;35°39&#39;30.89 N&quot;
-</code></pre><h5 id="format-date-type-value">format Date type value</h5>
+</code></pre><h6 id="format-date-type-value">Format Date type value</h6>
 <table>
 <thead>
 <tr>
@@ -612,6 +613,79 @@ You can use following variables with &#39;${}&#39;.</p>
 <pre><code>e.g.)
 &quot;${PhotoTakenDate%uuuu/MMdd}&quot;
 -&gt; &quot;2012/0123&quot;
+</code></pre><h5 id="convert-variable-values">Convert variable values</h5>
+<p>You can convert variables value with &#39;/&#39; separator, like &#39;${WhiteBalance/0:Auto/1:Manual}&#39;.</p>
+<pre><code>/ &lt;Expression&gt; : &lt;Returned value&gt;
+</code></pre><p>If multiple &#39;/&#39; separator is specified, the first matching value is returned.
+When it does not match any expression, then it returns an empty value.</p>
+<pre><code>e.g.)
+&quot;${WhiteBalance/0:Auto/1:Manual}&quot;
+-&gt; &quot;Auto&quot; or &quot;Manual&quot; or &quot;&quot; (When not matching)
+</code></pre><p>The following operators can be specified as comparison conditions in the expression.</p>
+<table>
+<thead>
+<tr>
+<th>Operator</th>
+<th>Meaning</th>
+<th>Variable Type</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>=</td>
+<td>Equals  (Default)</td>
+<td>String, Integer, Decimal, Date</td>
+<td>/=str:<br>/str:<br>/&#39;str&#39;:<br>/123.456:<br>/#2012-01-23#:</td>
+</tr>
+<tr>
+<td>=*</td>
+<td>Wildcard matches</td>
+<td>String</td>
+<td>/=<em>&#39;</em>str&#39;: (Ends with)<br>/=<em>&#39;str</em>&#39;: (Starts with)<br>/=<em>&#39;</em>str*&#39;: (Contains)</td>
+</tr>
+<tr>
+<td>=~</td>
+<td>Regular expression matches</td>
+<td>String</td>
+<td>/=~&#39;str[0-9]{4}&#39;:</td>
+</tr>
+<tr>
+<td>!=</td>
+<td>Not equals</td>
+<td>String, Integer, Decimal, Date</td>
+<td>/!=str:<br>/!=&#39;str&#39;:<br>/!=123.456:<br>/!=#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>Less than</td>
+<td>Integer, Decimal, Date</td>
+<td>/<123.456: <br> /&lt;#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&lt;=</td>
+<td>Less than or equals</td>
+<td>Integer, Decimal, Date</td>
+<td>/&lt;=123.456: <br> /&lt;=#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>Grater than</td>
+<td>Integer, Decimal, Date</td>
+<td>/&gt;123.456: <br> /&gt;#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&gt;=</td>
+<td>Grater than or equals</td>
+<td>Integer, Decimal, Date</td>
+<td>/&gt;=123.456: <br> /&gt;=#2012-01-23#:</td>
+</tr>
+</tbody>
+</table>
+<p>If &#39;default&#39; label is specified as the expression, it will match all values.</p>
+<pre><code>e.g.)
+&quot;${Make/=*&#39;NIKON*&#39;:Nikon/&#39;Canon&#39;:Canon/default:Others}&quot;
+-&gt; &quot;Nikon&quot; or &quot;Canon&quot; or &quot;Others&quot;
 </code></pre><h4 id="if-already-file-exists-">If already file exists ...</h4>
 <p>Specify processing when file of the same name exists.</p>
 <ul>

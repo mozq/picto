@@ -78,7 +78,7 @@ File's sub path in Destination Folder.
 You can use following variables with '${}'.
 
     e.g.)
-    "${ParentSubPath}/${PhotoTakenDate%yyyy/MM}/${FileName}"
+    "${ParentSubPath}/${PhotoTakenDate%uuuu/MM}/${FileName}"
     -> "subpath/to/2012/01/IMG_0001.JPG"
 
 |Variable                 |Type    |Meaning                          |Examples                |
@@ -105,11 +105,11 @@ You can use following variables with '${}'.
 |ShutterSpeed             |Decimal |Exif shutter speed value         |7.0                     |
 |ExposureTime             |Decimal |Exif exposure time (Seconds)     |0.008                   |
 |ExposureMode             |Integer |Exif exposure mode               |0: Auto exposure<br>1: Manual exposure<br>2: Auto bracket |
-|ExposureProgram          |Integer |Exif exposure program            |0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority, 4<br>Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode |
+|ExposureProgram          |Integer |Exif exposure program            |0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority<br>4: Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode |
 |Brightness               |Integer |Exif brightness value            |2.21                    |
 |WhiteBalance             |Integer |Exif white balance               |0: Auto<br>1: Manual    |
 |LightSource              |Integer |Exif light source                |0: Unknown<br>1: Daylight<br>2: Fluorescent<br>3: Tungsten (incandescent light)<br>4: Flash<br>9: Fine weather<br>10: Cloudy weather<br>11: Shade<br>12: Daylight fluorescent (D 5700 - 7100K)<br>13: Day white fluorescent (N 4600 - 5400K)<br>14: Cool white fluorescent (W 3900 - 4500K)<br>15: White fluorescent (WW 3200 - 3700K)<br>17: Standard light A<br>18: Standard light B<br>19: Standard light C<br>20: D55<br>21: D65<br>22: D75<br>23: D50<br>24: ISO studio tungsten<br>255: Other light source |
-|Orientation              |Integer |Tiff orientation                 |[0th Row, 0th Column]<br>1: top, left side<br>2: top, right side<br>3: bottom, right side<br>4: bottom, left side<br>5: left side, top<br>6: right side, top<br>7: right side, bottom<br>8: left side, bottom |
+|Orientation              |Integer |Tiff orientation                 |[0th Row, 0th Column]<br>1: Top, Left side<br>2: Top, Right side<br>3: Bottom, Right side<br>4: Bottom, Left side<br>5: Left side, Top<br>6: Right side, Top<br>7: Right side, Bottom<br>8: Left side, Bottom |
 |Lens                     |String  |Exif lens                        |                        |
 |LensMake                 |String  |Exif lens make                   |                        |
 |LensModel                |String  |Exif lens model                  |                        |
@@ -133,9 +133,10 @@ You can use following variables with '${}'.
 |GPSAlt                   |Decimal |Exif GPS altitude                |18.4                    |
 |GPSAltRef                |String  |Exif GPS altitude reference      |0: Above sea level<br>1: Below sea level |
 
-You can format a variable value with '%' separator, like '${FNumber%0.0}'.
+##### Format variable values
+You can format variable values with '%' separator, like '${FNumber%0.0}'.
 
-##### format Integer or Decimal type value
+###### Format Integer or Decimal type value
 |Symbol|Location           |Meaning                                        |
 |------|-------------------|-----------------------------------------------|
 |0     |Number             |Digit                                          |
@@ -153,7 +154,7 @@ See more information: https://docs.oracle.com/javase/8/docs/api/java/text/Decima
     "${GPSLatDeg%0}°${GPSLatMin%0}'${GPSLatSec%0.0#} ${GPSLatRef}"
     -> "35°39'30.89 N"
 
-##### format Date type value
+###### Format Date type value
 |Symbol|Meaning                    |Examples                                       |
 |------|---------------------------|-----------------------------------------------|
 |G     |era                        |AD; Anno Domini; A                             |
@@ -191,6 +192,38 @@ See more information: https://docs.oracle.com/javase/8/docs/api/java/text/Simple
     e.g.)
     "${PhotoTakenDate%uuuu/MMdd}"
     -> "2012/0123"
+
+##### Convert variable values
+You can convert variables value with '/' separator, like '${WhiteBalance/0:Auto/1:Manual}'.
+
+    / <Expression> : <Returned value>
+
+If multiple '/' separator is specified, the first matching value is returned.
+When it does not match any expression, then it returns an empty value.
+
+    e.g.)
+    "${WhiteBalance/0:Auto/1:Manual}"
+    -> "Auto" or "Manual" or "" (When not matching)
+
+The following operators can be specified as comparison conditions in the expression.
+
+|Operator|Meaning                    |Variable Type                 |Examples                                                                     |
+|--------|---------------------------|------------------------------|-----------------------------------------------------------------------------|
+|=       |Equals  (Default)          |String, Integer, Decimal, Date|/=str:<br>/str:<br>/'str':<br>/123.456:<br>/#2012-01-23#:                    |
+|=*      |Wildcard matches           |String                        |/=*'*str': (Ends with)<br>/=*'str*': (Starts with)<br>/=*'*str*': (Contains) |
+|=~      |Regular expression matches |String                        |/=~'str[0-9]{4}':                                                            |
+|!=      |Not equals                 |String, Integer, Decimal, Date|/!=str:<br>/!='str':<br>/!=123.456:<br>/!=#2012-01-23#:                      |
+|<       |Less than                  |Integer, Decimal, Date        |/<123.456: <br> /<#2012-01-23#:                                              |
+|<=      |Less than or equals        |Integer, Decimal, Date        |/<=123.456: <br> /<=#2012-01-23#:                                            |
+|>       |Grater than                |Integer, Decimal, Date        |/>123.456: <br> />#2012-01-23#:                                              |
+|>=      |Grater than or equals      |Integer, Decimal, Date        |/>=123.456: <br> />=#2012-01-23#:                                            |
+
+If 'default' label is specified as the expression, it will match all values.
+
+    e.g.)
+    "${Make/=*'NIKON*':Nikon/'Canon':Canon/default:Others}"
+    -> "Nikon" or "Canon" or "Others"
+
 
 #### If already file exists ...
 Specify processing when file of the same name exists.
