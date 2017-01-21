@@ -16,6 +16,7 @@
  */
 package net.mozq.picto.core;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream.Filter;
 import java.nio.file.FileSystem;
@@ -33,6 +34,8 @@ import org.mifmi.commons4j.matcher.NumberMatcher;
 public class PictoPathFilter implements Filter<Path> {
 
 	private PathMatcher pathMatcher = null;
+	private Path rootPath = null;
+	private boolean filenameMatch = false;
 	private boolean containsHiddens = false;
 	private IMatcher<Date> creationTimeMatcher = null;
 	private IMatcher<Date> modifiedTimeMatcher = null;
@@ -43,13 +46,15 @@ public class PictoPathFilter implements Filter<Path> {
 	public PictoPathFilter() {
 	}
 	
-	public PictoPathFilter setPathPattern(String pathPattern, boolean regex) {
+	public PictoPathFilter setPathPattern(String pathPattern, Path rootPath, boolean regex) {
 		if (pathPattern == null || pathPattern.isEmpty()) {
 			return this;
 		}
 		
-		final FileSystem fileSystem = FileSystems.getDefault();
+		FileSystem fileSystem = FileSystems.getDefault();
 		this.pathMatcher = fileSystem.getPathMatcher(((regex) ? "regex:" : "glob:") + pathPattern);
+		this.rootPath = rootPath;
+		this.filenameMatch = !(pathPattern.contains(File.separator) || pathPattern.contains("/") || pathPattern.contains("\\"));
 		return this;
 	}
 	
@@ -118,8 +123,19 @@ public class PictoPathFilter implements Filter<Path> {
 	
 	public boolean accept(Path path, BasicFileAttributes fileAttrs) throws IOException {
 		
-		if (this.pathMatcher != null && !this.pathMatcher.matches(path)) {
-			return false;
+		if (this.pathMatcher != null) {
+			Path p;
+			if (this.filenameMatch) {
+				p = path.getFileName();
+			} else if (this.rootPath != null) {
+				p = this.rootPath.relativize(path);
+			} else {
+				p = path;
+			}
+			
+			if (!this.pathMatcher.matches(p)) {
+				return false;
+			}
 		}
 
 		if (!this.containsHiddens) {
