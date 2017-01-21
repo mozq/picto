@@ -31,6 +31,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -125,7 +126,7 @@ public class MainFrame extends JFrame {
 					.withResolverStyle(ResolverStyle.SMART)
 	};
 	
-	private static final String SETTINGS_FILE_NAME_EXT = "picto";
+	private static final String SETTINGS_FILE_NAME_EXT = "picto"; //$NON-NLS-1$
 	
 	private final JFrame frame;
 	
@@ -238,7 +239,7 @@ public class MainFrame extends JFrame {
 				} catch (IOException e1) {
 					JOptionPane.showMessageDialog(
 							null,
-							Messages.getString("message.error.store.settings", e1.getLocalizedMessage()),
+							Messages.getString("message.error.store.settings", e1.getLocalizedMessage()), //$NON-NLS-1$
 							null,
 							JOptionPane.ERROR_MESSAGE
 							);
@@ -263,7 +264,7 @@ public class MainFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
 				filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("settings.ext.description"), SETTINGS_FILE_NAME_EXT));
+				filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("settings.ext.description"), SETTINGS_FILE_NAME_EXT)); //$NON-NLS-1$
 				
 				int selected = filechooser.showOpenDialog(frame);
 				if (selected == JFileChooser.APPROVE_OPTION) {
@@ -274,14 +275,14 @@ public class MainFrame extends JFrame {
 						
 						JOptionPane.showMessageDialog(
 								null,
-								Messages.getString("message.info.import.settings"),
+								Messages.getString("message.info.import.settings"), //$NON-NLS-1$
 								null,
 								JOptionPane.INFORMATION_MESSAGE
 								);
 					} catch (Exception e1) {
 						JOptionPane.showMessageDialog(
 								null,
-								Messages.getString("message.error.import.settings", e1.getLocalizedMessage()),
+								Messages.getString("message.error.import.settings", e1.getLocalizedMessage()), //$NON-NLS-1$
 								null,
 								JOptionPane.ERROR_MESSAGE
 								);
@@ -298,29 +299,29 @@ public class MainFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
 				filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("settings.ext.description"), SETTINGS_FILE_NAME_EXT));
+				filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("settings.ext.description"), SETTINGS_FILE_NAME_EXT)); //$NON-NLS-1$
 				
 				int selected = filechooser.showSaveDialog(frame);
 				if (selected == JFileChooser.APPROVE_OPTION) {
 					File file = filechooser.getSelectedFile();
 					
 					if (!SETTINGS_FILE_NAME_EXT.equals(FileUtilz.getExt(file.getName()))) {
-						file = new File(file.getParentFile(), file.getName() + "." + SETTINGS_FILE_NAME_EXT);
+						file = new File(file.getParentFile(), file.getName() + "." + SETTINGS_FILE_NAME_EXT); //$NON-NLS-1$
 					}
 					
 					try {
-						App.config().storeToFile(file.toPath(), "");
+						App.config().storeToFile(file.toPath(), ""); //$NON-NLS-1$
 						
 						JOptionPane.showMessageDialog(
 								null,
-								Messages.getString("message.info.export.settings"),
+								Messages.getString("message.info.export.settings"), //$NON-NLS-1$
 								null,
 								JOptionPane.INFORMATION_MESSAGE
 								);
 					} catch (Exception e1) {
 						JOptionPane.showMessageDialog(
 								null,
-								Messages.getString("message.error.export.settings", e1.getLocalizedMessage()),
+								Messages.getString("message.error.export.settings", e1.getLocalizedMessage()), //$NON-NLS-1$
 								null,
 								JOptionPane.ERROR_MESSAGE
 								);
@@ -345,6 +346,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		mnHelp.add(mntmHelp);
+		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -561,7 +563,6 @@ public class MainFrame extends JFrame {
 		txtCreationTimeRangeFrom = new JFormattedTextField(newMaskFormatter(DATE_MASK_PATTERN));
 		lblCreationTimeRange.setLabelFor(txtCreationTimeRangeFrom);
 		txtCreationTimeRangeFrom.setColumns(20);
-		pnlCreationTimeRange.add(txtCreationTimeRangeFrom);
 		txtCreationTimeRangeFrom.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
 		txtCreationTimeRangeFrom.addFocusListener(new FocusAdapter() {
 			@Override
@@ -571,13 +572,13 @@ public class MainFrame extends JFrame {
 			}
 		});
 		txtCreationTimeRangeFrom.setFocusLostBehavior(JFormattedTextField.COMMIT);
+		pnlCreationTimeRange.add(txtCreationTimeRangeFrom);
 		
 		lblCreationTimeRangeTo = new JLabel(Messages.getString("MainFrame.creationTimeRangeTo")); //$NON-NLS-1$
 		pnlCreationTimeRange.add(lblCreationTimeRangeTo);
 		
 		txtCreationTimeRangeTo = new JFormattedTextField(newMaskFormatter(DATE_MASK_PATTERN));
 		txtCreationTimeRangeTo.setColumns(20);
-		pnlCreationTimeRange.add(txtCreationTimeRangeTo);
 		txtCreationTimeRangeTo.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
 		txtCreationTimeRangeTo.addFocusListener(new FocusAdapter() {
 			@Override
@@ -587,6 +588,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		txtCreationTimeRangeTo.setFocusLostBehavior(JFormattedTextField.COMMIT);
+		pnlCreationTimeRange.add(txtCreationTimeRangeTo);
 		
 		lblModifiedTimeRange = new JLabel(Messages.getString("MainFrame.modifiedTimeRange")); //$NON-NLS-1$
 		GridBagConstraints gbc_lblModifiedTimeRange = new GridBagConstraints();
@@ -607,7 +609,6 @@ public class MainFrame extends JFrame {
 		txtModifiedTimeRangeFrom = new JFormattedTextField(newMaskFormatter(DATE_MASK_PATTERN));
 		lblModifiedTimeRange.setLabelFor(txtModifiedTimeRangeFrom);
 		txtModifiedTimeRangeFrom.setColumns(20);
-		pnlModifiedTimeRange.add(txtModifiedTimeRangeFrom);
 		txtModifiedTimeRangeFrom.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
 		txtModifiedTimeRangeFrom.addFocusListener(new FocusAdapter() {
 			@Override
@@ -617,13 +618,13 @@ public class MainFrame extends JFrame {
 			}
 		});
 		txtModifiedTimeRangeFrom.setFocusLostBehavior(JFormattedTextField.COMMIT);
+		pnlModifiedTimeRange.add(txtModifiedTimeRangeFrom);
 		
 		lblModifiedTimeRangeTo = new JLabel(Messages.getString("MainFrame.modifiedTimeRangeTo")); //$NON-NLS-1$
 		pnlModifiedTimeRange.add(lblModifiedTimeRangeTo);
 		
 		txtModifiedTimeRangeTo = new JFormattedTextField(newMaskFormatter(DATE_MASK_PATTERN));
 		txtModifiedTimeRangeTo.setColumns(20);
-		pnlModifiedTimeRange.add(txtModifiedTimeRangeTo);
 		txtModifiedTimeRangeTo.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
 		txtModifiedTimeRangeTo.addFocusListener(new FocusAdapter() {
 			@Override
@@ -633,6 +634,7 @@ public class MainFrame extends JFrame {
 			}
 		});
 		txtModifiedTimeRangeTo.setFocusLostBehavior(JFormattedTextField.COMMIT);
+		pnlModifiedTimeRange.add(txtModifiedTimeRangeTo);
 		
 		pnlDestConditions = new JPanel();
 		pnlDestConditions.setBorder(new TitledBorder(null, Messages.getString("MainFrame.destConditionsTitle"), TitledBorder.LEADING, TitledBorder.TOP, null, null)); //$NON-NLS-1$
@@ -746,12 +748,12 @@ public class MainFrame extends JFrame {
 		pnlDestOptions.add(sprDestOptionsL, gbc_sprDestOptionsL);
 		
 		lblDestOptions = new JLabel(Messages.getString("MainFrame.destOptionsTitle")); //$NON-NLS-1$
+		lblDestOptions.setForeground(Color.DARK_GRAY);
 		GridBagConstraints gbc_lblDestOptions = new GridBagConstraints();
 		gbc_lblDestOptions.insets = new Insets(0, 0, 0, 5);
 		gbc_lblDestOptions.gridx = 1;
 		gbc_lblDestOptions.gridy = 0;
 		pnlDestOptions.add(lblDestOptions, gbc_lblDestOptions);
-		lblDestOptions.setForeground(Color.DARK_GRAY);
 		
 		sprDestOptionsR = new JSeparator();
 		GridBagConstraints gbc_sprDestOptionsR = new GridBagConstraints();
@@ -770,13 +772,13 @@ public class MainFrame extends JFrame {
 		
 		txtDestSubPathPattern = new JTextField();
 		lblDestSubPathPattern.setLabelFor(txtDestSubPathPattern);
+		txtDestSubPathPattern.setColumns(10);
 		GridBagConstraints gbc_txtDestSubPathPattern = new GridBagConstraints();
 		gbc_txtDestSubPathPattern.insets = new Insets(0, 0, 5, 0);
 		gbc_txtDestSubPathPattern.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtDestSubPathPattern.gridx = 1;
 		gbc_txtDestSubPathPattern.gridy = 3;
 		pnlDestConditions.add(txtDestSubPathPattern, gbc_txtDestSubPathPattern);
-		txtDestSubPathPattern.setColumns(10);
 		
 		lblExistingFileMethod = new JLabel(Messages.getString("MainFrame.existingFileMethod")); //$NON-NLS-1$
 		GridBagConstraints gbc_lblExistingFileMethod = new GridBagConstraints();
@@ -793,8 +795,8 @@ public class MainFrame extends JFrame {
 		gbc_cmbExistingFileMethod.anchor = GridBagConstraints.WEST;
 		gbc_cmbExistingFileMethod.gridx = 1;
 		gbc_cmbExistingFileMethod.gridy = 4;
-		pnlDestConditions.add(cmbExistingFileMethod, gbc_cmbExistingFileMethod);
 		cmbExistingFileMethod.setModel(new DefaultComboBoxModel<>(ExistingFileMethod.values()));
+		pnlDestConditions.add(cmbExistingFileMethod, gbc_cmbExistingFileMethod);
 		
 		lblValidateFile = new JLabel(Messages.getString("MainFrame.validateFile")); //$NON-NLS-1$
 		GridBagConstraints gbc_lblValidateFile = new GridBagConstraints();
@@ -921,8 +923,15 @@ public class MainFrame extends JFrame {
 		txtCustomBaseDate = new JFormattedTextField(newMaskFormatter(DATE_MASK_PATTERN));
 		txtCustomBaseDate.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
 		txtCustomBaseDate.setColumns(20);
-		txtCustomBaseDate.setText(newDateFormatter(DATE_PATTERN, timeZone).format(new Date()));
 		txtCustomBaseDate.setVisible(false);
+		txtCustomBaseDate.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent ev) {
+				JFormattedTextField field = (JFormattedTextField)ev.getSource();
+				formatDateField(field, dateTimeFormatters, timeZone, Year.now().get(ChronoField.YEAR), 1, 1, 0, 0, 0, 0);
+			}
+		});
+		txtCustomBaseDate.setFocusLostBehavior(JFormattedTextField.COMMIT);
 		pnlBaseDate.add(txtCustomBaseDate);
 		
 		lblEditBaseDate = new JLabel(Messages.getString("MainFrame.changeFileEditBaseDate")); //$NON-NLS-1$
@@ -1148,7 +1157,7 @@ public class MainFrame extends JFrame {
 		conf.setBoolean("change.file.access.date", chkChangeFileAccessDate.isSelected()); //$NON-NLS-1$
 		conf.setBoolean("change.file.exif.date", chkChangeExifDate.isSelected()); //$NON-NLS-1$
 		conf.setEnum("base.date.type", (Enum<?>)cmbBaseDateType.getSelectedItem()); //$NON-NLS-1$
-		//conf.set("custom.base.date", txtCustomBaseDate.getText());
+		conf.set("custom.base.date", txtCustomBaseDate.getText()); //$NON-NLS-1$
 		conf.setEnum("date.mod.type", (Enum<?>)cmbDateModType.getSelectedItem()); //$NON-NLS-1$
 		conf.set("date.mod.year", txtDateModYears.getText()); //$NON-NLS-1$
 		conf.set("date.mod.month", txtDateModMonths.getText()); //$NON-NLS-1$
@@ -1261,7 +1270,19 @@ public class MainFrame extends JFrame {
 		if (!Files.exists(srcRootDirPath)) {
 			JOptionPane.showMessageDialog(
 					frame,
-					Messages.getString("message.warn.srcRootPath.not.exists"),
+					Messages.getString("message.warn.srcRootPath.not.exists"), //$NON-NLS-1$
+					null,
+					JOptionPane.WARNING_MESSAGE
+					);
+			return null;
+		}
+		
+		try {
+			FileSystems.getDefault().getPathMatcher(((filePatternRegex) ? "regex:" : "glob:") + filePattern); //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.warn.invalid.filePattern", e.getLocalizedMessage()), //$NON-NLS-1$
 					null,
 					JOptionPane.WARNING_MESSAGE
 					);
@@ -1272,7 +1293,7 @@ public class MainFrame extends JFrame {
 			if (sizeRangeFrom.longValue() > sizeRangeTo.longValue()) {
 				JOptionPane.showMessageDialog(
 						frame,
-						Messages.getString("message.warn.sizeRange.is.invalid.range"),
+						Messages.getString("message.warn.sizeRange.is.invalid.range"), //$NON-NLS-1$
 						null,
 						JOptionPane.WARNING_MESSAGE
 						);
@@ -1284,7 +1305,7 @@ public class MainFrame extends JFrame {
 			if (DateUtilz.compare(creationTimeRangeFrom, creationTimeRangeTo, false) > 0) {
 				JOptionPane.showMessageDialog(
 						frame,
-						Messages.getString("message.warn.creationTimeRange.is.invalid.range"),
+						Messages.getString("message.warn.creationTimeRange.is.invalid.range"), //$NON-NLS-1$
 						null,
 						JOptionPane.WARNING_MESSAGE
 						);
@@ -1296,7 +1317,7 @@ public class MainFrame extends JFrame {
 			if (DateUtilz.compare(modifiedTimeRangeFrom, modifiedTimeRangeTo, false) > 0) {
 				JOptionPane.showMessageDialog(
 						frame,
-						Messages.getString("message.warn.modifiedTimeRange.is.invalid.range"),
+						Messages.getString("message.warn.modifiedTimeRange.is.invalid.range"), //$NON-NLS-1$
 						null,
 						JOptionPane.WARNING_MESSAGE
 						);
@@ -1308,7 +1329,7 @@ public class MainFrame extends JFrame {
 		if (checkDigest && (changeExifDate || removeExifTagsGps || removeExifTagsAll)) {
 			int ret = JOptionPane.showConfirmDialog(
 					frame,
-					Messages.getString("message.confirm.change.file.with.checkFileDigest"),
+					Messages.getString("message.confirm.change.file.with.checkFileDigest"), //$NON-NLS-1$
 					null,
 					JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE
@@ -1322,7 +1343,7 @@ public class MainFrame extends JFrame {
 		
 		// Set values
 		PictoPathFilter pathFilter = new PictoPathFilter();
-		pathFilter.setPathPattern(filePattern, filePatternRegex);
+		pathFilter.setPathPattern(filePattern, srcRootDirPath, filePatternRegex);
 		pathFilter.setContainsHiddens(containsHiddens);
 		pathFilter.setSizeRange(sizeRangeFrom, sizeRangeTo);
 		pathFilter.setCreationTimeRange(creationTimeRangeFrom, creationTimeRangeTo);
