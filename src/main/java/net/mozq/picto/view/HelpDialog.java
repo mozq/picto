@@ -34,7 +34,7 @@ public class HelpDialog extends JDialog {
 		
 		JEditorPane editorPane = new JEditorPane();
 		editorPane.setEditable(false);
-		editorPane.setContentType("text/html");
+		editorPane.setContentType("text/html"); //$NON-NLS-1$
 		editorPane.setText(readResourceText(Messages.getString("HelpDialog.help.path"))); //$NON-NLS-1$
 		editorPane.setCaretPosition(0);
 		
@@ -44,7 +44,7 @@ public class HelpDialog extends JDialog {
 
 	private String readResourceText(String resourceName) {
 		StringBuilder sb = new StringBuilder();
-		try (InputStreamReader br = new InputStreamReader(this.getClass().getResourceAsStream(resourceName), "UTF-8")) {
+		try (InputStreamReader br = new InputStreamReader(this.getClass().getResourceAsStream(resourceName), "UTF-8")) { //$NON-NLS-1$
 			int ch;
 			while ((ch = br.read()) != -1) {
 				sb.append((char)ch);

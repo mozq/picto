@@ -57,12 +57,12 @@ import java.awt.FlowLayout;
 public class ProcessDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 	
-	private static final ImageIcon ICON_IGNORED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_ignored.png", ProcessDataStatus.Ignored.toString());
-	private static final ImageIcon ICON_PROCESSIG = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_processing.png", ProcessDataStatus.Processing.toString());
-	private static final ImageIcon ICON_SKIPPED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_skipped.png", ProcessDataStatus.Skipped.toString());
-	private static final ImageIcon ICON_TERMINATED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_terminated.png", ProcessDataStatus.Terminated.toString());
-	private static final ImageIcon ICON_SUCCESS = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_success.png", ProcessDataStatus.Success.toString());
-	private static final ImageIcon ICON_ERROR = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_error.png", ProcessDataStatus.Error.toString());
+	private static final ImageIcon ICON_IGNORED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_ignored.png", ProcessDataStatus.Ignored.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_PROCESSIG = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_processing.png", ProcessDataStatus.Processing.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_SKIPPED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_skipped.png", ProcessDataStatus.Skipped.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_TERMINATED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_terminated.png", ProcessDataStatus.Terminated.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_SUCCESS = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_success.png", ProcessDataStatus.Success.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_ERROR = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_error.png", ProcessDataStatus.Error.toString()); //$NON-NLS-1$
 
 	private ProcessCondition processCondition;
 	private final ProcessStatus processStatus = new ProcessStatus();
@@ -83,7 +83,7 @@ public class ProcessDialog extends JDialog {
 	public ProcessDialog(Window owner) {
 		super(owner);
 
-		setTitle(Messages.getString("ProcessDialog.title"));
+		setTitle(Messages.getString("ProcessDialog.title")); //$NON-NLS-1$
 		setBounds(100, 100, 850, 500);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -105,11 +105,11 @@ public class ProcessDialog extends JDialog {
 		
 		tableModel = new ObjectTableModel<ProcessData>(
 				new String[]{
-						Messages.getString("ProcessDialog.table.no"),
-						Messages.getString("ProcessDialog.table.status"),
-						Messages.getString("ProcessDialog.table.srcPath"),
-						Messages.getString("ProcessDialog.table.destPath"),
-						Messages.getString("ProcessDialog.table.message")
+						Messages.getString("ProcessDialog.table.no"), //$NON-NLS-1$
+						Messages.getString("ProcessDialog.table.status"), //$NON-NLS-1$
+						Messages.getString("ProcessDialog.table.srcPath"), //$NON-NLS-1$
+						Messages.getString("ProcessDialog.table.destPath"), //$NON-NLS-1$
+						Messages.getString("ProcessDialog.table.message") //$NON-NLS-1$
 						},
 				new Class<?>[]{Integer.class, ImageIcon.class, String.class, String.class, String.class},
 				new ArrayList<ProcessData>(),
@@ -166,7 +166,7 @@ public class ProcessDialog extends JDialog {
 		progressBar.setMaximum(0);
 		progressBar.setValue(0);
 		progressBar.setStringPainted(true);
-		progressBar.setString("");
+		progressBar.setString(""); //$NON-NLS-1$
 		GridBagConstraints gbc_progressBar = new GridBagConstraints();
 		gbc_progressBar.insets = new Insets(0, 0, 5, 0);
 		gbc_progressBar.fill = GridBagConstraints.HORIZONTAL;
@@ -182,7 +182,7 @@ public class ProcessDialog extends JDialog {
 		contentPane.add(pnlControls, gbc_pnlControls);
 		pnlControls.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
-		btnStop = new JButton(Messages.getString("ProcessDialog.stop"));
+		btnStop = new JButton(Messages.getString("ProcessDialog.stop")); //$NON-NLS-1$
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				btnStop.setEnabled(false);
@@ -191,7 +191,7 @@ public class ProcessDialog extends JDialog {
 		});
 		pnlControls.add(btnStop);
 		
-		btnClose = new JButton(Messages.getString("ProcessDialog.close"));
+		btnClose = new JButton(Messages.getString("ProcessDialog.close")); //$NON-NLS-1$
 		btnClose.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				dialog.dispose();
@@ -203,7 +203,7 @@ public class ProcessDialog extends JDialog {
 		tableModel.addTableModelListener(e -> {
 			int currentCount = processStatus.getCurrentProcessDataIndex() + 1;
 			int totalCount = tableModel.getRowCount();
-			progressBar.setString(String.format("%d / %d (%d%%)", currentCount, totalCount, (currentCount * 100 / totalCount)));
+			progressBar.setString(String.format("%d / %d (%d%%)", currentCount, totalCount, (currentCount * 100 / totalCount))); //$NON-NLS-1$
 			progressBar.setValue(currentCount);
 			progressBar.setMaximum(totalCount);
 		});
@@ -223,7 +223,7 @@ public class ProcessDialog extends JDialog {
 			} catch (Exception e) {
 				String message = e.getLocalizedMessage();
 				if (!(e instanceof PictoException)) {
-					message = Messages.getString("message.error.find.files", message);
+					message = Messages.getString("message.error.find.files", message); //$NON-NLS-1$
 				}
 				
 				JOptionPane.showMessageDialog(dialog, message, null, JOptionPane.ERROR_MESSAGE);
@@ -244,7 +244,7 @@ public class ProcessDialog extends JDialog {
 			} catch (Exception e) {
 				String message = e.getLocalizedMessage();
 				if (!(e instanceof PictoException)) {
-					message = Messages.getString("message.error.process.files", message);
+					message = Messages.getString("message.error.process.files", message); //$NON-NLS-1$
 				}
 				
 				JOptionPane.showMessageDialog(dialog, message, null, JOptionPane.ERROR_MESSAGE);
@@ -286,7 +286,7 @@ public class ProcessDialog extends JDialog {
 			
 			int ret = JOptionPane.showOptionDialog(
 					dialog,
-					Messages.getString("message.confirm.file.exists", processData.getDestPath()),
+					Messages.getString("message.confirm.file.exists", processData.getDestPath()), //$NON-NLS-1$
 					null,
 					JOptionPane.YES_NO_CANCEL_OPTION,
 					JOptionPane.QUESTION_MESSAGE,
