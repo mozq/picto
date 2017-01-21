@@ -50,6 +50,6 @@ public class Messages {
 	}
 	
 	public static String getString(Enum<?> enumKey) {
-		return getString("enum." + enumKey.getClass().getSimpleName() + "." + enumKey.name());
+		return getString("enum." + enumKey.getClass().getSimpleName() + "." + enumKey.name()); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
