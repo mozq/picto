@@ -10,11 +10,12 @@ It can be used for the following.
     - Specified date and difference date can be set. It is effective when you forget to change the time zone of the camera.
 - Remove GPS or all Exif data.
 
+
 ## Installation
 
 ### for Mac
 1. Download DMG file 'Picto-X.X.X-mac.dmg' from [here](https://bintray.com/mozq/generic/picto/_latestVersion). (X.X.X is a version)
-2. Mount DMG and cop Picto.app to Applications folder.
+2. Mount DMG and copy Picto.app to Applications folder.
 3. Execute Picto.app to start.
     - If the warning dialog of "can’t be opened because it is from an unidentified developer" is shown, try the following procedure
         1. Right-click (or control-click) the app and choose “Open”.
@@ -31,6 +32,10 @@ It can be used for the following.
 2. Download JAR file 'Picto-X.X.X-all.jar' from [here](https://bintray.com/mozq/generic/picto/_latestVersion). (X.X.X is a version)
 3. Copy JAR file to any folder.
 4. Execute JAR file like `java -jar Picto-X.X.X-all.jar`.
+
+
+## Uninstallation
+You can uninstall application by deleting the copied application file.
 
 
 ## Settings
@@ -84,12 +89,11 @@ You can use following variables with '${}'.
 |Variable                 |Type    |Meaning                          |Examples                |
 |-------------------------|--------|---------------------------------|------------------------|
 |Now                      |Date    |Current date                     |2012-01-23 12:34:56.780 |
-|ParentSubPath            |String  |File parent sub path             |subpath/to              |
+|ParentSubPath            |String  |Parent folder path of file       |subpath/to              |
 |FileName                 |String  |File name                        |IMG_0001.JPG            |
 |BaseName                 |String  |File base name                   |IMG_0001                |
 |Extension                |String  |File extension                   |.JPG                    |
 |Size                     |String  |File size                        |10485760                |
-|ContentType              |String  |File content type                |image/jpeg              |
 |CreationDate             |Date    |File creation date               |2012-01-23 12:34:56.780 |
 |ModifiedDate             |Date    |File modified date               |2012-01-23 12:34:56.780 |
 |AccessDate               |Date    |File access date                 |2012-01-23 12:34:56.780 |
@@ -130,7 +134,7 @@ You can use following variables with '${}'.
 |GPSLonMin                |Decimal |Exif GPS longitude minutes       |44.0                    |
 |GPSLonSec                |Decimal |Exif GPS longitude seconds       |43.558                  |
 |GPSLonRef                |String  |Exif GPS longitude reference     |E: East<br>W: West      |
-|GPSAlt                   |Decimal |Exif GPS altitude                |18.4                    |
+|GPSAlt                   |Decimal |Exif GPS altitude (m)            |18.4                    |
 |GPSAltRef                |String  |Exif GPS altitude reference      |0: Above sea level<br>1: Below sea level |
 
 ##### Format variable values
@@ -141,7 +145,7 @@ You can format variable values with '%' separator, like '${FNumber%0.0}'.
 |------|-------------------|-----------------------------------------------|
 |0     |Number             |Digit                                          |
 |#     |Number             |Digit, zero shows as absent                    |
-|.     |Number             |Decimal separator or monetary decimal separator|
+|.     |Number             |Decimal separator                              |
 |,     |Number             |Grouping separator                             |
 |;     |Subpattern boundary|Separates positive and negative subpatterns    |
 |%     |Prefix or suffix   |Multiply by 100 and show as percentage         |
@@ -187,14 +191,14 @@ See more information: https://docs.oracle.com/javase/8/docs/api/java/text/Decima
 |X     |zone-offset 'Z' for zero   |Z; -08; -0830; -08:30; -083015; -08:30:15;     |
 |x     |zone-offset                |+0000; -08; -0830; -08:30; -083015; -08:30:15; |
 |Z     |zone-offset                |+0000; -0800; -08:00;                          |
-See more information: https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html
+See more information: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
 
     e.g.)
     "${PhotoTakenDate%uuuu/MMdd}"
     -> "2012/0123"
 
 ##### Convert variable values
-You can convert variables value with '/' separator, like '${WhiteBalance/0:Auto/1:Manual}'.
+You can convert variables value with '/' and ':' separators, like '${WhiteBalance/0:Auto/1:Manual}'.
 
     / <Expression> : <Returned value>
 
@@ -235,7 +239,7 @@ Specify processing when file of the same name exists.
 
 #### Validate file - Check file digest.
 It checks whether the contents of the file were correctly copied.
-If you set an option to change the file, such as changing the date of the file, it will not be checked.
+If you set an option to change the file, such as removing the exif of the file, it will not be checked.
 
 
 ### Change File Date
@@ -280,6 +284,10 @@ Simurate process.
 
 ## License
 Picto is open-sourced software licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+
+## Repository
+Picto is developed and managed on [GitHub](https://github.com/mozq/picto).
 
 
 ## Legal

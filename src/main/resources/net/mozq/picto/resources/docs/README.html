@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 <html>
 <head>
-<title></title>
+<meta charset="UTF-8" />
+<title>README</title>
 <style type="text/css">
 h2 {
     border-top: 2px solid gray;
@@ -30,7 +32,7 @@ table, th, td {
 <h3 id="for-mac">for Mac</h3>
 <ol>
 <li>Download DMG file &#39;Picto-X.X.X-mac.dmg&#39; from <a href="https://bintray.com/mozq/generic/picto/_latestVersion">here</a>. (X.X.X is a version)</li>
-<li>Mount DMG and cop Picto.app to Applications folder.</li>
+<li>Mount DMG and copy Picto.app to Applications folder.</li>
 <li>Execute Picto.app to start.<ul>
 <li>If the warning dialog of &quot;can’t be opened because it is from an unidentified developer&quot; is shown, try the following procedure<ol>
 <li>Right-click (or control-click) the app and choose “Open”.</li>
@@ -54,6 +56,8 @@ table, th, td {
 <li>Copy JAR file to any folder.</li>
 <li>Execute JAR file like <code>java -jar Picto-X.X.X-all.jar</code>.</li>
 </ol>
+<h2 id="uninstallation">Uninstallation</h2>
+<p>You can uninstall application by deleting the copied application file.</p>
 <h2 id="settings">Settings</h2>
 <h3 id="source">Source</h3>
 <h4 id="photo-s-folder">Photo&#39;s folder</h4>
@@ -109,7 +113,7 @@ You can use following variables with &#39;${}&#39;.</p>
 <tr>
 <td>ParentSubPath</td>
 <td>String</td>
-<td>File parent sub path</td>
+<td>Parent folder path of file</td>
 <td>subpath/to</td>
 </tr>
 <tr>
@@ -135,12 +139,6 @@ You can use following variables with &#39;${}&#39;.</p>
 <td>String</td>
 <td>File size</td>
 <td>10485760</td>
-</tr>
-<tr>
-<td>ContentType</td>
-<td>String</td>
-<td>File content type</td>
-<td>image/jpeg</td>
 </tr>
 <tr>
 <td>CreationDate</td>
@@ -385,7 +383,7 @@ You can use following variables with &#39;${}&#39;.</p>
 <tr>
 <td>GPSAlt</td>
 <td>Decimal</td>
-<td>Exif GPS altitude</td>
+<td>Exif GPS altitude (m)</td>
 <td>18.4</td>
 </tr>
 <tr>
@@ -421,7 +419,7 @@ You can use following variables with &#39;${}&#39;.</p>
 <tr>
 <td>.</td>
 <td>Number</td>
-<td>Decimal separator or monetary decimal separator</td>
+<td>Decimal separator</td>
 </tr>
 <tr>
 <td>,</td>
@@ -609,12 +607,12 @@ You can use following variables with &#39;${}&#39;.</p>
 </tr>
 </tbody>
 </table>
-<p>See more information: <a href="https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html">https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html</a></p>
+<p>See more information: <a href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html</a></p>
 <pre><code>e.g.)
 &quot;${PhotoTakenDate%uuuu/MMdd}&quot;
 -&gt; &quot;2012/0123&quot;
 </code></pre><h5 id="convert-variable-values">Convert variable values</h5>
-<p>You can convert variables value with &#39;/&#39; separator, like &#39;${WhiteBalance/0:Auto/1:Manual}&#39;.</p>
+<p>You can convert variables value with &#39;/&#39; and &#39;:&#39; separators, like &#39;${WhiteBalance/0:Auto/1:Manual}&#39;.</p>
 <pre><code>/ &lt;Expression&gt; : &lt;Returned value&gt;
 </code></pre><p>If multiple &#39;/&#39; separator is specified, the first matching value is returned.
 When it does not match any expression, then it returns an empty value.</p>
@@ -660,7 +658,7 @@ When it does not match any expression, then it returns an empty value.</p>
 <td>&lt;</td>
 <td>Less than</td>
 <td>Integer, Decimal, Date</td>
-<td>/<123.456: <br> /&lt;#2012-01-23#:</td>
+<td>/&lt;123.456: <br> /&lt;#2012-01-23#:</td>
 </tr>
 <tr>
 <td>&lt;=</td>
@@ -696,7 +694,7 @@ When it does not match any expression, then it returns an empty value.</p>
 </ul>
 <h4 id="validate-file-check-file-digest-">Validate file - Check file digest.</h4>
 <p>It checks whether the contents of the file were correctly copied.
-If you set an option to change the file, such as changing the date of the file, it will not be checked.</p>
+If you set an option to change the file, such as removing the exif of the file, it will not be checked.</p>
 <h3 id="change-file-date">Change File Date</h3>
 <h4 id="change-">Change ...</h4>
 <p>Date of change target.</p>
@@ -734,6 +732,8 @@ If you set an option to change the file, such as changing the date of the file, 
 <p>Simurate process.</p>
 <h2 id="license">License</h2>
 <p>Picto is open-sourced software licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+<h2 id="repository">Repository</h2>
+<p>Picto is developed and managed on <a href="https://github.com/mozq/picto">GitHub</a>.</p>
 <h2 id="legal">Legal</h2>
 <p>Picto is built using open source software.</p>
 <h3 id="apache-commons-imaging-sanselan-">Apache Commons Imaging (Sanselan)</h3>
