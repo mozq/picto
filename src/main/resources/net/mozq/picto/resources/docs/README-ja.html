@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>README</title>
+<style type="text/css">
+h2 {
+    border-top: 2px solid gray;
+}
+table, th, td {
+    border: 1px solid gray;
+}
+</style>
+</head>
+<body>
+
+<h1 id="picto">Picto</h1>
+<p>Pictoは写真を整理するためのデスクトップ・アプリです。</p>
+<p>主に、下記のことが可能です。</p>
+<ul>
+<li>写真のコピー・移動<ul>
+<li>写真の撮影日などを利用した自由なファイル名やフォルダー名で、写真をコピー・移動できます。</li>
+</ul>
+</li>
+<li>写真ファイルの日付の変更<ul>
+<li>写真ファイルの作成日、更新日、アクセス日、Exif撮影日を変更できます。海外旅行などでカメラのタイムゾーンを変更し忘れた際に有効です。</li>
+</ul>
+</li>
+<li>Exif情報の削除<ul>
+<li>GPS情報の削除や、Exif情報の全削除ができます。</li>
+</ul>
+</li>
+</ul>
+<h2 id="-">インストール</h2>
+<h3 id="mac-">Macへのインストール</h3>
+<ol>
+<li>DMGファイル &#39;Picto-X.X.X-mac.dmg&#39; を <a href="https://bintray.com/mozq/generic/picto/_latestVersion">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
+<li>DMGをマウントして Picto.app をアプリケーション・フォルダーにコピーします。</li>
+<li>Picto.app を実行して起動します。<ul>
+<li>もし「開発元が未確認のため開けません」という警告ダイアログが表示された場合は、下記の手順をお試しください。<ol>
+<li>アプリケーションを右クリック (または control＋クリック) して「開く」をクリックします。</li>
+<li>次に表示される警告ダイアログで「開く」ボタンをクリックしてアプリケーションを起動します。</li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="windows-">Windowsへのインストール</h3>
+<ol>
+<li><a href="https://java.com/ja/download/">Java Runtime Environment</a> がインストールされていない場合はインストールします。</li>
+<li>Zipファイル &#39;Picto-X.X.X-win.zip&#39; を <a href="https://bintray.com/mozq/generic/picto/_latestVersion">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
+<li>Zipファイルを展開し、 Picto.exe を好きなフォルダーにコピーします。</li>
+<li>Picto.exe を実行して起動します。</li>
+</ol>
+<h3 id="-os-">その他OSへのインストール</h3>
+<ol>
+<li><a href="https://java.com/ja/download/">Java Runtime Environment</a> がインストールされていない場合はインストールします。</li>
+<li>JARファイル &#39;Picto-X.X.X-all.jar&#39; を <a href="https://bintray.com/mozq/generic/picto/_latestVersion">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
+<li>JARファイルを好きなフォルダーにコピーします。</li>
+<li>JARファイルを <code>java -jar Picto-X.X.X-all.jar</code> のように起動します。</li>
+</ol>
+<h2 id="-">アンインストール</h2>
+<p>コピーしたアプリケーションファイルを削除することで、アンインストールできます。</p>
+<h2 id="-">設定</h2>
+<h3 id="-">対象</h3>
+<h4 id="-">写真フォルダー</h4>
+<p>写真や動画ファイルがあるフォルダーを選択します。</p>
+<h4 id="-">ファイル名パターン</h4>
+<p>対象のファイルをファイル名のパターンで指定できます。
+<a href="https://en.wikipedia.org/wiki/Glob_%28programming%29">Glob</a> または <a href="https://ja.wikipedia.org/wiki/%E6%AD%A3%E8%A6%8F%E8%A1%A8%E7%8F%BE">正規表現</a> でパターンを指定できます。</p>
+<ul>
+<li>Glob: &quot;<em>.jpg&quot;, &quot;IMG_????.</em>&quot;</li>
+<li>正規表現: &quot;.<em>\.jpg&quot;, &quot;IMG_[0-9]{4}\..</em>&quot;</li>
+</ul>
+<h4 id="-">隠しファイルとフォルダーを含む</h4>
+<p>このオプションをチェックすると、隠しファイルとフォルダーを対象に含めます。</p>
+<h4 id="-">サブフォルダーのファイルを含む</h4>
+<p>このオプションをチェックすると、サブファイルとフォルダーを対象に含めます。</p>
+<h4 id="-">ファイルサイズ</h4>
+<p>ファイルサイズで対象をフィルタリングします。</p>
+<h4 id="-">作成日時</h4>
+<p>作成日時で対象をフィルタリングします。</p>
+<h4 id="-">更新日時</h4>
+<p>更新日時で対象をフィルタリングします。</p>
+<h3 id="-">宛先</h3>
+<h4 id="-">操作</h4>
+<ul>
+<li>コピー -- ファイルを写真フォルダーから宛先フォルダーにコピーします。</li>
+<li>移動 -- ファイルを写真フォルダーから宛先フォルダーに移動します。</li>
+<li>上書き -- 写真フォルダーのファイルを上書きします。</li>
+</ul>
+<h4 id="-">宛先フォルダー</h4>
+<p>コピーまたは移動先のフォルダーを指定します。</p>
+<h4 id="-">サブパスのパターン</h4>
+<p>宛先フォルダー内のファイルのサブパスを指定します。
+下記の変数を&#39;${}&#39;付きで指定可能です。</p>
+<pre><code>例)
+&quot;${ParentSubPath}/${PhotoTakenDate%uuuu/MM}/${FileName}&quot;
+-&gt; &quot;subpath/to/2012/01/IMG_0001.JPG&quot;
+</code></pre><table>
+<thead>
+<tr>
+<th>変数</th>
+<th>型</th>
+<th>意味</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Now</td>
+<td>日時</td>
+<td>現在の日時</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>ParentSubPath</td>
+<td>文字列</td>
+<td>ファイルの親フォルダーのパス</td>
+<td>subpath/to</td>
+</tr>
+<tr>
+<td>FileName</td>
+<td>文字列</td>
+<td>ファイルの名前</td>
+<td>IMG_0001.JPG</td>
+</tr>
+<tr>
+<td>BaseName</td>
+<td>文字列</td>
+<td>ファイルのベース名</td>
+<td>IMG_0001</td>
+</tr>
+<tr>
+<td>Extension</td>
+<td>文字列</td>
+<td>ファイルの拡張子</td>
+<td>.JPG</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>文字列</td>
+<td>ファイルのサイズ</td>
+<td>10485760</td>
+</tr>
+<tr>
+<td>CreationDate</td>
+<td>日時</td>
+<td>ファイルの作成日時</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>ModifiedDate</td>
+<td>日時</td>
+<td>ファイルの更新日時</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>AccessDate</td>
+<td>日時</td>
+<td>ファイルのアクセス日時</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>PhotoTakenDate</td>
+<td>日時</td>
+<td>Exifの撮影日時、またはファイルの更新日時</td>
+<td>2012-01-23 12:34:56.780</td>
+</tr>
+<tr>
+<td>Width</td>
+<td>整数</td>
+<td>Exif 画像の幅</td>
+<td>6000</td>
+</tr>
+<tr>
+<td>Height</td>
+<td>整数</td>
+<td>Exif 画像の高さ</td>
+<td>4000</td>
+</tr>
+<tr>
+<td>FNumber</td>
+<td>小数</td>
+<td>Exif F値</td>
+<td>8.0</td>
+</tr>
+<tr>
+<td>Aperture</td>
+<td>小数</td>
+<td>Exif 絞り値</td>
+<td>6.0</td>
+</tr>
+<tr>
+<td>MaxAperture</td>
+<td>小数</td>
+<td>Exif 最大絞り値</td>
+<td>3.6</td>
+</tr>
+<tr>
+<td>ISO</td>
+<td>整数</td>
+<td>Exif ISO</td>
+<td>100</td>
+</tr>
+<tr>
+<td>FocalLength</td>
+<td>小数</td>
+<td>Exif 焦点距離</td>
+<td>26.0</td>
+</tr>
+<tr>
+<td>FocalLength35mm</td>
+<td>小数</td>
+<td>Exif 35mm換算での焦点距離</td>
+<td>39.0</td>
+</tr>
+<tr>
+<td>ShutterSpeed</td>
+<td>小数</td>
+<td>Exif シャッタースピード</td>
+<td>7.0</td>
+</tr>
+<tr>
+<td>ExposureTime</td>
+<td>小数</td>
+<td>Exif 露出時間（秒）</td>
+<td>0.008</td>
+</tr>
+<tr>
+<td>ExposureMode</td>
+<td>整数</td>
+<td>Exif 露出モード</td>
+<td>0: 自動<br>1: マニュアル<br>2: オートブラケット</td>
+</tr>
+<tr>
+<td>ExposureProgram</td>
+<td>整数</td>
+<td>Exif 露出プログラム</td>
+<td>0: 未定義<br>1: マニュアル<br>2: ノーマル・プログラム<br>3: 絞り優先<br>4: シャッター優先<br>5: 深度優先<br>6: スポーツ<br>7: 人物<br>8: 風景</td>
+</tr>
+<tr>
+<td>Brightness</td>
+<td>整数</td>
+<td>Exif 輝度値</td>
+<td>2.21</td>
+</tr>
+<tr>
+<td>WhiteBalance</td>
+<td>整数</td>
+<td>Exif ホワイトバランス</td>
+<td>0: 自動<br>1: マニュアル</td>
+</tr>
+<tr>
+<td>LightSource</td>
+<td>整数</td>
+<td>Exif 光源</td>
+<td>0: 不明<br>1: 太陽光<br>2: 蛍光灯<br>3: 白熱電球<br>4: フラッシュ<br>9: 晴天<br>10: 曇天<br>11: 日陰<br>12: 昼光色蛍光灯 (D 5700 - 7100K)<br>13: 昼白色蛍光灯 (N 4600 - 5400K)<br>14: クール白色蛍光灯 (W 3900 - 4500K)<br>15: 白色蛍光灯 (WW 3200 - 3700K)<br>17: 標準ライト A<br>18: 標準ライト B<br>19: 標準ライト C<br>20: D55<br>21: D65<br>22: D75<br>23: D50<br>24: ISO ISO スタジオ電球<br>255: その他</td>
+</tr>
+<tr>
+<td>Orientation</td>
+<td>整数</td>
+<td>Tiff 方向</td>
+<td>[0番目の行, 0番目の列]<br>1: 上, 左<br>2: 上, 右<br>3: 下, 右<br>4: 下, 左<br>5: 左, 上<br>6: 右, 上<br>7: 右, 下<br>8: 左, 下</td>
+</tr>
+<tr>
+<td>Lens</td>
+<td>文字列</td>
+<td>Exif レンズ</td>
+<td></td>
+</tr>
+<tr>
+<td>LensMake</td>
+<td>文字列</td>
+<td>Exif レンズのメーカー</td>
+<td></td>
+</tr>
+<tr>
+<td>LensModel</td>
+<td>文字列</td>
+<td>Exif レンズのモデル</td>
+<td></td>
+</tr>
+<tr>
+<td>LensSerialNumber</td>
+<td>文字列</td>
+<td>Exif レンズのシリアルナンバー</td>
+<td></td>
+</tr>
+<tr>
+<td>Make</td>
+<td>文字列</td>
+<td>Tiff メーカー</td>
+<td>NIKON CORPORATION</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>文字列</td>
+<td>Tiff モデル</td>
+<td>NIKON D1</td>
+</tr>
+<tr>
+<td>Software</td>
+<td>文字列</td>
+<td>Exif ソフトウェア</td>
+<td>Capture NX-D 1.2.0 M</td>
+</tr>
+<tr>
+<td>ProcessingSoftware</td>
+<td>文字列</td>
+<td>Exif 処理ソフトウェア</td>
+<td></td>
+</tr>
+<tr>
+<td>OwnerName</td>
+<td>文字列</td>
+<td>Exif オーナー名</td>
+<td></td>
+</tr>
+<tr>
+<td>CameraOwnerName</td>
+<td>文字列</td>
+<td>Exif カメラオーナー名</td>
+<td></td>
+</tr>
+<tr>
+<td>GPSLat</td>
+<td>小数</td>
+<td>Exif GPS緯度（北基準）</td>
+<td>35.658581</td>
+</tr>
+<tr>
+<td>GPSLatDeg</td>
+<td>小数</td>
+<td>Exif GPS経度（度）</td>
+<td>35.0</td>
+</tr>
+<tr>
+<td>GPSLatMin</td>
+<td>小数</td>
+<td>Exif GPS経度（分）</td>
+<td>39.0</td>
+</tr>
+<tr>
+<td>GPSLatSec</td>
+<td>小数</td>
+<td>Exif GPS経度（秒）</td>
+<td>30.89</td>
+</tr>
+<tr>
+<td>GPSLatRef</td>
+<td>文字列</td>
+<td>Exif GPS経度基準</td>
+<td>N: 北緯<br>S: 南緯</td>
+</tr>
+<tr>
+<td>GPSLon</td>
+<td>小数</td>
+<td>Exif GPS経度（東基準）</td>
+<td>139.745433</td>
+</tr>
+<tr>
+<td>GPSLonDeg</td>
+<td>小数</td>
+<td>Exif GPS経度（度）</td>
+<td>139.0</td>
+</tr>
+<tr>
+<td>GPSLonMin</td>
+<td>小数</td>
+<td>Exif GPS経度（分）</td>
+<td>44.0</td>
+</tr>
+<tr>
+<td>GPSLonSec</td>
+<td>小数</td>
+<td>Exif GPS経度（秒）</td>
+<td>43.558</td>
+</tr>
+<tr>
+<td>GPSLonRef</td>
+<td>文字列</td>
+<td>Exif GPS経度基準</td>
+<td>E: 東経<br>W: 西経</td>
+</tr>
+<tr>
+<td>GPSAlt</td>
+<td>小数</td>
+<td>Exif GPS高度 (m)</td>
+<td>18.4</td>
+</tr>
+<tr>
+<td>GPSAltRef</td>
+<td>文字列</td>
+<td>Exif GPS高度基準</td>
+<td>0: 海抜標準<br>1: 海抜標準 (負の値)</td>
+</tr>
+</tbody>
+</table>
+<h5 id="format-variable-values">Format variable values</h5>
+<p>&#39;${FNumber%0.0}&#39; のように &#39;%&#39; 区切りを使うことで、変数値をフォーマットできます。</p>
+<h6 id="-">整数型、小数型の値のフォーマット</h6>
+<table>
+<thead>
+<tr>
+<th>記号</th>
+<th>指定位置</th>
+<th>意味</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>数値</td>
+<td>数字</td>
+</tr>
+<tr>
+<td>#</td>
+<td>数値</td>
+<td>数字、無い場合はゼロを表示</td>
+</tr>
+<tr>
+<td>.</td>
+<td>数値</td>
+<td>小数点</td>
+</tr>
+<tr>
+<td>,</td>
+<td>数値</td>
+<td>桁区切り</td>
+</tr>
+<tr>
+<td>;</td>
+<td>サブパターン区切り</td>
+<td>正の数と負の数でのサブパターンの区切り</td>
+</tr>
+<tr>
+<td>%</td>
+<td>最初または最後</td>
+<td>100を掛けたパーセント表示</td>
+</tr>
+</tbody>
+</table>
+<p>詳細はこちら: <a href="https://docs.oracle.com/javase/jp/8/docs/api/java/text/DecimalFormat.html">https://docs.oracle.com/javase/jp/8/docs/api/java/text/DecimalFormat.html</a></p>
+<pre><code>例)
+&quot;${FNumber%0.0}&quot;
+-&gt; &quot;8.0&quot;, &quot;16.0&quot;
+
+&quot;${GPSLatDeg%0}°${GPSLatMin%0}&#39;${GPSLatSec%0.0#} ${GPSLatRef}&quot;
+-&gt; &quot;35°39&#39;30.89 N&quot;
+</code></pre><h6 id="-date-">日時型(Date)の値のフォーマット</h6>
+<table>
+<thead>
+<tr>
+<th>記号</th>
+<th>意味</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G</td>
+<td>紀元</td>
+<td>AD; Anno Domini; A</td>
+</tr>
+<tr>
+<td>u</td>
+<td>年</td>
+<td>2004; 04</td>
+</tr>
+<tr>
+<td>y</td>
+<td>紀元における年</td>
+<td>2004; 04</td>
+</tr>
+<tr>
+<td>D</td>
+<td>年における日</td>
+<td>189</td>
+</tr>
+<tr>
+<td>M/L</td>
+<td>年における月</td>
+<td>7; 07; Jul; July; J</td>
+</tr>
+<tr>
+<td>d</td>
+<td>月における日</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Q/q</td>
+<td>年におけるクオーター</td>
+<td>3; 03; Q3; 3rd quarter</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>暦週の基準年</td>
+<td>1996; 96</td>
+</tr>
+<tr>
+<td>w</td>
+<td>年における週</td>
+<td>27</td>
+</tr>
+<tr>
+<td>W</td>
+<td>月における週</td>
+<td>4</td>
+</tr>
+<tr>
+<td>E</td>
+<td>週における曜日</td>
+<td>Tue; Tuesday; T</td>
+</tr>
+<tr>
+<td>e/c</td>
+<td>ローカライズされた週における曜日</td>
+<td>2; 02; Tue; Tuesday; T</td>
+</tr>
+<tr>
+<td>F</td>
+<td>月における週</td>
+<td>3</td>
+</tr>
+<tr>
+<td>a</td>
+<td>日におけるAM/PM</td>
+<td>PM</td>
+</tr>
+<tr>
+<td>h</td>
+<td>AM/PMにおける時計時間 (1-12)</td>
+<td>12</td>
+</tr>
+<tr>
+<td>K</td>
+<td>AM/PMにおける時間 (0-11)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>k</td>
+<td>時計時間 (1-24)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>H</td>
+<td>日における時間 (0-23)</td>
+<td>0</td>
+</tr>
+<tr>
+<td>m</td>
+<td>時間における分</td>
+<td>30</td>
+</tr>
+<tr>
+<td>s</td>
+<td>分における秒</td>
+<td>55</td>
+</tr>
+<tr>
+<td>S</td>
+<td>秒におけるミリ秒</td>
+<td>978</td>
+</tr>
+<tr>
+<td>A</td>
+<td>日におけるミリ秒</td>
+<td>1234</td>
+</tr>
+<tr>
+<td>n</td>
+<td>秒におけるナノ秒</td>
+<td>987654321</td>
+</tr>
+<tr>
+<td>N</td>
+<td>日におけるナノ秒</td>
+<td>1234000000</td>
+</tr>
+<tr>
+<td>V</td>
+<td>タイムゾーンID</td>
+<td>America/Los_Angeles; Z; -08:30</td>
+</tr>
+<tr>
+<td>z</td>
+<td>タイムゾーン名</td>
+<td>Pacific Standard Time; PST</td>
+</tr>
+<tr>
+<td>O</td>
+<td>ローカライズされたゾーンオフセット</td>
+<td>GMT+8; GMT+08:00; UTC-08:00;</td>
+</tr>
+<tr>
+<td>X</td>
+<td>ゾーンオフセット、ゼロの場合は&#39;Z&#39;</td>
+<td>Z; -08; -0830; -08:30; -083015; -08:30:15;</td>
+</tr>
+<tr>
+<td>x</td>
+<td>ゾーンオフセット</td>
+<td>+0000; -08; -0830; -08:30; -083015; -08:30:15;</td>
+</tr>
+<tr>
+<td>Z</td>
+<td>ゾーンオフセット</td>
+<td>+0000; -0800; -08:00;</td>
+</tr>
+</tbody>
+</table>
+<p>詳細はこちら: <a href="https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/DateTimeFormatter.html">https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/DateTimeFormatter.html</a></p>
+<pre><code>例)
+&quot;${PhotoTakenDate%uuuu/MMdd}&quot;
+-&gt; &quot;2012/0123&quot;
+</code></pre><h5 id="-">変数値の変換</h5>
+<p>&#39;${WhiteBalance/0:Auto/1:Manual}&#39; のように &#39;/&#39; と &#39;:&#39; の区切りを使うことで、変数値を変換できます。</p>
+<pre><code>/ &lt;比較式&gt; : &lt;戻り値&gt;
+</code></pre><p>複数の &#39;/&#39; 区切りを指定すると、最初に一致した値が返されます。
+どの比較式にも一致しない場合、空の値を返します。</p>
+<pre><code>例)
+&quot;${WhiteBalance/0:Auto/1:Manual}&quot;
+-&gt; &quot;Auto&quot; or &quot;Manual&quot; or &quot;&quot; (When not matching)
+</code></pre><p>比較式には、下記の演算子を使用できます。</p>
+<table>
+<thead>
+<tr>
+<th>演算子</th>
+<th>意味</th>
+<th>変数型</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>=</td>
+<td>等しい  (デフォルト)</td>
+<td>文字列, 整数, 小数, 日時</td>
+<td>/=str:<br>/str:<br>/&#39;str&#39;:<br>/123.456:<br>/#2012-01-23#:</td>
+</tr>
+<tr>
+<td>=*</td>
+<td>ワイルドカード一致</td>
+<td>文字列</td>
+<td>/=<em>&#39;</em>str&#39;: (後方一致)<br>/=<em>&#39;str</em>&#39;: (前方一致)<br>/=<em>&#39;</em>str*&#39;: (部分一致)</td>
+</tr>
+<tr>
+<td>=~</td>
+<td>正規表現一致</td>
+<td>文字列</td>
+<td>/=~&#39;str[0-9]{4}&#39;:</td>
+</tr>
+<tr>
+<td>!=</td>
+<td>等しく無い</td>
+<td>文字列, 整数, 小数, 日時</td>
+<td>/!=str:<br>/!=&#39;str&#39;:<br>/!=123.456:<br>/!=#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>より小さい</td>
+<td>整数, 小数, 日時</td>
+<td>/&lt;123.456: <br> /&lt;#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&lt;=</td>
+<td>以下</td>
+<td>整数, 小数, 日時</td>
+<td>/&lt;=123.456: <br> /&lt;=#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>より大きい</td>
+<td>整数, 小数, 日時</td>
+<td>/&gt;123.456: <br> /&gt;#2012-01-23#:</td>
+</tr>
+<tr>
+<td>&gt;=</td>
+<td>以上</td>
+<td>整数, 小数, 日時</td>
+<td>/&gt;=123.456: <br> /&gt;=#2012-01-23#:</td>
+</tr>
+</tbody>
+</table>
+<p>比較式に &#39;default&#39; ラベルを指定した場合、どんな値にもマッチします。</p>
+<pre><code>例)
+&quot;${Make/=*&#39;NIKON*&#39;:Nikon/&#39;Canon&#39;:Canon/default:Others}&quot;
+-&gt; &quot;Nikon&quot; or &quot;Canon&quot; or &quot;Others&quot;
+</code></pre><h4 id="-">同名ファイルが存在する場合</h4>
+<p>同名のファイルが存在する場合の処理方法を指定します。</p>
+<ul>
+<li>確認 -- 確認ダイアログを表示します。</li>
+<li>上書き -- ファイルを上書きします。</li>
+<li>スキップ -- そのファイルをスキップして処理を継続します。</li>
+<li>中断 -- 処理を中断します。</li>
+</ul>
+<h4 id="-">ファイルの検証 - ファイルのダイジェスト値を比較</h4>
+<p>チェックをすると、ファイルの内容が正常にコピーされたかを確認します。
+ファイルのExif情報を削除するといったファイルを変更するオプションを選択している場合、この指定は無視されます。</p>
+<h3 id="-">ファイル日時の変更</h3>
+<h4 id="-">変更対象</h4>
+<p>変更対象の日時を指定します。</p>
+<ul>
+<li>作成日時 -- ファイルの作成日時を更新します。</li>
+<li>更新日時 -- ファイルの更新日時を更新します。</li>
+<li>アクセス日時 -- ファイルのアクセス日時を更新します。</li>
+<li>Exif日時 -- ファイルのExif日時を更新します。</li>
+</ul>
+<h4 id="-">変更値</h4>
+<p>変更対象の日時として設定する日時を指定します。</p>
+<ul>
+<li>現在日時 -- 現在日時で変更します。</li>
+<li>ファイル作成日時 -- ファイルの作成日時で変更します。</li>
+<li>ファイル更新日時 -- ファイルの更新日時で変更します。</li>
+<li>ファイルアクセス日時 -- ファイルのアクセス日時で変更します。</li>
+<li>ファイルExif日時 -- ファイルのExif日時で変更します。</li>
+<li>指定日時 -- 入力した日時で変更します。</li>
+</ul>
+<h4 id="-">変更値の更新</h4>
+<p>更新値の差分を設定します。</p>
+<ul>
+<li>なし</li>
+<li>加算</li>
+<li>減算</li>
+<li>上書き</li>
+</ul>
+<h3 id="exif-">Exifの変更</h3>
+<ul>
+<li>GPSのExifタグのみを削除する</li>
+<li>全てのExifタグを削除する</li>
+</ul>
+<h3 id="-">その他</h3>
+<h4 id="-">テスト実行</h4>
+<p>処理をシミュレーションします。実際にコピーやファイルの変更は行われません。</p>
+<h2 id="-">ライセンス</h2>
+<p>Pictoはオープンソースソフトウェアで、<a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>のもとに公開されています。</p>
+<h2 id="-">リポジトリー</h2>
+<p>Pictoは<a href="https://github.com/mozq/picto">GitHub</a>で開発・管理されています。</p>
+<h2 id="-">リーガル</h2>
+<p>Pictoは下記のオープンソース・ソフトウェアを使用しています。</p>
+<h3 id="apache-commons-imaging-sanselan-">Apache Commons Imaging (Sanselan)</h3>
+<blockquote>
+<p>Apache Sanselan
+Copyright 2007-2009 The Apache Software Foundation.</p>
+<p>This product includes software developed at
+The Apache Software Foundation (<a href="http://www.apache.org/">http://www.apache.org/</a>).</p>
+</blockquote>
+<h3 id="mifmi-commons4j">mifmi-commons4j</h3>
+<blockquote>
+<p>The MIT License (MIT)</p>
+<p>Copyright (c) 2015 mifmi.org and other contributors</p>
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:</p>
+<p>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</p>
+<p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</p>
+</blockquote>
+
+</body>
+</html>
