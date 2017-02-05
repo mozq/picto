@@ -22,9 +22,9 @@ repositories {
 
 
 dependencies {
-    compile group: 'org.mifmi', name: 'mifmi-commons4j', version:'0.2.0'
-    compile group: 'org.apache.commons', name: 'commons-imaging', version:'1.0-SNAPSHOT'
-    testCompile group: 'junit', name: 'junit', version:'4.12'
+    compile 'org.mifmi:mifmi-commons4j:0.2.0'
+    compile 'org.apache.commons:commons-imaging:1.0-SNAPSHOT'
+    testCompile 'junit:junit:4.12'
 }
 
 
