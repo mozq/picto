@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/mozq/picto.svg?branch=master)](https://travis-ci.org/mozq/picto)
+[ ![Download](https://api.bintray.com/packages/mozq/generic/picto/images/download.svg) ](https://bintray.com/mozq/generic/picto/_latestVersion)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+
 # Picto
 
 Picto is a desktop application for organizing photo files.
