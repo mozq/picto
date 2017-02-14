@@ -42,7 +42,7 @@ h1 {
 .download .download-links a {
 	display: inline-block;
 	width: 110px;
-	margin: 5px 10px 0 0;
+	margin: 5px 5px 0;
 	padding: 10px 0;
 	text-align: center;
 	border: 1px solid black;
