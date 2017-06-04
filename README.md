@@ -153,6 +153,7 @@ You can format variable values with '%' separator, like '${FNumber%0.0}'.
 |,     |Number             |Grouping separator                             |
 |;     |Subpattern boundary|Separates positive and negative subpatterns    |
 |%     |Prefix or suffix   |Multiply by 100 and show as percentage         |
+
 See more information: https://docs.oracle.com/javase/8/docs/api/java/text/DecimalFormat.html
 
     e.g.)
@@ -195,6 +196,7 @@ See more information: https://docs.oracle.com/javase/8/docs/api/java/text/Decima
 |X     |zone-offset 'Z' for zero   |Z; -08; -0830; -08:30; -083015; -08:30:15;     |
 |x     |zone-offset                |+0000; -08; -0830; -08:30; -083015; -08:30:15; |
 |Z     |zone-offset                |+0000; -0800; -08:00;                          |
+
 See more information: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
 
     e.g.)
