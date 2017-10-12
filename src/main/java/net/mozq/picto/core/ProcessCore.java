@@ -356,7 +356,7 @@ public class ProcessCore {
 					}
 					byte[] destDigest = destMD.digest();
 					
-					if (isSame(srcDigest, destDigest)) {
+					if (!isSame(srcDigest, destDigest)) {
 						throw new PictoFileDigestMismatchException(Messages.getString("message.error.digest.mismatch"));
 					}
 				} else if (processCondition.isRemveExifTagsAll()) {
