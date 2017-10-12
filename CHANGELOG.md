@@ -1,4 +1,13 @@
+## 1.0.3 (2017-10-12)
+
+Fixed:
+
+  - Fix bug that file digest check can not be performed
+
+
 ## 1.0.2 (2017-02-05)
+
+Added:
 
   - Add Japanese README
 
