@@ -22,124 +22,124 @@ version = (version.startsWith('v')) ? version.substring(1) : version
 
 
 tasks.withType(JavaCompile) {
-	options.encoding = sourceEncoding
+  options.encoding = sourceEncoding
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+  classifier = 'sources'
+  from sourceSets.main.allSource
 }
 
 jar {
-    manifest {
-        attributes 'Main-Class': project.mainClassName
-    }
+  manifest {
+    attributes 'Main-Class': project.mainClassName
+  }
 }
 
 shadowJar {
-    manifest {
-        attributes 'Main-Class': project.mainClassName
-    }
+  manifest {
+    attributes 'Main-Class': project.mainClassName
+  }
 }
 
 launch4j {
-    outfile = "${project.appName}.exe"
-    productName = project.appName
-    mainClassName = project.mainClassName
-    copyConfigurable = project.tasks.shadowJar.outputs.files
-    jar = "lib/${project.tasks.shadowJar.archiveName}"
-    headerType = 'gui'
-    language = 'ENGLISH_US'
-    icon = "${project.projectDir}/src/build/resources/appicons/picto_appicon.ico"
-    copyright = project.copyright
+  outfile = "${project.appName}.exe"
+  productName = project.appName
+  mainClassName = project.mainClassName
+  copyConfigurable = project.tasks.shadowJar.outputs.files
+  jar = "lib/${project.tasks.shadowJar.archiveName}"
+  headerType = 'gui'
+  language = 'ENGLISH_US'
+  icon = "${project.projectDir}/src/build/resources/appicons/picto_appicon.ico"
+  copyright = project.copyright
 }
 createExe.dependsOn shadowJar
 
 task zipWinApp(type: Zip, dependsOn: createExe) {
-    archiveFileName = "${project.name}-${project.version}-win.zip"
-    from "${project.buildDir}/${launch4j.outputDir}/${project.appName}.exe"
-    from('src/main/resources/net/mozq/picto/resources/docs/') {
-        include 'README*.html'
-        into 'README'
-    }
-    from('.') {
-        include 'LICENSE.txt', 'NOTICE.txt'
-        into 'README'
-    }
+  archiveFileName = "${project.name}-${project.version}-win.zip"
+  from "${project.buildDir}/${launch4j.outputDir}/${project.appName}.exe"
+  from('src/main/resources/net/mozq/picto/resources/docs/') {
+    include 'README*.html'
+    into 'README'
+  }
+  from('.') {
+    include 'LICENSE.txt', 'NOTICE.txt'
+    into 'README'
+  }
 }
 assemble.dependsOn zipWinApp
 
 task copyDocsForMac(type: Copy) {
-    from('src/main/resources/net/mozq/picto/resources/docs/') {
-        include 'README*.html'
-    }
-    from('.') {
-        include 'LICENSE.txt', 'NOTICE.txt'
-    }
-	into "${project.buildDir}/macApp/README"
+  from('src/main/resources/net/mozq/picto/resources/docs/') {
+    include 'README*.html'
+  }
+  from('.') {
+    include 'LICENSE.txt', 'NOTICE.txt'
+  }
+  into "${project.buildDir}/macApp/README"
 }
 
 macAppBundle {
-    appName = project.appName
-    mainClassName = project.mainClassName
-    jarTask = 'shadowJar'
-    icon = 'src/build/resources/appicons/picto_appicon.icns'
-    bundleIdentifier = project.identifier
-    bundlePackageType = 'APPL'
-    bundleJRE = true
-    jreHome = System.getenv('JAVA_HOME')
-    javaProperties.put('apple.laf.useScreenMenuBar', 'true')
-    javaExtras.put('-Xdock:name', project.appName)
-    bundleExtras.put('NSHumanReadableCopyright', project.copyright)
-    
-    volumeName = dmgName = "${project.name}-${project.version}-mac"
-    backgroundImage = 'src/build/resources/dmg/picto_dmg_background_500.png'
-    backgroundImageWidth = 500
-    backgroundImageHeight = 700
-    appIconX = 170
-    appIconY = 217
-    appFolderX = 330
-    appFolderY = 217
-    backgroundScript = """
-      tell application "Finder"
-        tell disk "\${VOL_NAME}"
-          open
-          delay 1
-          set current view of container window to icon view
-          set toolbar visible of container window to false
-          set statusbar visible of container window to false
-          set the bounds of container window to { 0, 0, \${IMAGE_WIDTH}, \${IMAGE_HEIGHT} }
-          set the position of the container window to {400, 100}
-          set viewOptions to the icon view options of container window
-          set arrangement of viewOptions to not arranged
-          set icon size of viewOptions to 72
-          set background picture of viewOptions to file ".background:\${DMG_BACKGROUND_IMG}"
-          set position of item "\${APP_NAME}.app" of container window to { \${APPICONX}, \${APPICONY} }
-          set position of item "Applications" of container window to { \${APPFOLDERX}, \${APPFOLDERY} }
-          set position of item "README" of container window to { 250, 370 }
-          set position of item ".background" of container window to { 10000, 10000 }
-          try
-            set position of item ".DS_Store" of container window to { 10000, 10000 }
-          end try
-          try
-            set position of item ".fseventsd" of container window to { 10000, 10000 }
-          end try
-          try
-            set position of item ".Trashes" of container window to { 10000, 10000 }
-          end try
-          close
-          open
-          update without registering applications
-          delay 2
-        end tell
+  appName = project.appName
+  mainClassName = project.mainClassName
+  jarTask = 'shadowJar'
+  icon = 'src/build/resources/appicons/picto_appicon.icns'
+  bundleIdentifier = project.identifier
+  bundlePackageType = 'APPL'
+  bundleJRE = true
+  jreHome = System.getenv('JAVA_HOME')
+  javaProperties.put('apple.laf.useScreenMenuBar', 'true')
+  javaExtras.put('-Xdock:name', project.appName)
+  bundleExtras.put('NSHumanReadableCopyright', project.copyright)
+  
+  volumeName = dmgName = "${project.name}-${project.version}-mac"
+  backgroundImage = 'src/build/resources/dmg/picto_dmg_background_500.png'
+  backgroundImageWidth = 500
+  backgroundImageHeight = 700
+  appIconX = 170
+  appIconY = 217
+  appFolderX = 330
+  appFolderY = 217
+  backgroundScript = """
+    tell application "Finder"
+      tell disk "\${VOL_NAME}"
+        open
+        delay 1
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to { 0, 0, \${IMAGE_WIDTH}, \${IMAGE_HEIGHT} }
+        set the position of the container window to {400, 100}
+        set viewOptions to the icon view options of container window
+        set arrangement of viewOptions to not arranged
+        set icon size of viewOptions to 72
+        set background picture of viewOptions to file ".background:\${DMG_BACKGROUND_IMG}"
+        set position of item "\${APP_NAME}.app" of container window to { \${APPICONX}, \${APPICONY} }
+        set position of item "Applications" of container window to { \${APPFOLDERX}, \${APPFOLDERY} }
+        set position of item "README" of container window to { 250, 370 }
+        set position of item ".background" of container window to { 10000, 10000 }
+        try
+          set position of item ".DS_Store" of container window to { 10000, 10000 }
+        end try
+        try
+          set position of item ".fseventsd" of container window to { 10000, 10000 }
+        end try
+        try
+          set position of item ".Trashes" of container window to { 10000, 10000 }
+        end try
+        close
+        open
+        update without registering applications
+        delay 2
       end tell
+    end tell
 """
 }
 createDmg.dependsOn copyDocsForMac
 
 artifacts {
-    archives shadowJar
-    archives sourcesJar
-    archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-mac.dmg")
-    archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-win.zip")
+  archives shadowJar
+  archives sourcesJar
+  archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-mac.dmg")
+  archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-win.zip")
 }
