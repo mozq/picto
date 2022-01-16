@@ -1,49 +1,24 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow' version '1.2.4'
-    id 'edu.sc.seis.launch4j' version '2.1.0'
-    id 'edu.sc.seis.macAppBundle' version '2.1.6'
-    id 'com.jfrog.bintray' version '1.7'
+  id 'java'
+  id 'com.github.johnrengelman.shadow' version '6.1.0'
+  id 'edu.sc.seis.launch4j' version '2.5.1'
+  id 'edu.sc.seis.macAppBundle' version '2.3.0'
 }
-
 
 repositories {
-    jcenter()
-    maven {
-        url 'https://repository.apache.org/content/repositories/snapshots/'
-    }
+  mavenCentral()
+  maven { url 'https://jitpack.io' }
 }
-
 
 dependencies {
-    compile 'org.mifmi:mifmi-commons4j:0.2.0'
-    compile 'org.apache.commons:commons-imaging:1.0-SNAPSHOT'
-    testCompile 'junit:junit:4.12'
+  implementation 'com.github.mifmi:mifmi-commons4j:v0.2.+'
+  implementation 'org.apache.commons:commons-imaging:1.0-alpha2'
 }
 
 
-def ver = getVersionNum(getParam('releaseVersion', 'RELEASE_VERSION', '0.0.0'))
-version = ver
-
-def getParam(propName, envName, defaultValue) {
-    if (propName != null && project.hasProperty(propName)) {
-        return project.property(propName)
-    } else if (envName != null && System.getenv(envName) != null && !System.getenv(envName).isEmpty()) {
-        return System.getenv(envName)
-    } else {
-        return defaultValue
-    }
-}
-
-def getVersionNum(ver) {
-    return (ver.startsWith('v')) ? ver.substring(1) : ver
-}
+if (findProperty('version') == 'unspecified') { version = '' }
+version = findProperty('version') ?: System.getenv('RELEASE_VERSION') ?: '0.0.0-SNAPSHOT'
+version = (version.startsWith('v')) ? version.substring(1) : version
 
 
 tasks.withType(JavaCompile) {
@@ -61,7 +36,6 @@ jar {
     }
 }
 
-
 shadowJar {
     manifest {
         attributes 'Main-Class': project.mainClassName
@@ -69,6 +43,8 @@ shadowJar {
 }
 
 launch4j {
+    outfile = "${project.appName}.exe"
+    productName = project.appName
     mainClassName = project.mainClassName
     copyConfigurable = project.tasks.shadowJar.outputs.files
     jar = "lib/${project.tasks.shadowJar.archiveName}"
@@ -80,9 +56,8 @@ launch4j {
 createExe.dependsOn shadowJar
 
 task zipWinApp(type: Zip, dependsOn: createExe) {
-    destinationDir = file("${project.buildDir}/${project.distsDirName}")
-    archiveName = "${project.name}-${project.version}-win.zip"
-    from "${project.buildDir}/${launch4j.outputDir}/${project.name}.exe"
+    archiveFileName = "${project.name}-${project.version}-win.zip"
+    from "${project.buildDir}/${launch4j.outputDir}/${project.appName}.exe"
     from('src/main/resources/net/mozq/picto/resources/docs/') {
         include 'README*.html'
         into 'README'
@@ -105,13 +80,16 @@ task copyDocsForMac(type: Copy) {
 }
 
 macAppBundle {
+    appName = project.appName
     mainClassName = project.mainClassName
+    jarTask = 'shadowJar'
     icon = 'src/build/resources/appicons/picto_appicon.icns'
     bundleIdentifier = project.identifier
     bundlePackageType = 'APPL'
     bundleJRE = true
+    jreHome = System.getenv('JAVA_HOME')
     javaProperties.put('apple.laf.useScreenMenuBar', 'true')
-    javaExtras.put('-Xdock:name', project.name)
+    javaExtras.put('-Xdock:name', project.appName)
     bundleExtras.put('NSHumanReadableCopyright', project.copyright)
     
     volumeName = dmgName = "${project.name}-${project.version}-mac"
@@ -164,26 +142,4 @@ artifacts {
     archives sourcesJar
     archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-mac.dmg")
     archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-win.zip")
-}
-
-
-bintray {
-    user = getParam('bintrayUser', 'BINTRAY_USER', null)
-    key = getParam('bintrayApiKey', 'BINTRAY_API_KEY', null)
-    configurations = ['archives']
-    publish = false
-    dryRun = false
-    pkg {
-        userOrg = bintrayUserOrg
-        repo = bintrayRepository
-        name = bintrayPackage
-        version {
-            name = ver
-            released = new Date()
-            vcsTag = 'v' + ver
-            gpg {
-                sign = true
-            }
-        }
-    }
 }

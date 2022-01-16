@@ -1,7 +1,3 @@
-[![Build Status](https://travis-ci.org/mozq/picto.svg?branch=master)](https://travis-ci.org/mozq/picto)
-[ ![Download](https://api.bintray.com/packages/mozq/generic/picto/images/download.svg) ](https://bintray.com/mozq/generic/picto/_latestVersion)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-
 # Picto
 
 Pictoは写真を整理するためのデスクトップ・アプリです。
@@ -19,7 +15,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 ## インストール
 
 ### Macへのインストール
-1. DMGファイル 'Picto-X.X.X-mac.dmg' を [こちらからダウンロード](https://bintray.com/mozq/generic/picto/_latestVersion) します。(X.X.X はバージョンです。)
+1. DMGファイル 'picto-X.X.X-mac.dmg' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
 2. DMGをマウントして Picto.app をアプリケーション・フォルダーにコピーします。
 3. Picto.app を実行して起動します。
     - もし「開発元が未確認のため開けません」という警告ダイアログが表示された場合は、下記の手順をお試しください。
@@ -28,15 +24,15 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 
 ### Windowsへのインストール
 1. [Java Runtime Environment](https://java.com/ja/download/) がインストールされていない場合はインストールします。
-2. Zipファイル 'Picto-X.X.X-win.zip' を [こちらからダウンロード](https://bintray.com/mozq/generic/picto/_latestVersion) します。(X.X.X はバージョンです。)
+2. Zipファイル 'picto-X.X.X-win.zip' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
 3. Zipファイルを展開し、 Picto.exe を好きなフォルダーにコピーします。
 4. Picto.exe を実行して起動します。
 
 ### その他OSへのインストール
 1. [Java Runtime Environment](https://java.com/ja/download/) がインストールされていない場合はインストールします。
-2. JARファイル 'Picto-X.X.X-all.jar' を [こちらからダウンロード](https://bintray.com/mozq/generic/picto/_latestVersion) します。(X.X.X はバージョンです。)
+2. JARファイル 'picto-X.X.X-all.jar' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
 3. JARファイルを好きなフォルダーにコピーします。
-4. JARファイルを `java -jar Picto-X.X.X-all.jar` のように起動します。
+4. JARファイルを `java -jar picto-X.X.X-all.jar` のように起動します。
 
 
 ## アンインストール
@@ -300,9 +296,9 @@ Pictoは[GitHub](https://github.com/mozq/picto)で開発・管理されていま
 ## リーガル
 Pictoは下記のオープンソース・ソフトウェアを使用しています。
 
-### Apache Commons Imaging (Sanselan)
-> Apache Sanselan
-> Copyright 2007-2009 The Apache Software Foundation.
+### Apache Commons Imaging
+> Apache Commons Imaging
+> Copyright 2007-2020 The Apache Software Foundation
 > 
 > This product includes software developed at
 > The Apache Software Foundation (http://www.apache.org/).

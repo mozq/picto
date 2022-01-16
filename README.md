@@ -1,7 +1,3 @@
-[![Build Status](https://travis-ci.org/mozq/picto.svg?branch=master)](https://travis-ci.org/mozq/picto)
-[ ![Download](https://api.bintray.com/packages/mozq/generic/picto/images/download.svg) ](https://bintray.com/mozq/generic/picto/_latestVersion)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-
 # Picto
 
 Picto is a desktop application for organizing photo files.
@@ -18,7 +14,7 @@ It can be used for the following.
 ## Installation
 
 ### for Mac
-1. Download DMG file 'Picto-X.X.X-mac.dmg' from [here](https://bintray.com/mozq/generic/picto/_latestVersion). (X.X.X is a version)
+1. Download DMG file 'picto-X.X.X-mac.dmg' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
 2. Mount DMG and copy Picto.app to Applications folder.
 3. Execute Picto.app to start.
     - If the warning dialog of "can’t be opened because it is from an unidentified developer" is shown, try the following procedure
@@ -27,15 +23,15 @@ It can be used for the following.
 
 ### for Windows
 1. Install [Java Runtime Environment](https://java.com/ja/download/), if it is not installed.
-2. Download Zip file 'Picto-X.X.X-win.zip' from [here](https://bintray.com/mozq/generic/picto/_latestVersion). (X.X.X is a version)
+2. Download Zip file 'picto-X.X.X-win.zip' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
 3. Unzip and copy Picto.exe to any folder.
 4. Execute Picto.exe to start.
 
 ### for other OS
 1. Install [Java Runtime Environment](https://java.com/ja/download/), if it is not installed.
-2. Download JAR file 'Picto-X.X.X-all.jar' from [here](https://bintray.com/mozq/generic/picto/_latestVersion). (X.X.X is a version)
+2. Download JAR file 'picto-X.X.X-all.jar' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
 3. Copy JAR file to any folder.
-4. Execute JAR file like `java -jar Picto-X.X.X-all.jar`.
+4. Execute JAR file like `java -jar picto-X.X.X-all.jar`.
 
 
 ## Uninstallation
@@ -299,9 +295,9 @@ Picto is developed and managed on [GitHub](https://github.com/mozq/picto).
 ## Legal
 Picto is built using open source software.
 
-### Apache Commons Imaging (Sanselan)
-> Apache Sanselan
-> Copyright 2007-2009 The Apache Software Foundation.
+### Apache Commons Imaging
+> Apache Commons Imaging
+> Copyright 2007-2020 The Apache Software Foundation
 > 
 > This product includes software developed at
 > The Apache Software Foundation (http://www.apache.org/).
