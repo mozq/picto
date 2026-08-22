@@ -306,6 +306,20 @@ Picto is built using open source software.
 > This product includes software developed at
 > The Apache Software Foundation (https://www.apache.org/).
 
+### Apache Commons IO
+> Apache Commons IO
+> Copyright 2002-2025 The Apache Software Foundation
+> 
+> This product includes software developed at
+> The Apache Software Foundation (https://www.apache.org/).
+
+### Apache Commons Lang
+> Apache Commons Lang
+> Copyright 2001-2024 The Apache Software Foundation
+> 
+> This product includes software developed at
+> The Apache Software Foundation (https://www.apache.org/).
+
 ### mifmi-commons4j
 > The MIT License (MIT)
 > 
