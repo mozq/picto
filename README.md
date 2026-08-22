@@ -154,7 +154,7 @@ You can format variable values with '%' separator, like '${FNumber%0.0}'.
 |;     |Subpattern boundary|Separates positive and negative subpatterns    |
 |%     |Prefix or suffix   |Multiply by 100 and show as percentage         |
 
-See more information: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/text/DecimalFormat.html
+See more information: [DecimalFormat](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/text/DecimalFormat.html)
 
     e.g.)
     "${FNumber%0.0}"
@@ -197,7 +197,7 @@ See more information: https://docs.oracle.com/en/java/javase/25/docs/api/java.ba
 |x     |zone-offset                |+0000; -08; -0830; -08:30; -083015; -08:30:15; |
 |Z     |zone-offset                |+0000; -0800; -08:00;                          |
 
-See more information: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/format/DateTimeFormatter.html
+See more information: [DateTimeFormatter](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/format/DateTimeFormatter.html)
 
     e.g.)
     "${PhotoTakenDate%uuuu/MMdd}"

@@ -1,3 +1,13 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'org.commonmark:commonmark:0.29.0'
+    classpath 'org.commonmark:commonmark-ext-gfm-tables:0.29.0'
+  }
+}
+
 plugins {
   id 'java'
   id 'application'
@@ -29,6 +39,8 @@ def releaseVersion = providers.gradleProperty('version')
     .get()
 version = releaseVersion.startsWith('v') ? releaseVersion.substring(1) : releaseVersion
 def distributionBaseName = "${project.name}-${project.version}"
+def generatedReadmeResourcesDir = layout.buildDirectory.dir('generated/readme-html')
+def generatedReadmeDocsDir = generatedReadmeResourcesDir.map { it.dir('net/mozq/picto/resources/docs') }
 
 java {
   toolchain {
@@ -69,6 +81,70 @@ jar {
         'Implementation-Version': project.version
     )
   }
+}
+
+tasks.register('generateReadmeHtml') {
+  group = 'documentation'
+  description = 'Generates the in-app HTML help files from the Markdown README files.'
+
+  inputs.files(file('README.md'), file('README-ja.md'))
+  outputs.dir generatedReadmeResourcesDir
+
+  doLast {
+    def extensions = [
+        org.commonmark.ext.gfm.tables.TablesExtension.create()
+    ]
+    def parser = org.commonmark.parser.Parser.builder()
+        .extensions(extensions)
+        .build()
+    def renderer = org.commonmark.renderer.html.HtmlRenderer.builder()
+        .extensions(extensions)
+        .escapeHtml(false)
+        .build()
+
+    def renderReadme = { File markdownFile, File htmlFile ->
+      def bodyHtml = renderer.render(parser.parse(markdownFile.getText(appSourceEncoding)))
+      def html = """<!DOCTYPE html>
+<html>
+<head>
+<meta charset="${appSourceEncoding}" />
+<title>README</title>
+<style type="text/css">
+body {
+    font-family: Dialog, sans-serif;
+    font-size: 12pt;
+}
+h2 {
+    border-top: 2px solid gray;
+}
+table, th, td {
+    border: 1px solid gray;
+}
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 2px 4px;
+}
+</style>
+</head>
+<body>
+${bodyHtml}
+</body>
+</html>
+"""
+      htmlFile.parentFile.mkdirs()
+      htmlFile.setText(html, appSourceEncoding)
+    }
+
+    renderReadme(file('README.md'), generatedReadmeDocsDir.get().file('README.html').asFile)
+    renderReadme(file('README-ja.md'), generatedReadmeDocsDir.get().file('README-ja.html').asFile)
+  }
+}
+
+tasks.named('processResources') {
+  dependsOn tasks.named('generateReadmeHtml')
+  from(generatedReadmeResourcesDir)
 }
 
 def isWindowsHost = {
@@ -125,8 +201,9 @@ tasks.register('preparePackageReadme', Sync) {
   group = 'distribution'
   description = 'Collects README, license, and notice files for native packages.'
 
+  dependsOn tasks.named('generateReadmeHtml')
   into packageReadmeDir
-  from('src/main/resources/net/mozq/picto/resources/docs') {
+  from(generatedReadmeDocsDir) {
     include 'README*.html'
   }
   from('.') {

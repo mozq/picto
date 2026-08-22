@@ -155,7 +155,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 |;     |サブパターン区切り |正の数と負の数でのサブパターンの区切り |
 |%     |最初または最後     |100を掛けたパーセント表示              |
 
-詳細はこちら: https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/text/DecimalFormat.html
+詳細はこちら: [DecimalFormat](https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/text/DecimalFormat.html)
 
     例)
     "${FNumber%0.0}"
@@ -198,7 +198,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 |x     |ゾーンオフセット                   |+0000; -08; -0830; -08:30; -083015; -08:30:15; |
 |Z     |ゾーンオフセット                   |+0000; -0800; -08:00;                          |
 
-詳細はこちら: https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/time/format/DateTimeFormatter.html
+詳細はこちら: [DateTimeFormatter](https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/time/format/DateTimeFormatter.html)
 
     例)
     "${PhotoTakenDate%uuuu/MMdd}"
