@@ -14,7 +14,7 @@ It can be used for the following.
 ## Installation
 
 ### for Mac
-1. Download DMG file 'picto-X.X.X-mac.dmg' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
+1. Download DMG file 'picto-X.X.X-macos-arm64.dmg' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
 2. Mount DMG and copy Picto.app to Applications folder.
 3. Execute Picto.app to start.
     - If the warning dialog of "can’t be opened because it is from an unidentified developer" is shown, try the following procedure
@@ -22,16 +22,20 @@ It can be used for the following.
         2. Click the “Open” button at the next dialog warning to launch the app anyway
 
 ### for Windows
-1. Install [Java Runtime Environment](https://java.com/ja/download/), if it is not installed.
-2. Download Zip file 'picto-X.X.X-win.zip' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
-3. Unzip and copy Picto.exe to any folder.
-4. Execute Picto.exe to start.
+1. Download Zip file 'picto-X.X.X-windows-x64.zip' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
+2. Unzip and copy the Picto folder to any folder.
+3. Execute Picto.exe in the Picto folder to start.
+
+### for Linux
+1. Download tar.gz file 'picto-X.X.X-linux-x64.tar.gz' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
+2. Extract and copy the Picto folder to any folder.
+3. Execute `Picto/bin/Picto`.
 
 ### for other OS
-1. Install [Java Runtime Environment](https://java.com/ja/download/), if it is not installed.
-2. Download JAR file 'picto-X.X.X-all.jar' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
-3. Copy JAR file to any folder.
-4. Execute JAR file like `java -jar picto-X.X.X-all.jar`.
+1. Install Java 25 Runtime, if it is not installed.
+2. Download Zip file 'picto-X.X.X.zip' from [here](https://mozq.github.io/picto/). (X.X.X is a version)
+3. Unzip and copy the Picto folder to any folder.
+4. Execute `bin/Picto`.
 
 
 ## Uninstallation
@@ -150,7 +154,7 @@ You can format variable values with '%' separator, like '${FNumber%0.0}'.
 |;     |Subpattern boundary|Separates positive and negative subpatterns    |
 |%     |Prefix or suffix   |Multiply by 100 and show as percentage         |
 
-See more information: https://docs.oracle.com/javase/8/docs/api/java/text/DecimalFormat.html
+See more information: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/text/DecimalFormat.html
 
     e.g.)
     "${FNumber%0.0}"
@@ -193,7 +197,7 @@ See more information: https://docs.oracle.com/javase/8/docs/api/java/text/Decima
 |x     |zone-offset                |+0000; -08; -0830; -08:30; -083015; -08:30:15; |
 |Z     |zone-offset                |+0000; -0800; -08:00;                          |
 
-See more information: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
+See more information: https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/format/DateTimeFormatter.html
 
     e.g.)
     "${PhotoTakenDate%uuuu/MMdd}"
@@ -285,7 +289,7 @@ Simurate process.
 
 
 ## License
-Picto is open-sourced software licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+Picto is open-sourced software licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 
 ## Repository
@@ -297,10 +301,10 @@ Picto is built using open source software.
 
 ### Apache Commons Imaging
 > Apache Commons Imaging
-> Copyright 2007-2020 The Apache Software Foundation
+> Copyright 2007-2025 The Apache Software Foundation
 > 
 > This product includes software developed at
-> The Apache Software Foundation (http://www.apache.org/).
+> The Apache Software Foundation (https://www.apache.org/).
 
 ### mifmi-commons4j
 > The MIT License (MIT)

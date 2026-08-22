@@ -49,15 +49,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.ImageWriteException;
+import org.apache.commons.imaging.ImagingException;
 import org.apache.commons.imaging.Imaging;
 import org.apache.commons.imaging.common.ImageMetadata;
 import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
 import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
 import org.apache.commons.imaging.formats.tiff.TiffField;
 import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
-import org.apache.commons.imaging.formats.tiff.TiffImageMetadata.GPSInfo;
+import org.apache.commons.imaging.formats.tiff.TiffImageMetadata.GpsInfo;
 import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
 import org.apache.commons.imaging.formats.tiff.constants.GpsTagConstants;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
@@ -363,7 +362,7 @@ public class ProcessCore {
 					ExifRewriter exifRewriter = new ExifRewriter();
 					try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(destTempPath))) {
 						exifRewriter.removeExifMetadata(processData.getSrcPath().toFile(), os);
-					} catch (ImageReadException | ImageWriteException e) {
+					} catch (ImagingException e) {
 						throw new PictoFileChangeException(Messages.getString("message.error.edit.file"), e);
 					}
 				} else if (processCondition.isChangeExifDate() || processCondition.isRemveExifTagsGps()) {
@@ -401,19 +400,23 @@ public class ProcessCore {
 									exifDirectory.removeField(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_DIGITIZED);
 									exifDirectory.add(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_DIGITIZED, exifBaseSubsec);
 								}
-							} catch (ImageWriteException e) {
+							} catch (ImagingException e) {
 								throw new PictoFileChangeException(Messages.getString("message.error.edit.file"), e);
 							}
 						}
 						
 						if (processCondition.isRemveExifTagsGps()) {
 							outputSet.removeField(ExifTagConstants.EXIF_TAG_GPSINFO);
+							TiffOutputDirectory gpsDirectory = outputSet.getGpsDirectory();
+							if (gpsDirectory != null) {
+								GpsTagConstants.ALL_GPS_TAGS.forEach(gpsDirectory::removeField);
+							}
 						}
 						
 						ExifRewriter exifRewriter = new ExifRewriter();
 						try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(destTempPath))) {
 							exifRewriter.updateExifMetadataLossless(processData.getSrcPath().toFile(), os, outputSet);
-						} catch (ImageReadException | ImageWriteException e) {
+						} catch (ImagingException e) {
 							throw new PictoFileChangeException(Messages.getString("message.error.edit.file"), e);
 						}
 					}
@@ -625,7 +628,7 @@ public class ProcessCore {
 		ImageMetadata imageMetadata;
 		try {
 			imageMetadata = Imaging.getMetadata(imageFile);
-		} catch (ImageReadException e) {
+		} catch (ImagingException | IllegalArgumentException e) {
 			imageMetadata = null;
 		}
 		
@@ -644,13 +647,13 @@ public class ProcessCore {
 				if (exifMetadata != null) {
 					outputSet = exifMetadata.getOutputSet();
 				}
-			} catch (ImageWriteException e) {
+			} catch (ImagingException e) {
 				// NOP
 			}
 		} else if (imageMetadata instanceof TiffImageMetadata) {
 			try {
 				outputSet = ((TiffImageMetadata)imageMetadata).getOutputSet();
-			} catch (ImageWriteException e) {
+			} catch (ImagingException e) {
 				// NOP
 			}
 		}
@@ -677,11 +680,11 @@ public class ProcessCore {
 		
 		TiffField field;
 		if (imageMetadata instanceof JpegImageMetadata) {
-			field = ((JpegImageMetadata)imageMetadata).findEXIFValueWithExactMatch(tagInfo);
+			field = ((JpegImageMetadata)imageMetadata).findExifValueWithExactMatch(tagInfo);
 		} else if (imageMetadata instanceof TiffImageMetadata) {
 			try {
 				field = ((TiffImageMetadata)imageMetadata).findField(tagInfo, true);
-			} catch (ImageReadException e) {
+			} catch (ImagingException e) {
 				field = null;
 			}
 		} else {
@@ -700,7 +703,7 @@ public class ProcessCore {
 		String exifStr;
 		try {
 			exifStr = field.getStringValue();
-		} catch (ImageReadException e) {
+		} catch (ImagingException e) {
 			return null;
 		}
 		if (exifStr != null) {
@@ -722,7 +725,7 @@ public class ProcessCore {
 		Integer value;
 		try {
 			value = Integer.valueOf(field.getIntValue());
-		} catch (ImageReadException e) {
+		} catch (ImagingException e) {
 			value = null;
 		}
 		
@@ -738,7 +741,7 @@ public class ProcessCore {
 		Double value;
 		try {
 			value = Double.valueOf(field.getDoubleValue());
-		} catch (ImageReadException e) {
+		} catch (ImagingException e) {
 			value = null;
 		}
 		
@@ -759,7 +762,7 @@ public class ProcessCore {
 			} else {
 				value = Double.valueOf(v[index]);
 			}
-		} catch (ImageReadException e) {
+		} catch (ImagingException e) {
 			value = null;
 		}
 		
@@ -797,7 +800,7 @@ public class ProcessCore {
 		return date;
 	}
 	
-	private static GPSInfo getEXIFGpsInfo(ImageMetadata imageMetadata) {
+	private static GpsInfo getEXIFGpsInfo(ImageMetadata imageMetadata) {
 		if (imageMetadata == null) {
 			return null;
 		}
@@ -814,10 +817,10 @@ public class ProcessCore {
 			return null;
 		}
 		
-		GPSInfo gpsInfo;
+		GpsInfo gpsInfo;
 		try {
-			gpsInfo = tiffImageMetadata.getGPS();
-		} catch (ImageReadException e) {
+			gpsInfo = tiffImageMetadata.getGpsInfo();
+		} catch (ImagingException e) {
 			return null;
 		}
 		
@@ -825,27 +828,27 @@ public class ProcessCore {
 	}
 	
 	private static Double getEXIFGpsLat(ImageMetadata imageMetadata) {
-		GPSInfo gpsInfo = getEXIFGpsInfo(imageMetadata);
+		GpsInfo gpsInfo = getEXIFGpsInfo(imageMetadata);
 		if (gpsInfo == null) {
 			return null;
 		}
 		
 		try {
 			return Double.valueOf(gpsInfo.getLatitudeAsDegreesNorth());
-		} catch (ImageReadException e) {
+		} catch (ImagingException e) {
 			return null;
 		}
 	}
 	
 	private static Double getEXIFGpsLon(ImageMetadata imageMetadata) {
-		GPSInfo gpsInfo = getEXIFGpsInfo(imageMetadata);
+		GpsInfo gpsInfo = getEXIFGpsInfo(imageMetadata);
 		if (gpsInfo == null) {
 			return null;
 		}
 		
 		try {
 			return Double.valueOf(gpsInfo.getLongitudeAsDegreesEast());
-		} catch (ImageReadException e) {
+		} catch (ImagingException e) {
 			return null;
 		}
 	}

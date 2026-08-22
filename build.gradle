@@ -1,145 +1,276 @@
 plugins {
   id 'java'
-  id 'com.github.johnrengelman.shadow' version '6.1.0'
-  id 'edu.sc.seis.launch4j' version '2.5.1'
-  id 'edu.sc.seis.macAppBundle' version '2.3.0'
+  id 'application'
 }
 
 repositories {
   mavenCentral()
-  maven { url 'https://jitpack.io' }
+  maven { url = uri('https://jitpack.io') }
 }
 
 dependencies {
   implementation 'com.github.mifmi:mifmi-commons4j:v0.2.+'
-  implementation 'org.apache.commons:commons-imaging:1.0-alpha2'
+  implementation 'org.apache.commons:commons-imaging:1.0.0-alpha6'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.14.1'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+def appDisplayName = providers.gradleProperty('appName').get()
+def appIdentifier = providers.gradleProperty('identifier').get()
+def appMainClass = providers.gradleProperty('mainClassName').get()
+def appVendor = providers.gradleProperty('vendor').get()
+def appCopyright = providers.gradleProperty('copyright').get()
+def appSourceEncoding = providers.gradleProperty('sourceEncoding').get()
 
-if (findProperty('version') == 'unspecified') { version = '' }
-version = findProperty('version') ?: System.getenv('RELEASE_VERSION') ?: '0.0.0-SNAPSHOT'
-version = (version.startsWith('v')) ? version.substring(1) : version
+def releaseVersion = providers.gradleProperty('version')
+    .orElse(providers.environmentVariable('RELEASE_VERSION'))
+    .orElse('1.0.0')
+    .get()
+version = releaseVersion.startsWith('v') ? releaseVersion.substring(1) : releaseVersion
+def distributionBaseName = "${project.name}-${project.version}"
 
-
-tasks.withType(JavaCompile) {
-  options.encoding = sourceEncoding
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(25)
+  }
+  withSourcesJar()
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
+application {
+  mainClass = appMainClass
+}
+
+tasks.withType(JavaCompile).configureEach {
+  options.encoding = appSourceEncoding
+  options.release = 25
+}
+
+tasks.withType(Javadoc).configureEach {
+  options.encoding = appSourceEncoding
+  options.charSet = providers.gradleProperty('javadocCharset').get()
+  options.locale = providers.gradleProperty('javadocLocale').get()
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+  preserveFileTimestamps = false
+  reproducibleFileOrder = true
 }
 
 jar {
   manifest {
-    attributes 'Main-Class': project.mainClassName
+    attributes(
+        'Main-Class': appMainClass,
+        'Implementation-Title': appDisplayName,
+        'Implementation-Version': project.version
+    )
   }
 }
 
-shadowJar {
-  manifest {
-    attributes 'Main-Class': project.mainClassName
-  }
+def isWindowsHost = {
+  System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')
 }
 
-launch4j {
-  outfile = "${project.appName}.exe"
-  productName = project.appName
-  mainClassName = project.mainClassName
-  copyConfigurable = project.tasks.shadowJar.outputs.files
-  jar = "lib/${project.tasks.shadowJar.archiveName}"
-  headerType = 'gui'
-  language = 'ENGLISH_US'
-  icon = "${project.projectDir}/src/build/resources/appicons/picto_appicon.ico"
-  copyright = project.copyright
+def isMacHost = {
+  System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('mac')
 }
-createExe.dependsOn shadowJar
 
-task zipWinApp(type: Zip, dependsOn: createExe) {
-  archiveFileName = "${project.name}-${project.version}-win.zip"
-  from "${project.buildDir}/${launch4j.outputDir}/${project.appName}.exe"
-  from('src/main/resources/net/mozq/picto/resources/docs/') {
+def isLinuxHost = {
+  System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('linux')
+}
+
+def jpackageInputDir = layout.buildDirectory.dir('jpackage/input')
+def packageReadmeDir = layout.buildDirectory.dir('jpackage/readme/README')
+def winAppImageDir = layout.buildDirectory.dir('jpackage/windows-app-image')
+def macDmgWorkDir = layout.buildDirectory.dir('jpackage/macos-dmg')
+def linuxAppImageDir = layout.buildDirectory.dir('jpackage/linux-app-image')
+
+def java25Launcher = javaToolchains.launcherFor {
+  languageVersion = JavaLanguageVersion.of(25)
+}
+
+def jpackageExecutable = providers.provider {
+  def javaHome = java25Launcher.get().metadata.installationPath.asFile
+  new File(javaHome, isWindowsHost() ? 'bin/jpackage.exe' : 'bin/jpackage').absolutePath
+}
+
+def jpackageCommonArgs = {
+  [
+      '--name', appDisplayName,
+      '--app-version', project.version.toString(),
+      '--vendor', appVendor,
+      '--copyright', appCopyright,
+      '--input', jpackageInputDir.get().asFile.absolutePath,
+      '--main-jar', tasks.named('jar').get().archiveFileName.get(),
+      '--main-class', appMainClass,
+      '--java-options', '-Dfile.encoding=UTF-8'
+  ]
+}
+
+tasks.register('prepareJpackageInput', Sync) {
+  group = 'distribution'
+  description = 'Collects the application JAR and runtime dependencies for jpackage.'
+
+  dependsOn tasks.named('jar')
+  into jpackageInputDir
+  from tasks.named('jar')
+  from configurations.runtimeClasspath
+}
+
+tasks.register('preparePackageReadme', Sync) {
+  group = 'distribution'
+  description = 'Collects README, license, and notice files for native packages.'
+
+  into packageReadmeDir
+  from('src/main/resources/net/mozq/picto/resources/docs') {
     include 'README*.html'
-    into 'README'
   }
   from('.') {
     include 'LICENSE.txt', 'NOTICE.txt'
-    into 'README'
   }
 }
-assemble.dependsOn zipWinApp
 
-task copyDocsForMac(type: Copy) {
-  from('src/main/resources/net/mozq/picto/resources/docs/') {
-    include 'README*.html'
+tasks.register('jpackageWindowsAppImage', Exec) {
+  group = 'distribution'
+  description = 'Builds a Windows app image with a bundled Java runtime.'
+
+  onlyIf { isWindowsHost() }
+  dependsOn tasks.named('prepareJpackageInput')
+  inputs.dir jpackageInputDir
+  outputs.dir winAppImageDir
+
+  doFirst {
+    delete winAppImageDir
+    mkdir winAppImageDir.get().asFile
+
+    commandLine([
+        jpackageExecutable.get(),
+        '--type', 'app-image',
+        '--dest', winAppImageDir.get().asFile.absolutePath,
+        '--icon', file('src/build/resources/appicons/picto_appicon.ico').absolutePath
+    ] + jpackageCommonArgs())
   }
-  from('.') {
-    include 'LICENSE.txt', 'NOTICE.txt'
-  }
-  into "${project.buildDir}/macApp/README"
 }
 
-macAppBundle {
-  appName = project.appName
-  mainClassName = project.mainClassName
-  jarTask = 'shadowJar'
-  icon = 'src/build/resources/appicons/picto_appicon.icns'
-  bundleIdentifier = project.identifier
-  bundlePackageType = 'APPL'
-  bundleJRE = true
-  jreHome = System.getenv('JAVA_HOME')
-  javaProperties.put('apple.laf.useScreenMenuBar', 'true')
-  javaExtras.put('-Xdock:name', project.appName)
-  bundleExtras.put('NSHumanReadableCopyright', project.copyright)
-  
-  volumeName = dmgName = "${project.name}-${project.version}-mac"
-  backgroundImage = 'src/build/resources/dmg/picto_dmg_background_500.png'
-  backgroundImageWidth = 500
-  backgroundImageHeight = 700
-  appIconX = 170
-  appIconY = 217
-  appFolderX = 330
-  appFolderY = 217
-  backgroundScript = """
-    tell application "Finder"
-      tell disk "\${VOL_NAME}"
-        open
-        delay 1
-        set current view of container window to icon view
-        set toolbar visible of container window to false
-        set statusbar visible of container window to false
-        set the bounds of container window to { 0, 0, \${IMAGE_WIDTH}, \${IMAGE_HEIGHT} }
-        set the position of the container window to {400, 100}
-        set viewOptions to the icon view options of container window
-        set arrangement of viewOptions to not arranged
-        set icon size of viewOptions to 72
-        set background picture of viewOptions to file ".background:\${DMG_BACKGROUND_IMG}"
-        set position of item "\${APP_NAME}.app" of container window to { \${APPICONX}, \${APPICONY} }
-        set position of item "Applications" of container window to { \${APPFOLDERX}, \${APPFOLDERY} }
-        set position of item "README" of container window to { 250, 370 }
-        set position of item ".background" of container window to { 10000, 10000 }
-        try
-          set position of item ".DS_Store" of container window to { 10000, 10000 }
-        end try
-        try
-          set position of item ".fseventsd" of container window to { 10000, 10000 }
-        end try
-        try
-          set position of item ".Trashes" of container window to { 10000, 10000 }
-        end try
-        close
-        open
-        update without registering applications
-        delay 2
-      end tell
-    end tell
-"""
-}
-createDmg.dependsOn copyDocsForMac
+tasks.register('bundleWindowsApp', Zip) {
+  group = 'distribution'
+  description = 'Builds the Windows ZIP distribution from the jpackage app image.'
 
-artifacts {
-  archives shadowJar
-  archives sourcesJar
-  archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-mac.dmg")
-  archives file("${project.buildDir}/${project.distsDirName}/${project.name}-${project.version}-win.zip")
+  onlyIf { isWindowsHost() }
+  dependsOn tasks.named('jpackageWindowsAppImage'), tasks.named('preparePackageReadme')
+  archiveFileName = "${distributionBaseName}-windows-x64.zip"
+  destinationDirectory = layout.buildDirectory.dir('distributions')
+
+  from(winAppImageDir.map { it.dir(appDisplayName) }) {
+    into appDisplayName
+  }
+  from(packageReadmeDir) {
+    into "${appDisplayName}/README"
+  }
+}
+
+tasks.register('jpackageMacosDmg', Exec) {
+  group = 'distribution'
+  description = 'Builds an unsigned macOS DMG with a bundled Java runtime.'
+
+  onlyIf { isMacHost() }
+  dependsOn tasks.named('prepareJpackageInput'), tasks.named('preparePackageReadme')
+  inputs.dir jpackageInputDir
+  inputs.dir packageReadmeDir
+  outputs.dir macDmgWorkDir
+
+  doFirst {
+    delete macDmgWorkDir
+    mkdir macDmgWorkDir.get().asFile
+
+    commandLine([
+        jpackageExecutable.get(),
+        '--type', 'dmg',
+        '--dest', macDmgWorkDir.get().asFile.absolutePath,
+        '--icon', file('src/build/resources/appicons/picto_appicon.icns').absolutePath,
+        '--mac-package-identifier', appIdentifier,
+        '--mac-package-name', appDisplayName,
+        '--mac-dmg-content', packageReadmeDir.get().asFile.absolutePath,
+        '--java-options', '-Dapple.laf.useScreenMenuBar=true',
+        '--java-options', "-Xdock:name=${appDisplayName}"
+    ] + jpackageCommonArgs())
+  }
+}
+
+tasks.register('bundleMacosApp', Copy) {
+  group = 'distribution'
+  description = 'Copies the macOS DMG to the distribution directory using the project release name.'
+
+  onlyIf { isMacHost() }
+  dependsOn tasks.named('jpackageMacosDmg')
+  from(macDmgWorkDir) {
+    include '*.dmg'
+    rename { "${distributionBaseName}-macos-arm64.dmg" }
+  }
+  into layout.buildDirectory.dir('distributions')
+}
+
+tasks.register('jpackageLinuxAppImage', Exec) {
+  group = 'distribution'
+  description = 'Builds a Linux app image with a bundled Java runtime.'
+
+  onlyIf { isLinuxHost() }
+  dependsOn tasks.named('prepareJpackageInput')
+  inputs.dir jpackageInputDir
+  outputs.dir linuxAppImageDir
+
+  doFirst {
+    delete linuxAppImageDir
+    mkdir linuxAppImageDir.get().asFile
+
+    commandLine([
+        jpackageExecutable.get(),
+        '--type', 'app-image',
+        '--dest', linuxAppImageDir.get().asFile.absolutePath,
+        '--icon', file('src/build/resources/appicons/picto_appicon.png').absolutePath
+    ] + jpackageCommonArgs())
+  }
+}
+
+tasks.register('bundleLinuxApp', Tar) {
+  group = 'distribution'
+  description = 'Builds the Linux tar.gz distribution from the jpackage app image.'
+
+  onlyIf { isLinuxHost() }
+  dependsOn tasks.named('jpackageLinuxAppImage'), tasks.named('preparePackageReadme')
+  archiveFileName = "${distributionBaseName}-linux-x64.tar.gz"
+  destinationDirectory = layout.buildDirectory.dir('distributions')
+  compression = Compression.GZIP
+
+  from(linuxAppImageDir.map { it.dir(appDisplayName) }) {
+    into appDisplayName
+  }
+  from(packageReadmeDir) {
+    into "${appDisplayName}/README"
+  }
+}
+
+tasks.register('packageCurrentOs') {
+  group = 'distribution'
+  description = 'Builds the native package for the current operating system.'
+
+  if (isWindowsHost()) {
+    dependsOn tasks.named('bundleWindowsApp')
+  } else if (isMacHost()) {
+    dependsOn tasks.named('bundleMacosApp')
+  } else if (isLinuxHost()) {
+    dependsOn tasks.named('bundleLinuxApp')
+  }
+}
+
+tasks.named('distTar') {
+  enabled = false
+}
+
+tasks.named('assemble') {
+  dependsOn tasks.named('packageCurrentOs')
 }

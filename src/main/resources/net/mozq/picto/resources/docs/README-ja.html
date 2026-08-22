@@ -34,7 +34,7 @@ table, th, td {
 <h2 id="-">インストール</h2>
 <h3 id="mac-">Macへのインストール</h3>
 <ol>
-<li>DMGファイル &#39;Picto-X.X.X-mac.dmg&#39; を <a href="https://bintray.com/mozq/generic/picto/_latestVersion">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
+<li>DMGファイル &#39;picto-X.X.X-macos-arm64.dmg&#39; を <a href="https://github.com/mozq/picto/releases">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
 <li>DMGをマウントして Picto.app をアプリケーション・フォルダーにコピーします。</li>
 <li>Picto.app を実行して起動します。<ul>
 <li>もし「開発元が未確認のため開けません」という警告ダイアログが表示された場合は、下記の手順をお試しください。<ol>
@@ -47,17 +47,22 @@ table, th, td {
 </ol>
 <h3 id="windows-">Windowsへのインストール</h3>
 <ol>
-<li><a href="https://java.com/ja/download/">Java Runtime Environment</a> がインストールされていない場合はインストールします。</li>
-<li>Zipファイル &#39;Picto-X.X.X-win.zip&#39; を <a href="https://bintray.com/mozq/generic/picto/_latestVersion">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
-<li>Zipファイルを展開し、 Picto.exe を好きなフォルダーにコピーします。</li>
-<li>Picto.exe を実行して起動します。</li>
+<li>Zipファイル &#39;picto-X.X.X-windows-x64.zip&#39; を <a href="https://github.com/mozq/picto/releases">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
+<li>Zipファイルを展開し、 Pictoフォルダーを好きなフォルダーにコピーします。</li>
+<li>Pictoフォルダー内の Picto.exe を実行して起動します。</li>
+</ol>
+<h3 id="linux-">Linuxへのインストール</h3>
+<ol>
+<li>tar.gzファイル &#39;picto-X.X.X-linux-x64.tar.gz&#39; を <a href="https://github.com/mozq/picto/releases">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
+<li>tar.gzファイルを展開し、 Pictoフォルダーを好きなフォルダーにコピーします。</li>
+<li><code>Picto/bin/Picto</code> を実行して起動します。</li>
 </ol>
 <h3 id="-os-">その他OSへのインストール</h3>
 <ol>
-<li><a href="https://java.com/ja/download/">Java Runtime Environment</a> がインストールされていない場合はインストールします。</li>
-<li>JARファイル &#39;Picto-X.X.X-all.jar&#39; を <a href="https://bintray.com/mozq/generic/picto/_latestVersion">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
-<li>JARファイルを好きなフォルダーにコピーします。</li>
-<li>JARファイルを <code>java -jar Picto-X.X.X-all.jar</code> のように起動します。</li>
+<li>Java 25 Runtime がインストールされていない場合はインストールします。</li>
+<li>Zipファイル &#39;picto-X.X.X.zip&#39; を <a href="https://github.com/mozq/picto/releases">こちらからダウンロード</a> します。(X.X.X はバージョンです。)</li>
+<li>Zipファイルを展開し、 Pictoフォルダーを好きなフォルダーにコピーします。</li>
+<li><code>bin/Picto</code> を実行して起動します。</li>
 </ol>
 <h2 id="-">アンインストール</h2>
 <p>コピーしたアプリケーションファイルを削除することで、アンインストールできます。</p>
@@ -441,7 +446,7 @@ table, th, td {
 </tr>
 </tbody>
 </table>
-<p>詳細はこちら: <a href="https://docs.oracle.com/javase/jp/8/docs/api/java/text/DecimalFormat.html">https://docs.oracle.com/javase/jp/8/docs/api/java/text/DecimalFormat.html</a></p>
+<p>詳細はこちら: <a href="https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/text/DecimalFormat.html">https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/text/DecimalFormat.html</a></p>
 <pre><code>例)
 &quot;${FNumber%0.0}&quot;
 -&gt; &quot;8.0&quot;, &quot;16.0&quot;
@@ -610,7 +615,7 @@ table, th, td {
 </tr>
 </tbody>
 </table>
-<p>詳細はこちら: <a href="https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/DateTimeFormatter.html">https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/DateTimeFormatter.html</a></p>
+<p>詳細はこちら: <a href="https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/time/format/DateTimeFormatter.html">https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/time/format/DateTimeFormatter.html</a></p>
 <pre><code>例)
 &quot;${PhotoTakenDate%uuuu/MMdd}&quot;
 -&gt; &quot;2012/0123&quot;
@@ -734,17 +739,17 @@ table, th, td {
 <h4 id="-">テスト実行</h4>
 <p>処理をシミュレーションします。実際にコピーやファイルの変更は行われません。</p>
 <h2 id="-">ライセンス</h2>
-<p>Pictoはオープンソースソフトウェアで、<a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>のもとに公開されています。</p>
+<p>Pictoはオープンソースソフトウェアで、<a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>のもとに公開されています。</p>
 <h2 id="-">リポジトリー</h2>
 <p>Pictoは<a href="https://github.com/mozq/picto">GitHub</a>で開発・管理されています。</p>
 <h2 id="-">リーガル</h2>
 <p>Pictoは下記のオープンソース・ソフトウェアを使用しています。</p>
-<h3 id="apache-commons-imaging-sanselan-">Apache Commons Imaging (Sanselan)</h3>
+<h3 id="apache-commons-imaging">Apache Commons Imaging</h3>
 <blockquote>
-<p>Apache Sanselan
-Copyright 2007-2009 The Apache Software Foundation.</p>
+<p>Apache Commons Imaging
+Copyright 2007-2025 The Apache Software Foundation</p>
 <p>This product includes software developed at
-The Apache Software Foundation (<a href="http://www.apache.org/">http://www.apache.org/</a>).</p>
+The Apache Software Foundation (<a href="https://www.apache.org/">https://www.apache.org/</a>).</p>
 </blockquote>
 <h3 id="mifmi-commons4j">mifmi-commons4j</h3>
 <blockquote>

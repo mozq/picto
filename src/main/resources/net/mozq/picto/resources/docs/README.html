@@ -31,7 +31,7 @@ table, th, td {
 <h2 id="installation">Installation</h2>
 <h3 id="for-mac">for Mac</h3>
 <ol>
-<li>Download DMG file &#39;Picto-X.X.X-mac.dmg&#39; from <a href="https://bintray.com/mozq/generic/picto/_latestVersion">here</a>. (X.X.X is a version)</li>
+<li>Download DMG file &#39;picto-X.X.X-macos-arm64.dmg&#39; from <a href="https://github.com/mozq/picto/releases">here</a>. (X.X.X is a version)</li>
 <li>Mount DMG and copy Picto.app to Applications folder.</li>
 <li>Execute Picto.app to start.<ul>
 <li>If the warning dialog of &quot;can’t be opened because it is from an unidentified developer&quot; is shown, try the following procedure<ol>
@@ -44,17 +44,22 @@ table, th, td {
 </ol>
 <h3 id="for-windows">for Windows</h3>
 <ol>
-<li>Install <a href="https://java.com/ja/download/">Java Runtime Environment</a>, if it is not installed.</li>
-<li>Download Zip file &#39;Picto-X.X.X-win.zip&#39; from <a href="https://bintray.com/mozq/generic/picto/_latestVersion">here</a>. (X.X.X is a version)</li>
-<li>Unzip and copy Picto.exe to any folder.</li>
-<li>Execute Picto.exe to start.</li>
+<li>Download Zip file &#39;picto-X.X.X-windows-x64.zip&#39; from <a href="https://github.com/mozq/picto/releases">here</a>. (X.X.X is a version)</li>
+<li>Unzip and copy the Picto folder to any folder.</li>
+<li>Execute Picto.exe in the Picto folder to start.</li>
+</ol>
+<h3 id="for-linux">for Linux</h3>
+<ol>
+<li>Download tar.gz file &#39;picto-X.X.X-linux-x64.tar.gz&#39; from <a href="https://github.com/mozq/picto/releases">here</a>. (X.X.X is a version)</li>
+<li>Extract and copy the Picto folder to any folder.</li>
+<li>Execute <code>Picto/bin/Picto</code>.</li>
 </ol>
 <h3 id="for-other-os">for other OS</h3>
 <ol>
-<li>Install <a href="https://java.com/ja/download/">Java Runtime Environment</a>, if it is not installed.</li>
-<li>Download JAR file &#39;Picto-X.X.X-all.jar&#39; from <a href="https://bintray.com/mozq/generic/picto/_latestVersion">here</a>. (X.X.X is a version)</li>
-<li>Copy JAR file to any folder.</li>
-<li>Execute JAR file like <code>java -jar Picto-X.X.X-all.jar</code>.</li>
+<li>Install Java 25 Runtime, if it is not installed.</li>
+<li>Download Zip file &#39;picto-X.X.X.zip&#39; from <a href="https://github.com/mozq/picto/releases">here</a>. (X.X.X is a version)</li>
+<li>Unzip and copy the Picto folder to any folder.</li>
+<li>Execute <code>bin/Picto</code>.</li>
 </ol>
 <h2 id="uninstallation">Uninstallation</h2>
 <p>You can uninstall application by deleting the copied application file.</p>
@@ -438,7 +443,7 @@ You can use following variables with &#39;${}&#39;.</p>
 </tr>
 </tbody>
 </table>
-<p>See more information: <a href="https://docs.oracle.com/javase/8/docs/api/java/text/DecimalFormat.html">https://docs.oracle.com/javase/8/docs/api/java/text/DecimalFormat.html</a></p>
+<p>See more information: <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/text/DecimalFormat.html">https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/text/DecimalFormat.html</a></p>
 <pre><code>e.g.)
 &quot;${FNumber%0.0}&quot;
 -&gt; &quot;8.0&quot;, &quot;16.0&quot;
@@ -607,7 +612,7 @@ You can use following variables with &#39;${}&#39;.</p>
 </tr>
 </tbody>
 </table>
-<p>See more information: <a href="https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html">https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html</a></p>
+<p>See more information: <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/format/DateTimeFormatter.html">https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/format/DateTimeFormatter.html</a></p>
 <pre><code>e.g.)
 &quot;${PhotoTakenDate%uuuu/MMdd}&quot;
 -&gt; &quot;2012/0123&quot;
@@ -731,17 +736,17 @@ If you set an option to change the file, such as removing the exif of the file, 
 <h4 id="dry-run">Dry Run</h4>
 <p>Simurate process.</p>
 <h2 id="license">License</h2>
-<p>Picto is open-sourced software licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
+<p>Picto is open-sourced software licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
 <h2 id="repository">Repository</h2>
 <p>Picto is developed and managed on <a href="https://github.com/mozq/picto">GitHub</a>.</p>
 <h2 id="legal">Legal</h2>
 <p>Picto is built using open source software.</p>
-<h3 id="apache-commons-imaging-sanselan-">Apache Commons Imaging (Sanselan)</h3>
+<h3 id="apache-commons-imaging">Apache Commons Imaging</h3>
 <blockquote>
-<p>Apache Sanselan
-Copyright 2007-2009 The Apache Software Foundation.</p>
+<p>Apache Commons Imaging
+Copyright 2007-2025 The Apache Software Foundation</p>
 <p>This product includes software developed at
-The Apache Software Foundation (<a href="http://www.apache.org/">http://www.apache.org/</a>).</p>
+The Apache Software Foundation (<a href="https://www.apache.org/">https://www.apache.org/</a>).</p>
 </blockquote>
 <h3 id="mifmi-commons4j">mifmi-commons4j</h3>
 <blockquote>

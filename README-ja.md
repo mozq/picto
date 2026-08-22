@@ -15,7 +15,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 ## インストール
 
 ### Macへのインストール
-1. DMGファイル 'picto-X.X.X-mac.dmg' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
+1. DMGファイル 'picto-X.X.X-macos-arm64.dmg' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
 2. DMGをマウントして Picto.app をアプリケーション・フォルダーにコピーします。
 3. Picto.app を実行して起動します。
     - もし「開発元が未確認のため開けません」という警告ダイアログが表示された場合は、下記の手順をお試しください。
@@ -23,16 +23,20 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
         2. 次に表示される警告ダイアログで「開く」ボタンをクリックしてアプリケーションを起動します。
 
 ### Windowsへのインストール
-1. [Java Runtime Environment](https://java.com/ja/download/) がインストールされていない場合はインストールします。
-2. Zipファイル 'picto-X.X.X-win.zip' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
-3. Zipファイルを展開し、 Picto.exe を好きなフォルダーにコピーします。
-4. Picto.exe を実行して起動します。
+1. Zipファイル 'picto-X.X.X-windows-x64.zip' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
+2. Zipファイルを展開し、 Pictoフォルダーを好きなフォルダーにコピーします。
+3. Pictoフォルダー内の Picto.exe を実行して起動します。
+
+### Linuxへのインストール
+1. tar.gzファイル 'picto-X.X.X-linux-x64.tar.gz' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
+2. tar.gzファイルを展開し、 Pictoフォルダーを好きなフォルダーにコピーします。
+3. `Picto/bin/Picto` を実行して起動します。
 
 ### その他OSへのインストール
-1. [Java Runtime Environment](https://java.com/ja/download/) がインストールされていない場合はインストールします。
-2. JARファイル 'picto-X.X.X-all.jar' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
-3. JARファイルを好きなフォルダーにコピーします。
-4. JARファイルを `java -jar picto-X.X.X-all.jar` のように起動します。
+1. Java 25 Runtime がインストールされていない場合はインストールします。
+2. Zipファイル 'picto-X.X.X.zip' を [こちらからダウンロード](https://mozq.github.io/picto/ja/) します。(X.X.X はバージョンです。)
+3. Zipファイルを展開し、 Pictoフォルダーを好きなフォルダーにコピーします。
+4. `bin/Picto` を実行して起動します。
 
 
 ## アンインストール
@@ -151,7 +155,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 |;     |サブパターン区切り |正の数と負の数でのサブパターンの区切り |
 |%     |最初または最後     |100を掛けたパーセント表示              |
 
-詳細はこちら: https://docs.oracle.com/javase/jp/8/docs/api/java/text/DecimalFormat.html
+詳細はこちら: https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/text/DecimalFormat.html
 
     例)
     "${FNumber%0.0}"
@@ -194,7 +198,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 |x     |ゾーンオフセット                   |+0000; -08; -0830; -08:30; -083015; -08:30:15; |
 |Z     |ゾーンオフセット                   |+0000; -0800; -08:00;                          |
 
-詳細はこちら: https://docs.oracle.com/javase/jp/8/docs/api/java/time/format/DateTimeFormatter.html
+詳細はこちら: https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/time/format/DateTimeFormatter.html
 
     例)
     "${PhotoTakenDate%uuuu/MMdd}"
@@ -286,7 +290,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 
 
 ## ライセンス
-Pictoはオープンソースソフトウェアで、[Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)のもとに公開されています。
+Pictoはオープンソースソフトウェアで、[Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0)のもとに公開されています。
 
 
 ## リポジトリー
@@ -298,10 +302,10 @@ Pictoは下記のオープンソース・ソフトウェアを使用していま
 
 ### Apache Commons Imaging
 > Apache Commons Imaging
-> Copyright 2007-2020 The Apache Software Foundation
+> Copyright 2007-2025 The Apache Software Foundation
 > 
 > This product includes software developed at
-> The Apache Software Foundation (http://www.apache.org/).
+> The Apache Software Foundation (https://www.apache.org/).
 
 ### mifmi-commons4j
 > The MIT License (MIT)
