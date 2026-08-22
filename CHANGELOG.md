@@ -1,3 +1,16 @@
+## 1.1.0 (2026-08-22)
+
+Added:
+
+  - Add Linux x64 distribution
+
+Changed:
+
+  - Upgrade from Java 8 to Java 25
+  - Bundle Java runtime with Windows, macOS, and Linux distributions
+  - Collapse Source and Destination options by default
+
+
 ## 1.0.3 (2017-10-12)
 
 Fixed:
