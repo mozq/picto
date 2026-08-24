@@ -1,15 +1,22 @@
-body, div, p, h1, h2, h3, h4, h5, h6, header, article, footer {
-	display: block;
+body {
 	margin: 0;
 	padding: 0;
-	font-family: 'arial';
-	font-size: 12pt;
+	font-family: Arial, sans-serif;
+	font-size: 1rem;
+}
+
+h1,
+h2,
+h3,
+p {
+	margin: 0;
+	padding: 0;
 }
 
 h1 {
 	margin-top: 50px;
 	text-align: center;
-	font-size: 80pt;
+	font-size: 6.7rem;
 	color: #20d69a;
 }
 
@@ -31,7 +38,7 @@ h1 {
 	background-color: #aa0000;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
 	color: white;
-	font-size: 10pt;
+	font-size: 0.8rem;
 	font-weight: bold;
 	line-height: 1.2;
 	text-align: center;
@@ -52,7 +59,7 @@ h1 {
 
 .part0 .caption {
 	text-align: center;
-	font-size: 18pt;
+	font-size: 1.5rem;
 }
 
 .download {
@@ -61,7 +68,7 @@ h1 {
 }
 
 .download .download-label {
-	font-size: 13pt;
+	font-size: 1.1rem;
 }
 
 .download .download-links {
@@ -87,35 +94,19 @@ h1 {
 }
 
 .part1 {
+	padding-bottom: 3em;
+	min-height: 520px;
 	background-color: #20d69a;
 	color: white;
 }
 
-@media screen and (min-width: 799px) {
-	.part1 {
-		padding-bottom: 3em;
-		min-height: 520px;
-	}
-	
-	.part1 .screenshot {
-		width: 500px;
-		float: left;
-	}
-
-	.part1 .desc {
-		margin-left: 500px;
-	}
+.part1 .screenshot {
+	width: 500px;
+	float: left;
 }
 
-@media screen and (max-width: 800px) {
-	.part1 .screenshot {
-		display: block;
-		width: 95%;
-	}
-	
-	.part1 .desc {
-		margin-left: 3ex;
-	}
+.part1 .desc {
+	margin-left: 500px;
 }
 
 .part1 .desc section {
@@ -123,24 +114,39 @@ h1 {
 }
 
 .part1 .desc h3 {
-	font-size: 20pt;
+	font-size: 1.7rem;
 }
 
 .part1 .desc p {
-	margin: 0;
 	padding: 0 20px;
-	font-size: 16pt;
+	font-size: 1.3rem;
 }
 
 footer {
 	clear: both;
-	display: block;
 	margin: 5px 5%;
 	text-align: center;
-	font-size: 10pt;
+	font-size: 0.8rem;
 	color: #666;
 }
 
 footer a {
 	color: #666;
+}
+
+@media screen and (max-width: 800px) {
+	.part1 {
+		padding-bottom: 30px;
+		min-height: 0;
+	}
+
+	.part1 .screenshot {
+		display: block;
+		width: 95%;
+		margin: 0 auto;
+	}
+
+	.part1 .desc {
+		margin: 0 3ex;
+	}
 }
