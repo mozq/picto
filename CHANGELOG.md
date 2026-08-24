@@ -1,3 +1,10 @@
+## 1.1.1 (2026-08-24)
+
+Changed:
+
+  - Refresh application and status icons
+
+
 ## 1.1.0 (2026-08-22)
 
 Added:
