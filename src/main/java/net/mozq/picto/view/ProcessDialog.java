@@ -57,12 +57,12 @@ import java.awt.FlowLayout;
 public class ProcessDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 	
-	private static final ImageIcon ICON_IGNORED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_ignored.png", ProcessDataStatus.Ignored.toString()); //$NON-NLS-1$
-	private static final ImageIcon ICON_PROCESSIG = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_processing.png", ProcessDataStatus.Processing.toString()); //$NON-NLS-1$
-	private static final ImageIcon ICON_SKIPPED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_skipped.png", ProcessDataStatus.Skipped.toString()); //$NON-NLS-1$
-	private static final ImageIcon ICON_TERMINATED = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_terminated.png", ProcessDataStatus.Terminated.toString()); //$NON-NLS-1$
-	private static final ImageIcon ICON_SUCCESS = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_success.png", ProcessDataStatus.Success.toString()); //$NON-NLS-1$
-	private static final ImageIcon ICON_ERROR = loadImageIcon("net/mozq/picto/resources/icons/picto_icon_error.png", ProcessDataStatus.Error.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_IGNORED = loadImageIcon("net/mozq/picto/resources/icons/icon-ignored.png", ProcessDataStatus.Ignored.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_PROCESSIG = loadImageIcon("net/mozq/picto/resources/icons/icon-processing.png", ProcessDataStatus.Processing.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_SKIPPED = loadImageIcon("net/mozq/picto/resources/icons/icon-skipped.png", ProcessDataStatus.Skipped.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_TERMINATED = loadImageIcon("net/mozq/picto/resources/icons/icon-terminated.png", ProcessDataStatus.Terminated.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_SUCCESS = loadImageIcon("net/mozq/picto/resources/icons/icon-success.png", ProcessDataStatus.Success.toString()); //$NON-NLS-1$
+	private static final ImageIcon ICON_ERROR = loadImageIcon("net/mozq/picto/resources/icons/icon-error.png", ProcessDataStatus.Error.toString()); //$NON-NLS-1$
 
 	private ProcessCondition processCondition;
 	private final ProcessStatus processStatus = new ProcessStatus();

@@ -164,6 +164,7 @@ def packageReadmeDir = layout.buildDirectory.dir('jpackage/readme/README')
 def winAppImageDir = layout.buildDirectory.dir('jpackage/windows-app-image')
 def macDmgWorkDir = layout.buildDirectory.dir('jpackage/macos-dmg')
 def linuxAppImageDir = layout.buildDirectory.dir('jpackage/linux-app-image')
+def linuxScalableIconDir = "${appDisplayName}/share/icons/hicolor/scalable/apps"
 
 def java25Launcher = javaToolchains.launcherFor {
   languageVersion = JavaLanguageVersion.of(25)
@@ -218,6 +219,7 @@ tasks.register('jpackageWindowsAppImage', Exec) {
   onlyIf { isWindowsHost() }
   dependsOn tasks.named('prepareJpackageInput')
   inputs.dir jpackageInputDir
+  inputs.file file('src/build/resources/app-icons/app-icon.ico')
   outputs.dir winAppImageDir
 
   doFirst {
@@ -228,7 +230,7 @@ tasks.register('jpackageWindowsAppImage', Exec) {
         jpackageExecutable.get(),
         '--type', 'app-image',
         '--dest', winAppImageDir.get().asFile.absolutePath,
-        '--icon', file('src/build/resources/appicons/picto_appicon.ico').absolutePath
+        '--icon', file('src/build/resources/app-icons/app-icon.ico').absolutePath
     ] + jpackageCommonArgs())
   }
 }
@@ -258,6 +260,7 @@ tasks.register('jpackageMacosDmg', Exec) {
   dependsOn tasks.named('prepareJpackageInput'), tasks.named('preparePackageReadme')
   inputs.dir jpackageInputDir
   inputs.dir packageReadmeDir
+  inputs.file file('src/build/resources/app-icons/app-icon-filled.icns')
   outputs.dir macDmgWorkDir
 
   doFirst {
@@ -268,7 +271,7 @@ tasks.register('jpackageMacosDmg', Exec) {
         jpackageExecutable.get(),
         '--type', 'dmg',
         '--dest', macDmgWorkDir.get().asFile.absolutePath,
-        '--icon', file('src/build/resources/appicons/picto_appicon.icns').absolutePath,
+        '--icon', file('src/build/resources/app-icons/app-icon-filled.icns').absolutePath,
         '--mac-package-identifier', appIdentifier,
         '--mac-package-name', appDisplayName,
         '--mac-dmg-content', packageReadmeDir.get().asFile.absolutePath,
@@ -298,6 +301,7 @@ tasks.register('jpackageLinuxAppImage', Exec) {
   onlyIf { isLinuxHost() }
   dependsOn tasks.named('prepareJpackageInput')
   inputs.dir jpackageInputDir
+  inputs.file file('src/build/resources/app-icons/png/app-icon-512.png')
   outputs.dir linuxAppImageDir
 
   doFirst {
@@ -308,7 +312,7 @@ tasks.register('jpackageLinuxAppImage', Exec) {
         jpackageExecutable.get(),
         '--type', 'app-image',
         '--dest', linuxAppImageDir.get().asFile.absolutePath,
-        '--icon', file('src/build/resources/appicons/picto_appicon.png').absolutePath
+        '--icon', file('src/build/resources/app-icons/png/app-icon-512.png').absolutePath
     ] + jpackageCommonArgs())
   }
 }
@@ -319,12 +323,17 @@ tasks.register('bundleLinuxApp', Tar) {
 
   onlyIf { isLinuxHost() }
   dependsOn tasks.named('jpackageLinuxAppImage'), tasks.named('preparePackageReadme')
+  inputs.file file('src/build/resources/app-icons/app-icon.svg')
   archiveFileName = "${distributionBaseName}-linux-x64.tar.gz"
   destinationDirectory = layout.buildDirectory.dir('distributions')
   compression = Compression.GZIP
 
   from(linuxAppImageDir.map { it.dir(appDisplayName) }) {
     into appDisplayName
+  }
+  from('src/build/resources/app-icons/app-icon.svg') {
+    into linuxScalableIconDir
+    rename { "${project.name}.svg" }
   }
   from(packageReadmeDir) {
     into "${appDisplayName}/README"
