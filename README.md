@@ -6,9 +6,9 @@ It can be used for the following.
 
 - Copy or move photos to another folder under a different name.
     - You can specify sub folders and file names freely at shooting date etc.
-- Change file date (Creation date, Modified date, Access date, Exif date).
+- Change file date (Creation date, Modified date, Access date, EXIF date).
     - Specified date and difference date can be set. It is effective when you forget to change the time zone of the camera.
-- Remove GPS or all Exif data.
+- Remove GPS or all EXIF data.
 
 
 ## Installation
@@ -46,44 +46,44 @@ You can uninstall application by deleting the copied application file.
 
 ### Source
 
-#### Photo's folder
+#### Source folder
 Select folder contains picture and movie files.
 
-#### File Pattern
+#### File name
 Filter files by filename.
-You can use [Glob](https://en.wikipedia.org/wiki/Glob_%28programming%29) or [Regular expression (Regex)](https://en.wikipedia.org/wiki/Regular_expression) pattern.
+You can use [wildcard (glob)](https://en.wikipedia.org/wiki/Glob_%28programming%29) or [regular expression (Regex)](https://en.wikipedia.org/wiki/Regular_expression) pattern.
 
-- Glob: "*.jpg", "IMG_????.*"
+- Wildcard: "*.jpg", "IMG_????.*"
 - Regex: ".*\\.jpg", "IMG_[0-9]{4}\\..*"
 
-#### Contains hidden files and folders.
+#### Hidden files
 When check this option then contains hidden files and folders.
 
-#### Contains sub files and folders.
+#### Subfolders
 When check this option then contains sub files and folders.
 
-#### File Size
+#### Size
 Filter files by file size.
 
-#### Creation Time
+#### Created
 Filter files by creation time.
 
-#### Modified Time
+#### Modified
 Filter files by modified time.
 
 
 ### Destination
 
 #### Operation
-- Copy -- Copy files in Photo's folder to Destination Folder.
-- Move -- Move files in Photo's folder to Destination Folder.
-- Overwrite -- Overwrite files in Photo's folder.
+- Copy -- Copy files in Source folder to Destination folder.
+- Move -- Move files in Source folder to Destination folder.
+- Overwrite -- Overwrite files in Source folder.
 
-#### Destination Folder
+#### Destination folder
 Copy or move destination folder.
 
-#### Sub Path Pattern
-File's sub path in Destination Folder.
+#### Subfolder
+File's sub path in Destination folder.
 You can use following variables with '${}'.
 
     e.g.)
@@ -101,45 +101,45 @@ You can use following variables with '${}'.
 |CreationDate             |Date    |File creation date               |2012-01-23 12:34:56.780 |
 |ModifiedDate             |Date    |File modified date               |2012-01-23 12:34:56.780 |
 |AccessDate               |Date    |File access date                 |2012-01-23 12:34:56.780 |
-|PhotoTakenDate           |Date    |Exif date or file modified date  |2012-01-23 12:34:56.780 |
-|Width                    |Integer |Exif image width                 |6000                    |
-|Height                   |Integer |Exif image height                |4000                    |
-|FNumber                  |Decimal |Exif FNumber                     |8.0                     |
-|Aperture                 |Decimal |Exif aperture value              |6.0                     |
-|MaxAperture              |Decimal |Exif max aperture value          |3.6                     |
-|ISO                      |Integer |Exif ISO                         |100                     |
-|FocalLength              |Decimal |Exif focal length                |26.0                    |
-|FocalLength35mm          |Decimal |Exif focal length in 35mm format |39.0                    |
-|ShutterSpeed             |Decimal |Exif shutter speed value         |7.0                     |
-|ExposureTime             |Decimal |Exif exposure time (Seconds)     |0.008                   |
-|ExposureMode             |Integer |Exif exposure mode               |0: Auto exposure<br>1: Manual exposure<br>2: Auto bracket |
-|ExposureProgram          |Integer |Exif exposure program            |0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority<br>4: Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode |
-|Brightness               |Integer |Exif brightness value            |2.21                    |
-|WhiteBalance             |Integer |Exif white balance               |0: Auto<br>1: Manual    |
-|LightSource              |Integer |Exif light source                |0: Unknown<br>1: Daylight<br>2: Fluorescent<br>3: Tungsten (incandescent light)<br>4: Flash<br>9: Fine weather<br>10: Cloudy weather<br>11: Shade<br>12: Daylight fluorescent (D 5700 - 7100K)<br>13: Day white fluorescent (N 4600 - 5400K)<br>14: Cool white fluorescent (W 3900 - 4500K)<br>15: White fluorescent (WW 3200 - 3700K)<br>17: Standard light A<br>18: Standard light B<br>19: Standard light C<br>20: D55<br>21: D65<br>22: D75<br>23: D50<br>24: ISO studio tungsten<br>255: Other light source |
+|PhotoTakenDate           |Date    |EXIF date or file modified date  |2012-01-23 12:34:56.780 |
+|Width                    |Integer |EXIF image width                 |6000                    |
+|Height                   |Integer |EXIF image height                |4000                    |
+|FNumber                  |Decimal |EXIF FNumber                     |8.0                     |
+|Aperture                 |Decimal |EXIF aperture value              |6.0                     |
+|MaxAperture              |Decimal |EXIF max aperture value          |3.6                     |
+|ISO                      |Integer |EXIF ISO                         |100                     |
+|FocalLength              |Decimal |EXIF focal length                |26.0                    |
+|FocalLength35mm          |Decimal |EXIF focal length in 35mm format |39.0                    |
+|ShutterSpeed             |Decimal |EXIF shutter speed value         |7.0                     |
+|ExposureTime             |Decimal |EXIF exposure time (Seconds)     |0.008                   |
+|ExposureMode             |Integer |EXIF exposure mode               |0: Auto exposure<br>1: Manual exposure<br>2: Auto bracket |
+|ExposureProgram          |Integer |EXIF exposure program            |0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority<br>4: Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode |
+|Brightness               |Integer |EXIF brightness value            |2.21                    |
+|WhiteBalance             |Integer |EXIF white balance               |0: Auto<br>1: Manual    |
+|LightSource              |Integer |EXIF light source                |0: Unknown<br>1: Daylight<br>2: Fluorescent<br>3: Tungsten (incandescent light)<br>4: Flash<br>9: Fine weather<br>10: Cloudy weather<br>11: Shade<br>12: Daylight fluorescent (D 5700 - 7100K)<br>13: Day white fluorescent (N 4600 - 5400K)<br>14: Cool white fluorescent (W 3900 - 4500K)<br>15: White fluorescent (WW 3200 - 3700K)<br>17: Standard light A<br>18: Standard light B<br>19: Standard light C<br>20: D55<br>21: D65<br>22: D75<br>23: D50<br>24: ISO studio tungsten<br>255: Other light source |
 |Orientation              |Integer |Tiff orientation                 |[0th Row, 0th Column]<br>1: Top, Left side<br>2: Top, Right side<br>3: Bottom, Right side<br>4: Bottom, Left side<br>5: Left side, Top<br>6: Right side, Top<br>7: Right side, Bottom<br>8: Left side, Bottom |
-|Lens                     |String  |Exif lens                        |                        |
-|LensMake                 |String  |Exif lens make                   |                        |
-|LensModel                |String  |Exif lens model                  |                        |
-|LensSerialNumber         |String  |Exif lens serial number          |                        |
+|Lens                     |String  |EXIF lens                        |                        |
+|LensMake                 |String  |EXIF lens make                   |                        |
+|LensModel                |String  |EXIF lens model                  |                        |
+|LensSerialNumber         |String  |EXIF lens serial number          |                        |
 |Make                     |String  |Tiff make                        |NIKON CORPORATION       |
 |Model                    |String  |Tiff model                       |NIKON D1                |
-|Software                 |String  |Exif software                    |Capture NX-D 1.2.0 M    |
-|ProcessingSoftware       |String  |Exif processing software         |                        |
-|OwnerName                |String  |Exif owner name                  |                        |
-|CameraOwnerName          |String  |Exif camera owner name           |                        |
-|GPSLat                   |Decimal |Exif GPS latitude degrees north  |35.658581               |
-|GPSLatDeg                |Decimal |Exif GPS latitude degrees        |35.0                    |
-|GPSLatMin                |Decimal |Exif GPS latitude minutes        |39.0                    |
-|GPSLatSec                |Decimal |Exif GPS latitude seconds        |30.89                   |
-|GPSLatRef                |String  |Exif GPS latitude reference      |N: North<br>S: South    |
-|GPSLon                   |Decimal |Exif GPS longitude degrees east  |139.745433              |
-|GPSLonDeg                |Decimal |Exif GPS longitude degrees       |139.0                   |
-|GPSLonMin                |Decimal |Exif GPS longitude minutes       |44.0                    |
-|GPSLonSec                |Decimal |Exif GPS longitude seconds       |43.558                  |
-|GPSLonRef                |String  |Exif GPS longitude reference     |E: East<br>W: West      |
-|GPSAlt                   |Decimal |Exif GPS altitude (m)            |18.4                    |
-|GPSAltRef                |String  |Exif GPS altitude reference      |0: Above sea level<br>1: Below sea level |
+|Software                 |String  |EXIF software                    |Capture NX-D 1.2.0 M    |
+|ProcessingSoftware       |String  |EXIF processing software         |                        |
+|OwnerName                |String  |EXIF owner name                  |                        |
+|CameraOwnerName          |String  |EXIF camera owner name           |                        |
+|GPSLat                   |Decimal |EXIF GPS latitude degrees north  |35.658581               |
+|GPSLatDeg                |Decimal |EXIF GPS latitude degrees        |35.0                    |
+|GPSLatMin                |Decimal |EXIF GPS latitude minutes        |39.0                    |
+|GPSLatSec                |Decimal |EXIF GPS latitude seconds        |30.89                   |
+|GPSLatRef                |String  |EXIF GPS latitude reference      |N: North<br>S: South    |
+|GPSLon                   |Decimal |EXIF GPS longitude degrees east  |139.745433              |
+|GPSLonDeg                |Decimal |EXIF GPS longitude degrees       |139.0                   |
+|GPSLonMin                |Decimal |EXIF GPS longitude minutes       |44.0                    |
+|GPSLonSec                |Decimal |EXIF GPS longitude seconds       |43.558                  |
+|GPSLonRef                |String  |EXIF GPS longitude reference     |E: East<br>W: West      |
+|GPSAlt                   |Decimal |EXIF GPS altitude (m)            |18.4                    |
+|GPSAltRef                |String  |EXIF GPS altitude reference      |0: Above sea level<br>1: Below sea level |
 
 ##### Format variable values
 You can format variable values with '%' separator, like '${FNumber%0.0}'.
@@ -235,7 +235,7 @@ If 'default' label is specified as the expression, it will match all values.
     -> "Nikon" or "Canon" or "Others"
 
 
-#### If already file exists ...
+#### Existing File
 Specify processing when file of the same name exists.
 
 - Confirm -- Display a confirmation dialog for each file
@@ -243,49 +243,49 @@ Specify processing when file of the same name exists.
 - Skip -- Skip processing for a file
 - Terminate -- Terminate processing
 
-#### Validate file - Check file digest.
+#### Validation - Compare file digest
 It checks whether the contents of the file were correctly copied.
-If you set an option to change the file, such as removing the exif of the file, it will not be checked.
+If you set an option to change the file, such as removing the EXIF of the file, it will not be checked.
 
 
 ### Change File Date
 
-#### Change ...
+#### Update
 Date of change target.
 
-- Creation Date -- Change file creation date.
-- Modified Date -- Change file modified date.
-- Access Date -- Change file access date.
-- Exif Date -- Change file exif date.
+- Created -- Change file creation date.
+- Modified -- Change file modified date.
+- Accessed -- Change file access date.
+- EXIF date -- Change file EXIF date.
 
-#### by ...
+#### Base date
 Date to set.
 
-- Current Date -- Change by current date.
-- File Creation Date -- Change by file creation date.
-- File Modified Date -- Change by file modified date.
-- File Access Date -- Change by file access date.
-- File Exif Date -- Change by file exif date.
-- Specific Date -- Change by specific date. You can input it.
+- Now -- Change by current date.
+- Created -- Change by file creation date.
+- Modified -- Change by file modified date.
+- Accessed -- Change by file access date.
+- EXIF date -- Change by file EXIF date.
+- Custom -- Change by specific date. You can input it.
 
-#### with ...
+#### Adjustment
 Difference of set date.
 
 - None
-- Plus
-- Minus
-- Overwrite
+- Add
+- Subtract
+- Set
 
 
-### Change Exif
-- Remove GPS exif tags.
-- Remove ALL exif tags.
+### Change EXIF
+- Remove GPS.
+- Remove all EXIF.
 
 
 ### Others
 
 #### Dry Run
-Simurate process.
+Run from the menu next to the Run button to simulate processing without copying or changing files.
 
 
 ## License
@@ -298,6 +298,12 @@ Picto is developed and managed on [GitHub](https://github.com/mozq/picto).
 
 ## Legal
 Picto is built using open source software.
+
+### FlatLaf
+> FlatLaf
+> Copyright 2019 FormDev Software GmbH
+> 
+> Licensed under the Apache License, Version 2.0.
 
 ### Apache Commons Imaging
 > Apache Commons Imaging

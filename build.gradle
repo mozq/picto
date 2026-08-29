@@ -20,6 +20,7 @@ repositories {
 
 dependencies {
   implementation 'com.github.mifmi:mifmi-commons4j:v0.2.+'
+  implementation 'com.formdev:flatlaf:3.7.2'
   implementation 'org.apache.commons:commons-imaging:1.0.0-alpha6'
 
   testImplementation 'org.junit.jupiter:junit-jupiter:5.14.1'
