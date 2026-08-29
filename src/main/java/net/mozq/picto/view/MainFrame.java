@@ -753,6 +753,7 @@ public class MainFrame extends JFrame {
 		txtDestSubPathPattern = new JTextField();
 		lblDestSubPathPattern.setLabelFor(txtDestSubPathPattern);
 		txtDestSubPathPattern.setColumns(10);
+		new SubfolderTemplatePopup(txtDestSubPathPattern);
 		GridBagConstraints gbc_txtDestSubPathPattern = new GridBagConstraints();
 			gbc_txtDestSubPathPattern.insets = new Insets(0, 0, 5, 0);
 			gbc_txtDestSubPathPattern.fill = GridBagConstraints.HORIZONTAL;
