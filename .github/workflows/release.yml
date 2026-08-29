@@ -20,6 +20,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: gradle
 
       - name: Build Windows app image ZIP
         run: ./gradlew.bat clean bundleWindowsApp
@@ -42,6 +43,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: gradle
 
       - name: Build unsigned macOS DMG
         run: ./gradlew clean bundleMacosApp
@@ -73,6 +75,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: gradle
 
       - name: Build Linux app image tar.gz
         run: ./gradlew clean bundleLinuxApp
@@ -95,6 +98,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+          cache: gradle
 
       - name: Build generic Java ZIP
         run: ./gradlew clean distZip
