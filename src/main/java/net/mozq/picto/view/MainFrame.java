@@ -74,9 +74,9 @@ import javax.swing.text.MaskFormatter;
 
 import org.mifmi.commons4j.io.file.FileUtilz;
 import org.mifmi.commons4j.swing.WindowUtilz;
-import org.mifmi.commons4j.text.format.NamedFormatter;
 import org.mifmi.commons4j.util.DateUtilz;
 
+import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
 import net.mozq.picto.AppConfig;
 import net.mozq.picto.core.PictoPathFilter;
@@ -1455,7 +1455,7 @@ public class MainFrame extends JFrame {
 //		pathFilter.setAccessTimeRange(from, to);
 
 
-		NamedFormatter destSubPathFormat = new NamedFormatter(destSubPathPattern);
+		NanoTemplate destSubPathTemplate = new NanoTemplate(destSubPathPattern).timeZone(timeZone);
 
 		ProcessCondition processCondition = new ProcessCondition();
 		processCondition.setTimeZone(timeZone);
@@ -1464,7 +1464,7 @@ public class MainFrame extends JFrame {
 		processCondition.setDept(dept);
 		processCondition.setPathFilter(pathFilter);
 		processCondition.setFollowLinks(followLinks);
-		processCondition.setDestSubPathFormat(destSubPathFormat);
+		processCondition.setDestSubPathTemplate(destSubPathTemplate);
 		processCondition.setOperationType(operationType);
 		processCondition.setExistingFileMethod(existingFileMethod);
 		processCondition.setCheckDigest(checkDigest);

@@ -65,6 +65,7 @@ import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 import org.mifmi.commons4j.io.file.FileUtilz;
 
+import net.mozq.nanotemplate.NanoTemplateException;
 import net.mozq.picto.App;
 import net.mozq.picto.core.exception.PictoException;
 import net.mozq.picto.core.exception.PictoFileChangeException;
@@ -161,71 +162,83 @@ public class ProcessCore {
 							baseDate = null;
 						}
 						
-						String destSubPathname = processCondition.getDestSubPathFormat().format(varName -> {
-							try {
-								switch (varName) {
-								case "Now": return new Date();
-								case "ParentSubPath": return rootRelativeSubPath.toString();
-								case "FileName": return file.getFileName().toString();
-								case "BaseName": return FileUtilz.getBaseName(file.getFileName().toString());
-								case "Extension": return FileUtilz.getExt(file.getFileName().toString());
-								case "Size": return Long.valueOf(Files.size(file));
-								case "CreationDate": return (processCondition.isChangeFileCreationDate()) ? baseDate : new Date(attrs.creationTime().toMillis());
-								case "ModifiedDate": return (processCondition.isChangeFileModifiedDate()) ? baseDate : new Date(attrs.lastModifiedTime().toMillis());
-								case "AccessDate": return (processCondition.isChangeFileAccessDate()) ? baseDate : new Date(attrs.lastAccessTime().toMillis());
-								case "PhotoTakenDate": return (processCondition.isChangeExifDate()) ? baseDate : getPhotoTakenDate(file, imageMetadata);
-								case "Width": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);
-								case "Height": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);
-								case "FNumber": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FNUMBER);
-								case "Aperture": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_APERTURE_VALUE);
-								case "MaxAperture": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_MAX_APERTURE_VALUE);
-								case "ISO": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_ISO);
-								case "FocalLength": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH); // 焦点距離
-								case "FocalLength35mm": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH_IN_35MM_FORMAT);
-								case "ShutterSpeed": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_SHUTTER_SPEED_VALUE);
-								case "Exposure": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE); // 露出
-								case "ExposureTime": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_TIME); // 露出時間（秒）
-								case "ExposureMode": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_MODE);
-								case "ExposureProgram": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_PROGRAM);
-								case "Brightness": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_BRIGHTNESS_VALUE);
-								case "WhiteBalance": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_WHITE_BALANCE_1);
-								case "LightSource": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_LIGHT_SOURCE);
-								case "Lens": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS);
-								case "LensMake": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MAKE);
-								case "LensModel": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MODEL);
-								case "LensSerialNumber": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_SERIAL_NUMBER);
-								case "Make": return getEXIFStringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MAKE);
-								case "Model": return getEXIFStringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MODEL);
-								case "SerialNumber": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SERIAL_NUMBER);
-								case "Software": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SOFTWARE);
-								case "ProcessingSoftware": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_PROCESSING_SOFTWARE);
-								case "OwnerName": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_OWNER_NAME);
-								case "CameraOwnerName": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_CAMERA_OWNER_NAME);
-								case "GPSLat": return getEXIFGpsLat(imageMetadata);
-								case "GPSLatDeg": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 0);
-								case "GPSLatMin": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 1);
-								case "GPSLatSec": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 2);
-								case "GPSLatRef": return getEXIFStringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE_REF);
-								case "GPSLon": return getEXIFGpsLon(imageMetadata);
-								case "GPSLonDeg": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 0);
-								case "GPSLonMin": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 1);
-								case "GPSLonSec": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 2);
-								case "GPSLonRef": return getEXIFStringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE_REF);
-								case "GPSAlt": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE);
-								case "GPSAltRef": return getEXIFIntValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF);
-								default: throw new PictoInvalidDestinationPathException(
-											Messages.getString("message.warn.invalid.destSubPath.varName", varName)
+						String destSubPathname;
+						try {
+							destSubPathname = processCondition.getDestSubPathTemplate().render(varName -> {
+								try {
+									switch (varName) {
+									case "Now": return new Date();
+									case "ParentSubPath": return rootRelativeSubPath.toString();
+									case "FileName": return file.getFileName().toString();
+									case "BaseName": return FileUtilz.getBaseName(file.getFileName().toString());
+									case "Extension": return FileUtilz.getExt(file.getFileName().toString());
+									case "Size": return Long.valueOf(Files.size(file));
+									case "CreationDate": return (processCondition.isChangeFileCreationDate()) ? baseDate : new Date(attrs.creationTime().toMillis());
+									case "ModifiedDate": return (processCondition.isChangeFileModifiedDate()) ? baseDate : new Date(attrs.lastModifiedTime().toMillis());
+									case "AccessDate": return (processCondition.isChangeFileAccessDate()) ? baseDate : new Date(attrs.lastAccessTime().toMillis());
+									case "PhotoTakenDate": return (processCondition.isChangeExifDate()) ? baseDate : getPhotoTakenDate(file, imageMetadata);
+									case "Width": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);
+									case "Height": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);
+									case "FNumber": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FNUMBER);
+									case "Aperture": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_APERTURE_VALUE);
+									case "MaxAperture": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_MAX_APERTURE_VALUE);
+									case "ISO": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_ISO);
+									case "FocalLength": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH); // 焦点距離
+									case "FocalLength35mm": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH_IN_35MM_FORMAT);
+									case "ShutterSpeed": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_SHUTTER_SPEED_VALUE);
+									case "Exposure": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE); // 露出
+									case "ExposureTime": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_TIME); // 露出時間（秒）
+									case "ExposureMode": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_MODE);
+									case "ExposureProgram": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_PROGRAM);
+									case "Brightness": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_BRIGHTNESS_VALUE);
+									case "WhiteBalance": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_WHITE_BALANCE_1);
+									case "LightSource": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_LIGHT_SOURCE);
+									case "Lens": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS);
+									case "LensMake": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MAKE);
+									case "LensModel": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MODEL);
+									case "LensSerialNumber": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_SERIAL_NUMBER);
+									case "Make": return getEXIFStringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MAKE);
+									case "Model": return getEXIFStringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MODEL);
+									case "SerialNumber": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SERIAL_NUMBER);
+									case "Software": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SOFTWARE);
+									case "ProcessingSoftware": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_PROCESSING_SOFTWARE);
+									case "OwnerName": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_OWNER_NAME);
+									case "CameraOwnerName": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_CAMERA_OWNER_NAME);
+									case "GPSLat": return getEXIFGpsLat(imageMetadata);
+									case "GPSLatDeg": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 0);
+									case "GPSLatMin": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 1);
+									case "GPSLatSec": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 2);
+									case "GPSLatRef": return getEXIFStringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE_REF);
+									case "GPSLon": return getEXIFGpsLon(imageMetadata);
+									case "GPSLonDeg": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 0);
+									case "GPSLonMin": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 1);
+									case "GPSLonSec": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 2);
+									case "GPSLonRef": return getEXIFStringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE_REF);
+									case "GPSAlt": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE);
+									case "GPSAltRef": return getEXIFIntValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF);
+									default: throw new PictoInvalidDestinationPathException(
+												Messages.getString("message.warn.invalid.destSubPath.varName", varName)
+												);
+									}
+								} catch (PictoException e) {
+									throw e;
+								} catch (Exception e) {
+									throw new PictoInvalidDestinationPathException(
+											Messages.getString("message.warn.invalid.destSubPath.pattern"),
+											e
 											);
 								}
-							} catch (PictoException e) {
-								throw e;
-							} catch (Exception e) {
-								throw new PictoInvalidDestinationPathException(
-										Messages.getString("message.warn.invalid.destSubPath.pattern"),
-										e
-										);
+							});
+						} catch (NanoTemplateException e) {
+							Throwable cause = e.getCause();
+							if (cause instanceof PictoException) {
+								throw (PictoException)cause;
 							}
-						});
+							throw new PictoInvalidDestinationPathException(
+									Messages.getString("message.warn.invalid.destSubPath.pattern"),
+									e
+									);
+						}
 						
 						Path destSubPath = processCondition.getDestRootPath().resolve(destSubPathname).normalize();
 						

@@ -87,7 +87,7 @@ File's sub path in Destination folder.
 You can use following variables with '${}'.
 
     e.g.)
-    "${ParentSubPath}/${PhotoTakenDate%uuuu/MM}/${FileName}"
+    "${ParentSubPath}/${PhotoTakenDate:uuuu/MM}/${FileName}"
     -> "subpath/to/2012/01/IMG_0001.JPG"
 
 |Variable                 |Type    |Meaning                          |Examples                |
@@ -96,7 +96,7 @@ You can use following variables with '${}'.
 |ParentSubPath            |String  |Parent folder path of file       |subpath/to              |
 |FileName                 |String  |File name                        |IMG_0001.JPG            |
 |BaseName                 |String  |File base name                   |IMG_0001                |
-|Extension                |String  |File extension                   |.JPG                    |
+|Extension                |String  |File extension                   |JPG                     |
 |Size                     |String  |File size                        |10485760                |
 |CreationDate             |Date    |File creation date               |2012-01-23 12:34:56.780 |
 |ModifiedDate             |Date    |File modified date               |2012-01-23 12:34:56.780 |
@@ -142,7 +142,7 @@ You can use following variables with '${}'.
 |GPSAltRef                |String  |EXIF GPS altitude reference      |0: Above sea level<br>1: Below sea level |
 
 ##### Format variable values
-You can format variable values with '%' separator, like '${FNumber%0.0}'.
+You can format variable values with ':' separator or the `format` filter, like '${FNumber:0.0}'.
 
 ###### Format Integer or Decimal type value
 |Symbol|Location           |Meaning                                        |
@@ -157,10 +157,10 @@ You can format variable values with '%' separator, like '${FNumber%0.0}'.
 See more information: [DecimalFormat](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/text/DecimalFormat.html)
 
     e.g.)
-    "${FNumber%0.0}"
+    "${FNumber:0.0}"
     -> "8.0", "16.0"
     
-    "${GPSLatDeg%0}°${GPSLatMin%0}'${GPSLatSec%0.0#} ${GPSLatRef}"
+    "${GPSLatDeg:0}°${GPSLatMin:0}'${GPSLatSec:0.0#} ${GPSLatRef}"
     -> "35°39'30.89 N"
 
 ###### Format Date type value
@@ -200,38 +200,38 @@ See more information: [DecimalFormat](https://docs.oracle.com/en/java/javase/25/
 See more information: [DateTimeFormatter](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/format/DateTimeFormatter.html)
 
     e.g.)
-    "${PhotoTakenDate%uuuu/MMdd}"
+    "${PhotoTakenDate:uuuu/MMdd}"
     -> "2012/0123"
 
-##### Convert variable values
-You can convert variables value with '/' and ':' separators, like '${WhiteBalance/0:Auto/1:Manual}'.
+##### Match variable values
+You can return text by matching variable values with match expressions, like "${WhiteBalance?{0:Auto,1:Manual,default:''}}".
 
-    / <Expression> : <Returned value>
+    ?{ <Condition> : <Output>, default : <Output> }
 
-If multiple '/' separator is specified, the first matching value is returned.
-When it does not match any expression, then it returns an empty value.
+If multiple conditions are specified, the first matching value is returned.
+Use `default` to return a value when no condition matches.
 
     e.g.)
-    "${WhiteBalance/0:Auto/1:Manual}"
+    "${WhiteBalance?{0:Auto,1:Manual,default:''}}"
     -> "Auto" or "Manual" or "" (When not matching)
 
 The following operators can be specified as comparison conditions in the expression.
 
 |Operator|Meaning                    |Variable Type                 |Examples                                                                     |
 |--------|---------------------------|------------------------------|-----------------------------------------------------------------------------|
-|=       |Equals  (Default)          |String, Integer, Decimal, Date|/=str:<br>/str:<br>/'str':<br>/123.456:<br>/#2012-01-23#:                    |
-|=*      |Wildcard matches           |String                        |/=*'*str': (Ends with)<br>/=*'str*': (Starts with)<br>/=*'*str*': (Contains) |
-|=~      |Regular expression matches |String                        |/=~'str[0-9]{4}':                                                            |
-|!=      |Not equals                 |String, Integer, Decimal, Date|/!=str:<br>/!='str':<br>/!=123.456:<br>/!=#2012-01-23#:                      |
-|<       |Less than                  |Integer, Decimal, Date        |/<123.456: <br> /<#2012-01-23#:                                              |
-|<=      |Less than or equals        |Integer, Decimal, Date        |/<=123.456: <br> /<=#2012-01-23#:                                            |
-|>       |Grater than                |Integer, Decimal, Date        |/>123.456: <br> />#2012-01-23#:                                              |
-|>=      |Grater than or equals      |Integer, Decimal, Date        |/>=123.456: <br> />=#2012-01-23#:                                            |
+|=       |Equals  (Default)          |String, Integer, Decimal, Date|=str:<br>str:<br>'str':<br>123.456:<br>#2012-01-23#:                         |
+|%...%   |Wildcard matches           |String                        |%*str%: (Ends with)<br>%str*%: (Starts with)<br>%*str*%: (Contains)           |
+|/.../   |Regular expression matches |String                        |/str[0-9]{4}/:                                                               |
+|!=      |Not equals                 |String, Integer, Decimal, Date|!=str:<br>!='str':<br>!=123.456:<br>!=#2012-01-23#:                          |
+|<       |Less than                  |Integer, Decimal, Date        |<123.456: <br> <#2012-01-23#:                                                |
+|<=      |Less than or equals        |Integer, Decimal, Date        |<=123.456: <br> <=#2012-01-23#:                                              |
+|>       |Grater than                |Integer, Decimal, Date        |>123.456: <br> >#2012-01-23#:                                                |
+|>=      |Grater than or equals      |Integer, Decimal, Date        |>=123.456: <br> >=#2012-01-23#:                                              |
 
-If 'default' label is specified as the expression, it will match all values.
+If `default` label is specified as the expression, it will match all values.
 
     e.g.)
-    "${Make/=*'NIKON*':Nikon/'Canon':Canon/default:Others}"
+    "${Make?{%NIKON*%:Nikon,'Canon':Canon,default:Others}}"
     -> "Nikon" or "Canon" or "Others"
 
 

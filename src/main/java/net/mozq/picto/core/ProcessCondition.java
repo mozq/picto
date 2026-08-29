@@ -20,12 +20,11 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.TimeZone;
 
-import org.mifmi.commons4j.text.format.NamedFormatter;
-
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
 import net.mozq.picto.enums.ExistingFileMethod;
 import net.mozq.picto.enums.OperationType;
+import net.mozq.nanotemplate.NanoTemplate;
 
 public class ProcessCondition {
 
@@ -35,7 +34,7 @@ public class ProcessCondition {
 	int dept = Integer.MAX_VALUE;
 
 	private Path destRootPath;
-	private NamedFormatter destSubPathFormat;
+	private NanoTemplate destSubPathTemplate;
 
 	private OperationType operationType;
 	private ExistingFileMethod existingFileMethod;
@@ -107,12 +106,12 @@ public class ProcessCondition {
 		this.destRootPath = destRootPath;
 	}
 
-	public NamedFormatter getDestSubPathFormat() {
-		return destSubPathFormat;
+	public NanoTemplate getDestSubPathTemplate() {
+		return destSubPathTemplate;
 	}
 
-	public void setDestSubPathFormat(NamedFormatter destSubPathFormat) {
-		this.destSubPathFormat = destSubPathFormat;
+	public void setDestSubPathTemplate(NanoTemplate destSubPathTemplate) {
+		this.destSubPathTemplate = destSubPathTemplate;
 	}
 
 	public OperationType getOperationType() {

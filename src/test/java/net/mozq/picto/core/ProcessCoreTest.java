@@ -56,10 +56,10 @@ import org.apache.commons.imaging.formats.tiff.constants.GpsTagConstants;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
-import org.mifmi.commons4j.text.format.NamedFormatter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.core.exception.PictoInvalidDestinationPathException;
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
@@ -403,12 +403,24 @@ class ProcessCoreTest {
 		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
 		Path source = plainJpeg(srcRoot.resolve("source.jpg"));
 		Files.setLastModifiedTime(source, FileTime.fromMillis(parseUtc("2026-08-20 12:34:56").getTime()));
-		ProcessCondition condition = findCondition(srcRoot, destRoot, "${PhotoTakenDate%uuuu-MM-dd}.txt");
-		condition.getDestSubPathFormat().setTimeZone(UTC);
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${PhotoTakenDate:uuuu-MM-dd}.txt");
+		condition.getDestSubPathTemplate().timeZone(UTC);
 
 		ProcessData data = findFiles(condition).get(0);
 
 		assertEquals(destRoot.resolve("2026-08-20.txt"), data.getDestPath());
+	}
+
+	@Test
+	void findFilesAppliesTemplateMatchExpressionToDestinationPath() throws IOException {
+		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
+		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
+		Files.writeString(srcRoot.resolve("source.txt"), "source");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${Extension?{'txt':text,default:other}}/${FileName}");
+
+		ProcessData data = findFiles(condition).get(0);
+
+		assertEquals(destRoot.resolve("text/source.txt"), data.getDestPath());
 	}
 
 	@Test
@@ -467,7 +479,7 @@ class ProcessCoreTest {
 		condition.setSrcRootPath(srcRoot);
 		condition.setDestRootPath(destRoot);
 		condition.setPathFilter(new PictoPathFilter());
-		condition.setDestSubPathFormat(new NamedFormatter(destSubPathPattern));
+		condition.setDestSubPathTemplate(new NanoTemplate(destSubPathPattern).timeZone(UTC));
 		condition.setDept(Integer.MAX_VALUE);
 		return condition;
 	}
