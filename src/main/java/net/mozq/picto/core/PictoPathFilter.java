@@ -27,20 +27,16 @@ import java.nio.file.PathMatcher;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 
-import org.mifmi.commons4j.matcher.DateMatcher;
-import org.mifmi.commons4j.matcher.IMatcher;
-import org.mifmi.commons4j.matcher.NumberMatcher;
-
 public class PictoPathFilter implements Filter<Path> {
 
 	private PathMatcher pathMatcher = null;
 	private Path rootPath = null;
 	private boolean filenameMatch = false;
 	private boolean containsHiddens = false;
-	private IMatcher<Date> creationTimeMatcher = null;
-	private IMatcher<Date> modifiedTimeMatcher = null;
-	private IMatcher<Date> accessTimeMatcher = null;
-	private IMatcher<Number> sizeMatcher = null;
+	private Range<Date> creationTimeRange = null;
+	private Range<Date> modifiedTimeRange = null;
+	private Range<Date> accessTimeRange = null;
+	private Range<Long> sizeRange = null;
 	
 	
 	public PictoPathFilter() {
@@ -64,22 +60,22 @@ public class PictoPathFilter implements Filter<Path> {
 	}
 	
 	public PictoPathFilter setCreationTimeRange(Date from, Date to) {
-		this.creationTimeMatcher = DateMatcher.between(from, to);
+		this.creationTimeRange = Range.of(from, to);
 		return this;
 	}
 	
 	public PictoPathFilter setModifiedTimeRange(Date from, Date to) {
-		this.modifiedTimeMatcher = DateMatcher.between(from, to);
+		this.modifiedTimeRange = Range.of(from, to);
 		return this;
 	}
 	
 	public PictoPathFilter setAccessTimeRange(Date from, Date to) {
-		this.accessTimeMatcher = DateMatcher.between(from, to);
+		this.accessTimeRange = Range.of(from, to);
 		return this;
 	}
 	
 	public PictoPathFilter setSizeRange(Long from, Long to) {
-		this.sizeMatcher = NumberMatcher.between(from, to);
+		this.sizeRange = Range.of(from, to);
 		return this;
 	}
 	
@@ -91,20 +87,20 @@ public class PictoPathFilter implements Filter<Path> {
 		return containsHiddens;
 	}
 
-	public IMatcher<Date> getCreationTimeMatcher() {
-		return creationTimeMatcher;
+	public Range<Date> getCreationTimeRange() {
+		return creationTimeRange;
 	}
 
-	public IMatcher<Date> getModifiedTimeMatcher() {
-		return modifiedTimeMatcher;
+	public Range<Date> getModifiedTimeRange() {
+		return modifiedTimeRange;
 	}
 
-	public IMatcher<Date> getAccessTimeMatcher() {
-		return accessTimeMatcher;
+	public Range<Date> getAccessTimeRange() {
+		return accessTimeRange;
 	}
 
-	public IMatcher<Number> getSizeMatcher() {
-		return sizeMatcher;
+	public Range<Long> getSizeRange() {
+		return sizeRange;
 	}
 
 	@Override
@@ -112,9 +108,9 @@ public class PictoPathFilter implements Filter<Path> {
 
 		BasicFileAttributes fileAttrs = null;
 		
-		if (this.creationTimeMatcher != null
-				|| this.modifiedTimeMatcher != null
-				|| this.accessTimeMatcher != null) {
+		if (this.creationTimeRange != null
+				|| this.modifiedTimeRange != null
+				|| this.accessTimeRange != null) {
 			fileAttrs = Files.readAttributes(path, BasicFileAttributes.class);
 		}
 		
@@ -144,27 +140,27 @@ public class PictoPathFilter implements Filter<Path> {
 			}
 		}
 
-		if (this.creationTimeMatcher != null) {
-			if (!this.creationTimeMatcher.matches(new Date(fileAttrs.creationTime().toMillis()))) {
+		if (this.creationTimeRange != null) {
+			if (!this.creationTimeRange.contains(new Date(fileAttrs.creationTime().toMillis()))) {
 				return false;
 			}
 		}
 		
-		if (this.modifiedTimeMatcher != null) {
-			if (!this.modifiedTimeMatcher.matches(new Date(fileAttrs.lastModifiedTime().toMillis()))) {
+		if (this.modifiedTimeRange != null) {
+			if (!this.modifiedTimeRange.contains(new Date(fileAttrs.lastModifiedTime().toMillis()))) {
 				return false;
 			}
 		}
 		
-		if (this.accessTimeMatcher != null) {
-			if (!this.accessTimeMatcher.matches(new Date(fileAttrs.lastAccessTime().toMillis()))) {
+		if (this.accessTimeRange != null) {
+			if (!this.accessTimeRange.contains(new Date(fileAttrs.lastAccessTime().toMillis()))) {
 				return false;
 			}
 		}
 		
-		if (this.sizeMatcher != null) {
+		if (this.sizeRange != null) {
 			long size = Files.size(path);
-			if (!this.sizeMatcher.matches(size)) {
+			if (!this.sizeRange.contains(size)) {
 				return false;
 			}
 		}

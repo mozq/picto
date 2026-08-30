@@ -17,8 +17,10 @@
 package net.mozq.picto.view;
 
 import java.awt.Color;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Window;
@@ -37,11 +39,9 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.plaf.basic.BasicProgressBarUI;
-
-import org.mifmi.commons4j.swing.AdjustableImageIcon;
-import org.mifmi.commons4j.swing.ObjectTableModel;
-import org.mifmi.commons4j.swing.TableUtilz;
 
 import net.mozq.picto.App;
 import net.mozq.picto.core.ProcessCondition;
@@ -52,10 +52,9 @@ import net.mozq.picto.core.exception.PictoException;
 import net.mozq.picto.enums.ExistingFileOption;
 import net.mozq.picto.enums.ProcessDataStatus;
 
-import java.awt.FlowLayout;
-
 public class ProcessDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
+	private static final int STATUS_ICON_SIZE = 16;
 	
 	private static final ImageIcon ICON_IGNORED = loadImageIcon("net/mozq/picto/resources/icons/icon-ignored.png", ProcessDataStatus.Ignored.toString()); //$NON-NLS-1$
 	private static final ImageIcon ICON_PROCESSIG = loadImageIcon("net/mozq/picto/resources/icons/icon-processing.png", ProcessDataStatus.Processing.toString()); //$NON-NLS-1$
@@ -71,7 +70,7 @@ public class ProcessDialog extends JDialog {
 	private final JDialog dialog;
 	private JPanel contentPane;
 	private JTable table;
-	private ObjectTableModel<ProcessData> tableModel;
+	private ProcessDataTableModel tableModel;
 	private final JProgressBar progressBar;
 	private final JButton btnStop;
 	private JPanel pnlControls;
@@ -103,40 +102,14 @@ public class ProcessDialog extends JDialog {
 		gbc_scrollPane.gridy = 0;
 		getContentPane().add(scrollPane, gbc_scrollPane);
 		
-		tableModel = new ObjectTableModel<ProcessData>(
+		tableModel = new ProcessDataTableModel(
 				new String[]{
 						Messages.getString("ProcessDialog.table.no"), //$NON-NLS-1$
 						Messages.getString("ProcessDialog.table.status"), //$NON-NLS-1$
 						Messages.getString("ProcessDialog.table.srcPath"), //$NON-NLS-1$
 						Messages.getString("ProcessDialog.table.destPath"), //$NON-NLS-1$
 						Messages.getString("ProcessDialog.table.message") //$NON-NLS-1$
-						},
-				new Class<?>[]{Integer.class, ImageIcon.class, String.class, String.class, String.class},
-				new ArrayList<ProcessData>(),
-				(data, rowIndex, columnIndex) -> {
-					switch (columnIndex) {
-					case 0: return rowIndex + 1;
-					case 1:
-						ProcessDataStatus status = data.getStatus();
-						if (status == null) {
-							return null;
-						}
-						switch (status) {
-						case Ignored: return ICON_IGNORED;
-						case Processing: return ICON_PROCESSIG;
-						case Waiting: return null;
-						case Skipped: return ICON_SKIPPED;
-						case Terminated: return ICON_TERMINATED;
-						case Success: return ICON_SUCCESS;
-						case Error: return ICON_ERROR;
-						default: throw new IllegalStateException();
-						}
-					case 2: return processCondition.getSrcRootPath().relativize(data.getSrcPath()).toString();
-					case 3: return processCondition.getDestRootPath().relativize(data.getDestPath()).toString();
-					case 4: return data.getMessage();
-					}
-					return null;
-				});
+						});
 		
 		table = new JTable(tableModel) {
 			private static final long serialVersionUID = 1L;
@@ -154,11 +127,11 @@ public class ProcessDialog extends JDialog {
 			}
 		};
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		TableUtilz.setColumnWidth(table, 0, 40, 40, 40);
-		TableUtilz.setColumnWidth(table, 1, 40);
-		TableUtilz.setColumnWidth(table, 2, 250);
-		TableUtilz.setColumnWidth(table, 3, 250);
-		TableUtilz.setColumnWidth(table, 4, 250);
+		setColumnWidth(table, 0, 40, 40, 40);
+		setColumnWidth(table, 1, 40);
+		setColumnWidth(table, 2, 250);
+		setColumnWidth(table, 3, 250);
+		setColumnWidth(table, 4, 250);
 		scrollPane.setViewportView(table);
 		
 		progressBar = new JProgressBar();
@@ -334,9 +307,107 @@ public class ProcessDialog extends JDialog {
 		URL imageUrl = ProcessDialog.class.getClassLoader().getResource(filename);
 
 		if (imageUrl != null) {
-			return new AdjustableImageIcon(imageUrl, description);
+			return createScaledImageIcon(new ImageIcon(imageUrl, description));
 		}
 		
-		return new AdjustableImageIcon(filename, description);
+		return createScaledImageIcon(new ImageIcon(filename, description));
+	}
+
+	private static ImageIcon createScaledImageIcon(ImageIcon icon) {
+		Image image = icon.getImage().getScaledInstance(STATUS_ICON_SIZE, STATUS_ICON_SIZE, Image.SCALE_SMOOTH);
+		return new ImageIcon(image, icon.getDescription());
+	}
+
+	private static void setColumnWidth(JTable table, int columnIndex, int width) {
+		TableColumn column = table.getColumnModel().getColumn(columnIndex);
+		column.setPreferredWidth(width);
+	}
+
+	private static void setColumnWidth(JTable table, int columnIndex, int minWidth, int preferredWidth, int maxWidth) {
+		TableColumn column = table.getColumnModel().getColumn(columnIndex);
+		column.setMinWidth(minWidth);
+		column.setPreferredWidth(preferredWidth);
+		column.setMaxWidth(maxWidth);
+	}
+
+	private class ProcessDataTableModel extends AbstractTableModel {
+		private static final long serialVersionUID = 1L;
+
+		private final String[] columnNames;
+		private final Class<?>[] columnClasses = new Class<?>[]{
+				Integer.class,
+				ImageIcon.class,
+				String.class,
+				String.class,
+				String.class
+		};
+		private final ArrayList<ProcessData> rows = new ArrayList<>();
+
+		ProcessDataTableModel(String[] columnNames) {
+			this.columnNames = columnNames;
+		}
+
+		@Override
+		public int getRowCount() {
+			return rows.size();
+		}
+
+		@Override
+		public int getColumnCount() {
+			return columnNames.length;
+		}
+
+		@Override
+		public String getColumnName(int columnIndex) {
+			return columnNames[columnIndex];
+		}
+
+		@Override
+		public Class<?> getColumnClass(int columnIndex) {
+			return columnClasses[columnIndex];
+		}
+
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			ProcessData data = rows.get(rowIndex);
+			switch (columnIndex) {
+			case 0: return rowIndex + 1;
+			case 1: return getStatusIcon(data.getStatus());
+			case 2: return processCondition.getSrcRootPath().relativize(data.getSrcPath()).toString();
+			case 3: return processCondition.getDestRootPath().relativize(data.getDestPath()).toString();
+			case 4: return data.getMessage();
+			default: throw new IllegalArgumentException(Integer.toString(columnIndex));
+			}
+		}
+
+		void addRow(ProcessData processData) {
+			int rowIndex = rows.size();
+			rows.add(processData);
+			fireTableRowsInserted(rowIndex, rowIndex);
+		}
+
+		ProcessData getRow(int rowIndex) {
+			return rows.get(rowIndex);
+		}
+
+		void updateRow(int rowIndex) {
+			fireTableRowsUpdated(rowIndex, rowIndex);
+		}
+
+		private ImageIcon getStatusIcon(ProcessDataStatus status) {
+			if (status == null) {
+				return null;
+			}
+			switch (status) {
+			case Ignored: return ICON_IGNORED;
+			case Processing: return ICON_PROCESSIG;
+			case Waiting: return null;
+			case Skipped: return ICON_SKIPPED;
+			case Terminated: return ICON_TERMINATED;
+			case Success: return ICON_SUCCESS;
+			case Error: return ICON_ERROR;
+			default: throw new IllegalStateException(status.toString());
+			}
+		}
 	}
 }

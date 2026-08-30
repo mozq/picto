@@ -72,10 +72,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.MaskFormatter;
 
-import org.mifmi.commons4j.io.file.FileUtilz;
-import org.mifmi.commons4j.swing.WindowUtilz;
-import org.mifmi.commons4j.util.DateUtilz;
-
 import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
 import net.mozq.picto.AppConfig;
@@ -292,7 +288,7 @@ public class MainFrame extends JFrame {
 				if (selected == JFileChooser.APPROVE_OPTION) {
 					File file = filechooser.getSelectedFile();
 
-					if (!SETTINGS_FILE_NAME_EXT.equals(FileUtilz.getExt(file.getName()))) {
+					if (!SETTINGS_FILE_NAME_EXT.equals(getExtension(file.getName()))) {
 						file = new File(file.getParentFile(), file.getName() + "." + SETTINGS_FILE_NAME_EXT); //$NON-NLS-1$
 					}
 
@@ -328,7 +324,7 @@ public class MainFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				HelpDialog helpDialog = new HelpDialog();
 				helpDialog.setModalityType(ModalityType.DOCUMENT_MODAL);
-				WindowUtilz.setPositionCenter(helpDialog, frame);
+				helpDialog.setLocationRelativeTo(frame);
 				helpDialog.setVisible(true);
 			}
 		});
@@ -1315,7 +1311,7 @@ public class MainFrame extends JFrame {
 
 		ProcessDialog processDialog = new ProcessDialog(frame);
 		processDialog.setModalityType(ModalityType.DOCUMENT_MODAL);
-		WindowUtilz.setPositionCenter(processDialog, frame);
+		processDialog.setLocationRelativeTo(frame);
 		processDialog.doProcess(processCondition);
 		processDialog.setVisible(true);
 	}
@@ -1407,7 +1403,7 @@ public class MainFrame extends JFrame {
 		}
 
 		if (creationTimeRangeFrom != null && creationTimeRangeTo != null) {
-			if (DateUtilz.compare(creationTimeRangeFrom, creationTimeRangeTo, false) > 0) {
+			if (creationTimeRangeFrom.compareTo(creationTimeRangeTo) > 0) {
 				JOptionPane.showMessageDialog(
 						frame,
 						Messages.getString("message.warn.creationTimeRange.is.invalid.range"), //$NON-NLS-1$
@@ -1419,7 +1415,7 @@ public class MainFrame extends JFrame {
 		}
 
 		if (modifiedTimeRangeFrom != null && modifiedTimeRangeTo != null) {
-			if (DateUtilz.compare(modifiedTimeRangeFrom, modifiedTimeRangeTo, false) > 0) {
+			if (modifiedTimeRangeFrom.compareTo(modifiedTimeRangeTo) > 0) {
 				JOptionPane.showMessageDialog(
 						frame,
 						Messages.getString("message.warn.modifiedTimeRange.is.invalid.range"), //$NON-NLS-1$
@@ -1537,6 +1533,15 @@ public class MainFrame extends JFrame {
 			return null;
 		}
 		return size * unit.getUnitBytes();
+	}
+
+	private static String getExtension(String filename) {
+		int separator = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
+		int extensionSeparator = filename.lastIndexOf('.');
+		if (extensionSeparator <= separator || extensionSeparator < 1 || extensionSeparator == filename.length() - 1) {
+			return ""; //$NON-NLS-1$
+		}
+		return filename.substring(extensionSeparator + 1);
 	}
 
 	private static Integer parseInteger(String numberText) {

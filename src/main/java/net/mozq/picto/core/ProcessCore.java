@@ -63,7 +63,6 @@ import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.taginfos.TagInfo;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
-import org.mifmi.commons4j.io.file.FileUtilz;
 
 import net.mozq.nanotemplate.NanoTemplateException;
 import net.mozq.picto.App;
@@ -170,8 +169,8 @@ public class ProcessCore {
 									case "Now": return new Date();
 									case "ParentSubPath": return rootRelativeSubPath.toString();
 									case "FileName": return file.getFileName().toString();
-									case "BaseName": return FileUtilz.getBaseName(file.getFileName().toString());
-									case "Extension": return FileUtilz.getExt(file.getFileName().toString());
+									case "BaseName": return getBaseName(file.getFileName().toString());
+									case "Extension": return getExtension(file.getFileName().toString());
 									case "Size": return Long.valueOf(Files.size(file));
 									case "CreationDate": return (processCondition.isChangeFileCreationDate()) ? baseDate : new Date(attrs.creationTime().toMillis());
 									case "ModifiedDate": return (processCondition.isChangeFileModifiedDate()) ? baseDate : new Date(attrs.lastModifiedTime().toMillis());
@@ -616,6 +615,31 @@ public class ProcessCore {
 		
 		cal.set(field, amount.intValue());
 		return true;
+	}
+
+	private static String getBaseName(String filename) {
+		int extensionSeparator = getExtensionSeparator(filename);
+		if (extensionSeparator < 0) {
+			return filename;
+		}
+		return filename.substring(0, extensionSeparator);
+	}
+
+	private static String getExtension(String filename) {
+		int extensionSeparator = getExtensionSeparator(filename);
+		if (extensionSeparator < 0 || extensionSeparator == filename.length() - 1) {
+			return ""; //$NON-NLS-1$
+		}
+		return filename.substring(extensionSeparator + 1);
+	}
+
+	private static int getExtensionSeparator(String filename) {
+		int separator = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
+		int extensionSeparator = filename.lastIndexOf('.');
+		if (extensionSeparator <= separator || extensionSeparator < 1) {
+			return -1;
+		}
+		return extensionSeparator;
 	}
 	
 	private static Date getPhotoTakenDate(Path imagePath, ImageMetadata imageImageMetadata) {
