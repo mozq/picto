@@ -72,9 +72,9 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import javax.swing.text.MaskFormatter;
 
+import net.mozq.appsettings.AppSettings;
 import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
-import net.mozq.picto.AppConfig;
 import net.mozq.picto.core.PictoPathFilter;
 import net.mozq.picto.core.ProcessCondition;
 import net.mozq.picto.enums.DateModType;
@@ -110,7 +110,7 @@ public class MainFrame extends JFrame {
 
 	private TimeZone timeZone = TimeZone.getDefault();
 
-	private static final String SETTINGS_FILE_NAME_EXT = "picto"; //$NON-NLS-1$
+	private static final String SETTINGS_FILE_NAME_EXT = "conf"; //$NON-NLS-1$
 
 	private final JFrame frame;
 	private boolean windowLayoutReady;
@@ -253,7 +253,7 @@ public class MainFrame extends JFrame {
 				if (selected == JFileChooser.APPROVE_OPTION) {
 					File file = filechooser.getSelectedFile();
 					try {
-						App.config().loadFromFile(file.toPath());
+						App.config().loadFrom(file.toPath());
 						loadSettings();
 
 						JOptionPane.showMessageDialog(
@@ -293,7 +293,7 @@ public class MainFrame extends JFrame {
 					}
 
 					try {
-						App.config().storeToFile(file.toPath(), ""); //$NON-NLS-1$
+						App.config().storeTo(file.toPath(), ""); //$NON-NLS-1$
 
 						JOptionPane.showMessageDialog(
 								null,
@@ -1091,28 +1091,28 @@ public class MainFrame extends JFrame {
 		}
 
 	protected void loadSettings() {
-		AppConfig conf = App.config();
+		AppSettings conf = App.config();
 
-		txtSrcRootDirPath.setText(conf.get("src.root.dir", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtFilePattern.setText(conf.get("file.pattern", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtSrcRootDirPath.setText(conf.getString("src.root.dir", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtFilePattern.setText(conf.getString("file.pattern", "")); //$NON-NLS-1$ //$NON-NLS-2$
 		cmbFilePatternSyntax.setSelectedItem(FilePatternSyntax.of(conf.getBoolean("file.pattern.regex", false))); //$NON-NLS-1$
 		chkContainsSubs.setSelected(conf.getBoolean("contains.subs", true)); //$NON-NLS-1$
 		chkContainsHiddens.setSelected(conf.getBoolean("contains.hiddens", false)); //$NON-NLS-1$
 
-		txtFileSizeRangeFrom.setText(conf.get("file.size.range.from", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtFileSizeRangeTo.setText(conf.get("file.size.range.to", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtFileSizeRangeFrom.setText(conf.getString("file.size.range.from", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtFileSizeRangeTo.setText(conf.getString("file.size.range.to", "")); //$NON-NLS-1$ //$NON-NLS-2$
 		cmbFileSizeUnit.setSelectedItem(conf.getEnum("file.size.unit", FileSizeUnit.class, FileSizeUnit.MB)); //$NON-NLS-1$
-		txtCreationTimeRangeFrom.setText(conf.get("creation.time.range.from", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtCreationTimeRangeTo.setText(conf.get("creation.time.range.to", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtModifiedTimeRangeFrom.setText(conf.get("modified.time.range.from", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtModifiedTimeRangeTo.setText(conf.get("modified.time.range.to", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtCreationTimeRangeFrom.setText(conf.getString("creation.time.range.from", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtCreationTimeRangeTo.setText(conf.getString("creation.time.range.to", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtModifiedTimeRangeFrom.setText(conf.getString("modified.time.range.from", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtModifiedTimeRangeTo.setText(conf.getString("modified.time.range.to", "")); //$NON-NLS-1$ //$NON-NLS-2$
 
 		rdoOpeTypeCopy.setSelected(conf.getBoolean("ope.type.copy", true)); //$NON-NLS-1$
 		rdoOpeTypeMove.setSelected(conf.getBoolean("ope.type.move", false)); //$NON-NLS-1$
 		rdoOpeTypeOverwrite.setSelected(conf.getBoolean("ope.type.overwrite", false)); //$NON-NLS-1$
 
-		txtDestRootDirPath.setText(conf.get("dest.root.dir", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtDestSubPathPattern.setText(conf.get("dest.sub.path.pattern", "${FileName}")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDestRootDirPath.setText(conf.getString("dest.root.dir", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDestSubPathPattern.setText(conf.getString("dest.sub.path.pattern", "${FileName}")); //$NON-NLS-1$ //$NON-NLS-2$
 		cmbExistingFileMethod.setSelectedItem(conf.getEnum("existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm)); //$NON-NLS-1$
 		chkCheckFileDigest.setSelected(conf.getBoolean("check.file.digest", false)); //$NON-NLS-1$
 
@@ -1121,62 +1121,63 @@ public class MainFrame extends JFrame {
 		chkChangeFileAccessDate.setSelected(conf.getBoolean("change.file.access.date", false)); //$NON-NLS-1$
 		chkChangeExifDate.setSelected(conf.getBoolean("change.file.exif.date", false)); //$NON-NLS-1$
 		cmbBaseDateType.setSelectedItem(conf.getEnum("base.date.type", DateType.class, DateType.FileModifiedDate)); //$NON-NLS-1$
-		txtCustomBaseDate.setText(conf.get("custom.base.date", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtCustomBaseDate.setText(conf.getString("custom.base.date", "")); //$NON-NLS-1$ //$NON-NLS-2$
 		cmbDateModType.setSelectedItem(conf.getEnum("date.mod.type", DateModType.class, DateModType.None)); //$NON-NLS-1$
-		txtDateModYears.setText(conf.get("date.mod.year", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtDateModMonths.setText(conf.get("date.mod.month", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtDateModDays.setText(conf.get("date.mod.day", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtDateModHours.setText(conf.get("date.mod.hour", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtDateModMinutes.setText(conf.get("date.mod.minute", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtDateModSeconds.setText(conf.get("date.mod.second", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDateModYears.setText(conf.getString("date.mod.year", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDateModMonths.setText(conf.getString("date.mod.month", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDateModDays.setText(conf.getString("date.mod.day", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDateModHours.setText(conf.getString("date.mod.hour", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDateModMinutes.setText(conf.getString("date.mod.minute", "")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDateModSeconds.setText(conf.getString("date.mod.second", "")); //$NON-NLS-1$ //$NON-NLS-2$
 		chkRemoveExifTagsGps.setSelected(conf.getBoolean("remove.exif.tags.gps", false)); //$NON-NLS-1$
 		chkRemoveExifTagsAll.setSelected(conf.getBoolean("remove.exif.tags.all", false)); //$NON-NLS-1$
 
 	}
 
 	protected void storeSettings() throws IOException {
-		AppConfig conf = App.config();
+		AppSettings conf = App.config();
 
 		conf.set("src.root.dir", txtSrcRootDirPath.getText()); //$NON-NLS-1$
 		conf.set("file.pattern", txtFilePattern.getText()); //$NON-NLS-1$
-		conf.setBoolean("file.pattern.regex", getSelectedFilePatternSyntax().isRegex()); //$NON-NLS-1$
-		conf.setBoolean("contains.subs", chkContainsSubs.isSelected()); //$NON-NLS-1$
-		conf.setBoolean("contains.hiddens", chkContainsHiddens.isSelected()); //$NON-NLS-1$
+		conf.set("file.pattern.regex", getSelectedFilePatternSyntax().isRegex()); //$NON-NLS-1$
+		conf.set("contains.subs", chkContainsSubs.isSelected()); //$NON-NLS-1$
+		conf.set("contains.hiddens", chkContainsHiddens.isSelected()); //$NON-NLS-1$
 
 		conf.set("file.size.range.from", txtFileSizeRangeFrom.getText()); //$NON-NLS-1$
 		conf.set("file.size.range.to", txtFileSizeRangeTo.getText()); //$NON-NLS-1$
-		conf.setEnum("file.size.unit", (Enum<?>)cmbFileSizeUnit.getSelectedItem()); //$NON-NLS-1$
+		conf.set("file.size.unit", cmbFileSizeUnit.getSelectedItem()); //$NON-NLS-1$
 		conf.set("creation.time.range.from", txtCreationTimeRangeFrom.getText()); //$NON-NLS-1$
 		conf.set("creation.time.range.to", txtCreationTimeRangeTo.getText()); //$NON-NLS-1$
 		conf.set("modified.time.range.from", txtModifiedTimeRangeFrom.getText()); //$NON-NLS-1$
 		conf.set("modified.time.range.to", txtModifiedTimeRangeTo.getText()); //$NON-NLS-1$
 
-		conf.setBoolean("ope.type.copy", rdoOpeTypeCopy.isSelected()); //$NON-NLS-1$
-		conf.setBoolean("ope.type.move", rdoOpeTypeMove.isSelected()); //$NON-NLS-1$
-		conf.setBoolean("ope.type.overwrite", rdoOpeTypeOverwrite.isSelected()); //$NON-NLS-1$
+		conf.set("ope.type.copy", rdoOpeTypeCopy.isSelected()); //$NON-NLS-1$
+		conf.set("ope.type.move", rdoOpeTypeMove.isSelected()); //$NON-NLS-1$
+		conf.set("ope.type.overwrite", rdoOpeTypeOverwrite.isSelected()); //$NON-NLS-1$
 
 		conf.set("dest.root.dir", txtDestRootDirPath.getText()); //$NON-NLS-1$
 		conf.set("dest.sub.path.pattern", txtDestSubPathPattern.getText()); //$NON-NLS-1$
-		conf.setEnum("existing.file.method", (Enum<?>)cmbExistingFileMethod.getSelectedItem()); //$NON-NLS-1$
-		conf.setBoolean("check.file.digest", chkCheckFileDigest.isSelected()); //$NON-NLS-1$
+		conf.set("existing.file.method", cmbExistingFileMethod.getSelectedItem()); //$NON-NLS-1$
+		conf.set("check.file.digest", chkCheckFileDigest.isSelected()); //$NON-NLS-1$
 
-		conf.setBoolean("change.file.creation.date", chkChangeFileCreationDate.isSelected()); //$NON-NLS-1$
-		conf.setBoolean("change.file.modified.date", chkChangeFileModifiedDate.isSelected()); //$NON-NLS-1$
-		conf.setBoolean("change.file.access.date", chkChangeFileAccessDate.isSelected()); //$NON-NLS-1$
-		conf.setBoolean("change.file.exif.date", chkChangeExifDate.isSelected()); //$NON-NLS-1$
-		conf.setEnum("base.date.type", (Enum<?>)cmbBaseDateType.getSelectedItem()); //$NON-NLS-1$
+		conf.set("change.file.creation.date", chkChangeFileCreationDate.isSelected()); //$NON-NLS-1$
+		conf.set("change.file.modified.date", chkChangeFileModifiedDate.isSelected()); //$NON-NLS-1$
+		conf.set("change.file.access.date", chkChangeFileAccessDate.isSelected()); //$NON-NLS-1$
+		conf.set("change.file.exif.date", chkChangeExifDate.isSelected()); //$NON-NLS-1$
+		conf.set("base.date.type", cmbBaseDateType.getSelectedItem()); //$NON-NLS-1$
 		conf.set("custom.base.date", txtCustomBaseDate.getText()); //$NON-NLS-1$
-		conf.setEnum("date.mod.type", (Enum<?>)cmbDateModType.getSelectedItem()); //$NON-NLS-1$
+		conf.set("date.mod.type", cmbDateModType.getSelectedItem()); //$NON-NLS-1$
 		conf.set("date.mod.year", txtDateModYears.getText()); //$NON-NLS-1$
 		conf.set("date.mod.month", txtDateModMonths.getText()); //$NON-NLS-1$
 		conf.set("date.mod.day", txtDateModDays.getText()); //$NON-NLS-1$
 		conf.set("date.mod.hour", txtDateModHours.getText()); //$NON-NLS-1$
 		conf.set("date.mod.minute", txtDateModMinutes.getText()); //$NON-NLS-1$
 		conf.set("date.mod.second", txtDateModSeconds.getText()); //$NON-NLS-1$
-		conf.setBoolean("remove.exif.tags.gps", chkRemoveExifTagsGps.isSelected()); //$NON-NLS-1$
-		conf.setBoolean("remove.exif.tags.all", chkRemoveExifTagsAll.isSelected()); //$NON-NLS-1$
+		conf.set("remove.exif.tags.gps", chkRemoveExifTagsGps.isSelected()); //$NON-NLS-1$
+		conf.set("remove.exif.tags.all", chkRemoveExifTagsAll.isSelected()); //$NON-NLS-1$
 
 		conf.store(null);
+		App.deleteMigratedLegacySettingsIfNeeded();
 	}
 
 	private JLabel newMainLabel(String title) {

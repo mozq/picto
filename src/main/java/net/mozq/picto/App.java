@@ -24,19 +24,19 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import org.mifmi.commons4j.io.file.FileUtilz;
-import org.mifmi.commons4j.util.EnvUtilz;
+import net.mozq.appsettings.AppSettings;
 
 public class App {
-	public static final String GROUP_NAME = "Mozq";
-	public static final String APP_NAME = "Picto";
-	public static final String CONFIG_FILE_NAME = "settings.properties";
+	public static final String GROUP_NAME = "mozq";
+	public static final String APP_NAME = "picto";
+	public static final String CONFIG_FILE_NAME = "settings.conf";
 	public static final String WARNS_FILE_NAME = "warns.log";
 	public static final String ERRORS_FILE_NAME = "errors.log";
-	public static final Path WARNS_FILE_PATH = FileUtilz.getPath(EnvUtilz.getAppDataDir(), GROUP_NAME, APP_NAME, WARNS_FILE_NAME);
-	public static final Path ERRORS_FILE_PATH = FileUtilz.getPath(EnvUtilz.getAppDataDir(), GROUP_NAME, APP_NAME, ERRORS_FILE_NAME);
 	
-	private static AppConfig config = null;
+	private static AppSettings config = null;
+	private static AppSettingsMigration.Result settingsMigrationResult = AppSettingsMigration.Result.none();
+	private static Path warnsFilePath = null;
+	private static Path errorsFilePath = null;
 
 	private App() {
 		// NOP
@@ -44,30 +44,51 @@ public class App {
 	
 	public static void init() throws IOException {
 		// Load config
-		config = new AppConfig(CONFIG_FILE_NAME, APP_NAME, GROUP_NAME);
+		config = AppSettings.of(GROUP_NAME, APP_NAME, CONFIG_FILE_NAME);
+		settingsMigrationResult = AppSettingsMigration.migrateIfNeeded(config);
+		if (!settingsMigrationResult.migrated()) {
+			config.load();
+		}
+		
+		Path appDirectory = config.path().getParent();
+		warnsFilePath = appDirectory.resolve(WARNS_FILE_NAME);
+		errorsFilePath = appDirectory.resolve(ERRORS_FILE_NAME);
 		
 		// Clear old logs
-		Files.deleteIfExists(WARNS_FILE_PATH);
-		Files.deleteIfExists(ERRORS_FILE_PATH);
+		Files.deleteIfExists(warnsFilePath);
+		Files.deleteIfExists(errorsFilePath);
 	}
 
-	public static AppConfig config() {
+	public static AppSettings config() {
 		return config;
+	}
+	
+	public static void deleteMigratedLegacySettingsIfNeeded() {
+		AppSettingsMigration.deleteLegacyFiles(settingsMigrationResult);
+		settingsMigrationResult = AppSettingsMigration.Result.none();
 	}
 
 	public static void handleWarn(String message, Throwable throwable) {
-		writeLog(WARNS_FILE_PATH, message, throwable);
+		writeLog(warnsFilePath, message, throwable);
 	}
 
 	public static void handleError(String message, Throwable throwable) {
-		writeLog(ERRORS_FILE_PATH, message, throwable);
+		writeLog(errorsFilePath, message, throwable);
 	}
 
 	private static void writeLog(Path filePath, String message, Throwable throwable) {
+		if (filePath == null) {
+			return;
+		}
+		try {
+			Files.createDirectories(filePath.getParent());
+		} catch (IOException e) {
+			return;
+		}
 		try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(
 				filePath,
-				StandardOpenOption.WRITE,
-				StandardOpenOption.CREATE_NEW
+				StandardOpenOption.CREATE,
+				StandardOpenOption.APPEND
 				))) {
 			writer.println("--");
 			writer.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
