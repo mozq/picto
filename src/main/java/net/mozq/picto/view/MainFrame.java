@@ -25,6 +25,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Dimension;
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -39,11 +40,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -59,12 +63,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
@@ -97,6 +104,7 @@ public class MainFrame extends JFrame {
 	private static final char DATE_MASK_PLACEHOLDER_CHAR = '_';
 	private static final String DATE_MASK_VALID_CHARS = "0123456789_"; //$NON-NLS-1$
 	private static final String DATE_NASK_DEFAULT_VALUE = "____/__/__ __:__:__"; //$NON-NLS-1$
+	private static final String DEFAULT_DEST_SUB_PATH_PATTERN = "${FileName}"; //$NON-NLS-1$
 	private static final String CLIENT_PROPERTY_ENABLED_BACKGROUND = "picto.enabledBackground"; //$NON-NLS-1$
 	private static final String CLIENT_PROPERTY_DISABLED_BACKGROUND = "picto.disabledBackground"; //$NON-NLS-1$
 	private static final int WINDOW_PADDING = 10;
@@ -104,6 +112,7 @@ public class MainFrame extends JFrame {
 	private static final int SECTION_PADDING = 8;
 	private static final int SECTION_HEADER_GAP = 4;
 	private static final int SECTION_GAP = 10;
+	private static final int OPERATION_BOTTOM_GAP = 14;
 	private static final int FIELD_BUTTON_GAP = 6;
 	private static final int INLINE_HGAP = 6;
 	private static final int INLINE_VGAP = 2;
@@ -202,6 +211,11 @@ public class MainFrame extends JFrame {
 	private JLabel lblDestConditionsTitle;
 	private JPanel pnlSrcOptionsBody;
 	private JPanel pnlDestOptionsBody;
+	private JTextArea txtSrcOptionsSummary;
+	private JTextArea txtDestOptionsSummary;
+	private JTextArea txtChangesSummary;
+	private JLabel lblRunSummary;
+	private boolean showingRunSummary;
 	private JMenuBar menuBar;
 	private JMenu mnFile;
 	private JMenu mnHelp;
@@ -335,9 +349,9 @@ public class MainFrame extends JFrame {
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{427, 0};
-		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
+		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_contentPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
 
 		pnlSrcConditions = new JPanel();
@@ -365,6 +379,7 @@ public class MainFrame extends JFrame {
 
 		JLabel lblSrcRootDirPath = new JLabel(UIManager.getIcon("FileView.directoryIcon")); //$NON-NLS-1$
 		lblSrcRootDirPath.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.srcRootDirPath")); //$NON-NLS-1$
+		lblSrcRootDirPath.setToolTipText(Messages.getString("MainFrame.srcRootDirPath")); //$NON-NLS-1$
 		GridBagConstraints gbc_lblSrcRootDirPath = new GridBagConstraints();
 		gbc_lblSrcRootDirPath.anchor = GridBagConstraints.WEST;
 		gbc_lblSrcRootDirPath.insets = new Insets(0, 0, 5, 5);
@@ -436,6 +451,15 @@ public class MainFrame extends JFrame {
 					setOptionsExpanded(btnSrcOptions, pnlSrcOptionsBody, Messages.getString("MainFrame.srcOptionsTitle"), btnSrcOptions.isSelected()); //$NON-NLS-1$
 				}
 			});
+
+			txtSrcOptionsSummary = newOptionsSummaryText(btnSrcOptions, pnlSrcOptionsBody, Messages.getString("MainFrame.srcOptionsTitle")); //$NON-NLS-1$
+			GridBagConstraints gbc_txtSrcOptionsSummary = new GridBagConstraints();
+			gbc_txtSrcOptionsSummary.fill = GridBagConstraints.HORIZONTAL;
+			gbc_txtSrcOptionsSummary.gridwidth = 3;
+			gbc_txtSrcOptionsSummary.insets = new Insets(0, 0, 5, 0);
+			gbc_txtSrcOptionsSummary.gridx = 1;
+			gbc_txtSrcOptionsSummary.gridy = 1;
+			pnlSrcConditions.add(txtSrcOptionsSummary, gbc_txtSrcOptionsSummary);
 
 		lblFilePattern = new JLabel(Messages.getString("MainFrame.filePattern")); //$NON-NLS-1$
 		lblFilePattern.setToolTipText(Messages.getString("MainFrame.filePattern.tooltip")); //$NON-NLS-1$
@@ -606,7 +630,7 @@ public class MainFrame extends JFrame {
 
 		pnlOperation = new JPanel();
 		GridBagConstraints gbc_pnlOperation = new GridBagConstraints();
-		gbc_pnlOperation.insets = new Insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0);
+		gbc_pnlOperation.insets = new Insets(0, MAIN_LABEL_WIDTH + 8, OPERATION_BOTTOM_GAP, 0);
 		gbc_pnlOperation.anchor = GridBagConstraints.NORTH;
 		gbc_pnlOperation.fill = GridBagConstraints.HORIZONTAL;
 		gbc_pnlOperation.gridx = 0;
@@ -627,7 +651,7 @@ public class MainFrame extends JFrame {
 		gbc_pnlOpeType.gridx = 0;
 		gbc_pnlOpeType.gridy = 0;
 		pnlOperation.add(pnlOpeType, gbc_pnlOpeType);
-		pnlOpeType.setLayout(new FlowLayout(FlowLayout.LEFT, INLINE_HGAP, INLINE_VGAP));
+		pnlOpeType.setLayout(new FlowLayout(FlowLayout.LEFT, INLINE_HGAP, 0));
 
 		rdoOpeTypeCopy = new JRadioButton(Messages.getString("MainFrame.opeTypeCopy")); //$NON-NLS-1$
 		btngrpOpeType.add(rdoOpeTypeCopy);
@@ -666,6 +690,7 @@ public class MainFrame extends JFrame {
 
 		lblDestRootDirPath = new JLabel(UIManager.getIcon("FileView.directoryIcon")); //$NON-NLS-1$
 		lblDestRootDirPath.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.destRootDirPath")); //$NON-NLS-1$
+		lblDestRootDirPath.setToolTipText(Messages.getString("MainFrame.destRootDirPath")); //$NON-NLS-1$
 		GridBagConstraints gbc_lblDestRootDirPath = new GridBagConstraints();
 		gbc_lblDestRootDirPath.anchor = GridBagConstraints.WEST;
 		gbc_lblDestRootDirPath.insets = new Insets(0, 0, 5, 5);
@@ -738,6 +763,15 @@ public class MainFrame extends JFrame {
 				}
 			});
 
+			txtDestOptionsSummary = newOptionsSummaryText(btnDestOptions, pnlDestOptionsBody, Messages.getString("MainFrame.destOptionsTitle")); //$NON-NLS-1$
+			GridBagConstraints gbc_txtDestOptionsSummary = new GridBagConstraints();
+			gbc_txtDestOptionsSummary.fill = GridBagConstraints.HORIZONTAL;
+			gbc_txtDestOptionsSummary.gridwidth = 3;
+			gbc_txtDestOptionsSummary.insets = new Insets(0, 0, 5, 0);
+			gbc_txtDestOptionsSummary.gridx = 1;
+			gbc_txtDestOptionsSummary.gridy = 1;
+			pnlDestConditions.add(txtDestOptionsSummary, gbc_txtDestOptionsSummary);
+
 		lblDestSubPathPattern = new JLabel(Messages.getString("MainFrame.destSubPathPattern")); //$NON-NLS-1$
 		GridBagConstraints gbc_lblDestSubPathPattern = new GridBagConstraints();
 		gbc_lblDestSubPathPattern.anchor = GridBagConstraints.WEST;
@@ -806,8 +840,16 @@ public class MainFrame extends JFrame {
 		gbc_tabModConditions.insets = new Insets(0, 0, SECTION_GAP, 0);
 		gbc_tabModConditions.fill = GridBagConstraints.BOTH;
 		gbc_tabModConditions.gridx = 0;
-		gbc_tabModConditions.gridy = 4;
+		gbc_tabModConditions.gridy = 5;
 		contentPane.add(tabModConditions, gbc_tabModConditions);
+
+		txtChangesSummary = newOptionsSummaryText(btnChanges, tabModConditions, Messages.getString("MainFrame.changesTitle")); //$NON-NLS-1$
+		GridBagConstraints gbc_txtChangesSummary = new GridBagConstraints();
+		gbc_txtChangesSummary.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtChangesSummary.insets = new Insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0);
+		gbc_txtChangesSummary.gridx = 0;
+		gbc_txtChangesSummary.gridy = 4;
+		contentPane.add(txtChangesSummary, gbc_txtChangesSummary);
 
 		pnlChangeFileDate = new JPanel();
 		pnlChangeFileDate.setBorder(new EmptyBorder(SECTION_PADDING, SECTION_PADDING, SECTION_PADDING, SECTION_PADDING));
@@ -1030,9 +1072,9 @@ public class MainFrame extends JFrame {
 		gbc_pnlControls.anchor = GridBagConstraints.SOUTH;
 		gbc_pnlControls.fill = GridBagConstraints.HORIZONTAL;
 		gbc_pnlControls.gridx = 0;
-		gbc_pnlControls.gridy = 5;
+		gbc_pnlControls.gridy = 6;
 		getContentPane().add(pnlControls, gbc_pnlControls);
-		pnlControls.setLayout(new FlowLayout(FlowLayout.CENTER, INLINE_HGAP, INLINE_VGAP));
+		pnlControls.setLayout(new BorderLayout(0, INLINE_VGAP));
 
 		btnStart = new JButton(Messages.getString("MainFrame.start")); //$NON-NLS-1$
 		btnStart.putClientProperty("JButton.buttonType", "default"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1062,8 +1104,12 @@ public class MainFrame extends JFrame {
 		JPanel pnlRunButton = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		pnlRunButton.add(btnStart);
 		pnlRunButton.add(btnStartMenu);
-		pnlControls.add(pnlRunButton);
+		pnlControls.add(pnlRunButton, BorderLayout.CENTER);
 
+		lblRunSummary = newRunSummaryLabel();
+		installRunSummaryHover(btnStart);
+		installRunSummaryHover(btnStartMenu);
+		pnlControls.add(lblRunSummary, BorderLayout.SOUTH);
 
 		rdoOpeTypeCopy.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -1081,9 +1127,11 @@ public class MainFrame extends JFrame {
 			}
 		});
 
+			installOptionsSummaryListeners();
 			loadSettings();
 			changeEnableDestConditions();
 			changeEnableFileDateModConditions();
+			updateOptionsSummaries();
 
 			frame = this;
 			windowLayoutReady = true;
@@ -1112,7 +1160,7 @@ public class MainFrame extends JFrame {
 		rdoOpeTypeOverwrite.setSelected(conf.getBoolean("ope.type.overwrite", false)); //$NON-NLS-1$
 
 		txtDestRootDirPath.setText(conf.getString("dest.root.dir", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		txtDestSubPathPattern.setText(conf.getString("dest.sub.path.pattern", "${FileName}")); //$NON-NLS-1$ //$NON-NLS-2$
+		txtDestSubPathPattern.setText(conf.getString("dest.sub.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN)); //$NON-NLS-1$
 		cmbExistingFileMethod.setSelectedItem(conf.getEnum("existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm)); //$NON-NLS-1$
 		chkCheckFileDigest.setSelected(conf.getBoolean("check.file.digest", false)); //$NON-NLS-1$
 
@@ -1199,18 +1247,464 @@ public class MainFrame extends JFrame {
 		return button;
 	}
 
+	private JTextArea newOptionsSummaryText(JToggleButton button, JComponent optionsBody, String title) {
+		JTextArea summary = newSummaryText();
+		summary.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		summary.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (button.isEnabled()) {
+					setOptionsExpanded(button, optionsBody, title, true);
+				}
+			}
+		});
+		return summary;
+	}
+
+	private JTextArea newSummaryText() {
+		JTextArea summary = new JTextArea();
+		summary.setEditable(false);
+		summary.setFocusable(false);
+		summary.setLineWrap(true);
+		summary.setWrapStyleWord(true);
+		summary.setOpaque(false);
+		summary.setBorder(new EmptyBorder(1, 4, 2, 4));
+		summary.setFont(summary.getFont().deriveFont(summary.getFont().getSize2D() - 1.0f));
+		Color foreground = UIManager.getColor("Label.disabledForeground"); //$NON-NLS-1$
+		if (foreground == null) {
+			foreground = UIManager.getColor("Label.foreground"); //$NON-NLS-1$
+		}
+		summary.setForeground(foreground);
+		return summary;
+	}
+
+	private JLabel newRunSummaryLabel() {
+		JLabel label = new JLabel(" "); //$NON-NLS-1$
+		label.setHorizontalAlignment(JLabel.CENTER);
+		label.setFont(label.getFont().deriveFont(label.getFont().getSize2D() - 1.0f));
+		Color foreground = UIManager.getColor("Label.disabledForeground"); //$NON-NLS-1$
+		if (foreground == null) {
+			foreground = UIManager.getColor("Label.foreground"); //$NON-NLS-1$
+		}
+		label.setForeground(foreground);
+		return label;
+	}
+
+	private void installRunSummaryHover(AbstractButton button) {
+		button.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				showingRunSummary = true;
+				updateRunSummary();
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				showingRunSummary = false;
+				updateRunSummary();
+			}
+		});
+	}
+
 	private void setOptionsExpanded(JToggleButton button, JComponent optionsBody, String title, boolean expanded) {
 		button.setSelected(expanded);
 		setOptionsToggleButtonText(button, title, expanded);
 		optionsBody.setVisible(expanded);
+		updateOptionsSummaries();
 		fitWindowToContent();
+	}
+
+	private void installOptionsSummaryListeners() {
+		DocumentListener documentListener = new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) {
+				optionsSummaryChanged();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				optionsSummaryChanged();
+			}
+
+			public void changedUpdate(DocumentEvent e) {
+				optionsSummaryChanged();
+			}
+		};
+		ChangeListener changeListener = e -> optionsSummaryChanged();
+		ItemListener itemListener = e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				optionsSummaryChanged();
+			}
+		};
+
+		addDocumentListener(documentListener,
+				txtFilePattern,
+				txtFileSizeRangeFrom,
+				txtFileSizeRangeTo,
+				txtCreationTimeRangeFrom,
+				txtCreationTimeRangeTo,
+				txtModifiedTimeRangeFrom,
+				txtModifiedTimeRangeTo,
+				txtSrcRootDirPath,
+				txtDestRootDirPath,
+				txtDestSubPathPattern,
+				txtCustomBaseDate,
+				txtDateModYears,
+				txtDateModMonths,
+				txtDateModDays,
+				txtDateModHours,
+				txtDateModMinutes,
+				txtDateModSeconds);
+		addChangeListener(changeListener,
+				chkContainsSubs,
+				chkContainsHiddens,
+				chkCheckFileDigest,
+				chkChangeFileCreationDate,
+				chkChangeFileModifiedDate,
+				chkChangeFileAccessDate,
+				chkChangeExifDate,
+				chkRemoveExifTagsGps,
+				chkRemoveExifTagsAll,
+				rdoOpeTypeCopy,
+				rdoOpeTypeMove,
+				rdoOpeTypeOverwrite);
+		cmbFilePatternSyntax.addItemListener(itemListener);
+		cmbFileSizeUnit.addItemListener(itemListener);
+		cmbExistingFileMethod.addItemListener(itemListener);
+		cmbBaseDateType.addItemListener(itemListener);
+		cmbDateModType.addItemListener(itemListener);
+	}
+
+	private static void addDocumentListener(DocumentListener listener, JTextField... fields) {
+		for (JTextField field : fields) {
+			field.getDocument().addDocumentListener(listener);
+		}
+	}
+
+	private static void addChangeListener(ChangeListener listener, AbstractButton... buttons) {
+		for (AbstractButton button : buttons) {
+			button.addChangeListener(listener);
+		}
+	}
+
+	private void optionsSummaryChanged() {
+		updateOptionsSummaries();
+		fitWindowToContent();
+	}
+
+	private void updateOptionsSummaries() {
+		if (txtSrcOptionsSummary == null || txtDestOptionsSummary == null || txtChangesSummary == null || btnStart == null || btnStartMenu == null || lblRunSummary == null) {
+			return;
+		}
+		updateOptionsSummary(txtSrcOptionsSummary, pnlSrcOptionsBody, sourceOptionsSummary());
+		updateOptionsSummary(txtDestOptionsSummary, pnlDestOptionsBody, destinationOptionsSummary());
+		updateOptionsSummary(txtChangesSummary, tabModConditions, changesSummary());
+		updateRunSummary();
+	}
+
+	private void updateRunSummary() {
+		btnStart.setToolTipText(null);
+		btnStartMenu.setToolTipText(null);
+		if (showingRunSummary) {
+			showRunSummary();
+		} else {
+			clearRunSummary();
+		}
+	}
+
+	private void showRunSummary() {
+		lblRunSummary.setText(abbreviateMiddle(runSummary(), lblRunSummary.getWidth() - 8, lblRunSummary));
+	}
+
+	private void clearRunSummary() {
+		lblRunSummary.setText(" "); //$NON-NLS-1$
+	}
+
+	private String runSummary() {
+		ProcessConditionValues values = collectProcessConditionValues();
+		String summary = values.operationType + ": " //$NON-NLS-1$
+				+ Messages.getString("MainFrame.srcConditionsTitle") + " " //$NON-NLS-1$ //$NON-NLS-2$
+				+ shortPathText(fieldText(txtSrcRootDirPath), Messages.getString("MainFrame.srcRootDirPath")); //$NON-NLS-1$
+		if (values.operationType == OperationType.Overwrite) {
+			return summary;
+		}
+		return summary + " -> " //$NON-NLS-1$
+				+ Messages.getString("MainFrame.destConditionsTitle") + " " //$NON-NLS-1$ //$NON-NLS-2$
+				+ shortPathText(fieldText(txtDestRootDirPath), Messages.getString("MainFrame.destRootDirPath")); //$NON-NLS-1$
+	}
+
+	private static void updateOptionsSummary(JTextArea summary, JComponent optionsBody, String text) {
+		summary.setText(text);
+		summary.setVisible(!optionsBody.isVisible() && !text.isEmpty());
+	}
+
+	private String sourceOptionsSummary() {
+		ProcessConditionValues values = collectProcessConditionValues();
+		List<String> items = new ArrayList<>();
+		if (!values.filePattern.isEmpty()) {
+			String pattern = values.filePattern;
+			if (values.filePatternRegex) {
+				pattern += " (" + FilePatternSyntax.REGEX + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			items.add(summaryItem(Messages.getString("MainFrame.filePattern"), pattern)); //$NON-NLS-1$
+		}
+		if (values.dept != 1) {
+			items.add(Messages.getString("MainFrame.containsSubs")); //$NON-NLS-1$
+		}
+		if (values.containsHiddens) {
+			items.add(Messages.getString("MainFrame.containsHiddens")); //$NON-NLS-1$
+		}
+		if (values.sizeRangeFrom != null || values.sizeRangeTo != null) {
+			String range = rangeText(fieldText(txtFileSizeRangeFrom), fieldText(txtFileSizeRangeTo));
+			items.add(summaryItem(Messages.getString("MainFrame.fileSizeRange"), range + " " + cmbFileSizeUnit.getSelectedItem())); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		if (values.creationTimeRangeFrom != null || values.creationTimeRangeTo != null) {
+			items.add(summaryItem(Messages.getString("MainFrame.creationTimeRange"), //$NON-NLS-1$
+					rangeText(dateFieldText(txtCreationTimeRangeFrom), dateFieldText(txtCreationTimeRangeTo))));
+		}
+		if (values.modifiedTimeRangeFrom != null || values.modifiedTimeRangeTo != null) {
+			items.add(summaryItem(Messages.getString("MainFrame.modifiedTimeRange"), //$NON-NLS-1$
+					rangeText(dateFieldText(txtModifiedTimeRangeFrom), dateFieldText(txtModifiedTimeRangeTo))));
+		}
+		return joinOptionsSummary(items);
+	}
+
+	private String destinationOptionsSummary() {
+		ProcessConditionValues values = collectProcessConditionValues();
+		List<String> items = new ArrayList<>();
+		if (!values.destSubPathPattern.isBlank() && !DEFAULT_DEST_SUB_PATH_PATTERN.equals(values.destSubPathPattern)) {
+			items.add(summaryItem(Messages.getString("MainFrame.destSubPathPattern"), values.destSubPathPattern)); //$NON-NLS-1$
+		}
+		if (values.existingFileMethod != ExistingFileMethod.Confirm) {
+			items.add(summaryItem(Messages.getString("MainFrame.existingFileMethod"), String.valueOf(values.existingFileMethod))); //$NON-NLS-1$
+		}
+		if (values.checkDigest) {
+			items.add(Messages.getString("MainFrame.validateFile")); //$NON-NLS-1$
+		}
+		return joinOptionsSummary(items);
+	}
+
+	private String changesSummary() {
+		ProcessConditionValues values = collectProcessConditionValues();
+		List<String> items = new ArrayList<>();
+		boolean changesFileDate = false;
+		if (values.changeFileCreationDate) {
+			items.add(Messages.getString("MainFrame.changeFileCreationDate")); //$NON-NLS-1$
+			changesFileDate = true;
+		}
+		if (values.changeFileModifiedDate) {
+			items.add(Messages.getString("MainFrame.changeFileModifiedDate")); //$NON-NLS-1$
+			changesFileDate = true;
+		}
+		if (values.changeFileAccessDate) {
+			items.add(Messages.getString("MainFrame.changeFileAccessDate")); //$NON-NLS-1$
+			changesFileDate = true;
+		}
+		if (values.changeExifDate) {
+			items.add(Messages.getString("MainFrame.changeFileExifDate")); //$NON-NLS-1$
+			changesFileDate = true;
+		}
+		if (changesFileDate && values.baseDateType != DateType.FileModifiedDate) {
+			items.add(summaryItem(Messages.getString("MainFrame.changeFileBaseDateType"), baseDateTypeSummary(values))); //$NON-NLS-1$
+		}
+		if (changesFileDate && values.baseDateModType != DateModType.None) {
+			items.add(summaryItem(Messages.getString("MainFrame.changeFileEditBaseDate"), adjustmentSummary(values))); //$NON-NLS-1$
+		}
+		if (values.removeExifTagsGps) {
+			items.add(Messages.getString("MainFrame.removeExifTagsGps")); //$NON-NLS-1$
+		}
+		if (values.removeExifTagsAll) {
+			items.add(Messages.getString("MainFrame.removeExifTagsAll")); //$NON-NLS-1$
+		}
+		return joinOptionsSummary(items);
+	}
+
+	private static boolean hasText(JTextField field) {
+		return !fieldText(field).isBlank();
+	}
+
+	private static boolean hasDateText(JTextField field) {
+		String text = field.getText();
+		return text != null && containsDigit(text);
+	}
+
+	private static String fieldText(JTextField field) {
+		String text = field.getText();
+		return text == null ? "" : text.trim(); //$NON-NLS-1$
+	}
+
+	private static String dateFieldText(JTextField field) {
+		if (!hasDateText(field)) {
+			return ""; //$NON-NLS-1$
+		}
+		String[] dateTimeParts = fieldText(field).split(" ", -1); //$NON-NLS-1$
+		String date = compactMaskedParts(dateTimeParts.length > 0 ? dateTimeParts[0] : "", "/", "/"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		String time = compactMaskedParts(dateTimeParts.length > 1 ? dateTimeParts[1] : "", ":", ":"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		if (date.isEmpty()) {
+			return time;
+		}
+		if (time.isEmpty()) {
+			return date;
+		}
+		return date + " " + time; //$NON-NLS-1$
+	}
+
+	private static String compactMaskedParts(String text, String regexDelimiter, String displayDelimiter) {
+		List<String> parts = new ArrayList<>();
+		for (String part : text.split(regexDelimiter, -1)) {
+			if (containsDigit(part)) {
+				parts.add(part);
+			}
+		}
+		return String.join(displayDelimiter, parts);
+	}
+
+	private String baseDateTypeSummary(ProcessConditionValues values) {
+		String value = String.valueOf(values.baseDateType);
+		String customDate = dateFieldText(txtCustomBaseDate);
+		if (values.baseDateType == DateType.CustomDate && values.customBaseDate != null && !customDate.isEmpty()) {
+			value += " " + customDate; //$NON-NLS-1$
+		}
+		return value;
+	}
+
+	private String adjustmentSummary(ProcessConditionValues values) {
+		String value = String.valueOf(values.baseDateModType);
+		List<String> amounts = new ArrayList<>();
+		addAdjustmentAmount(amounts, values.baseDateModYears, "Y"); //$NON-NLS-1$
+		addAdjustmentAmount(amounts, values.baseDateModMonths, "M"); //$NON-NLS-1$
+		addAdjustmentAmount(amounts, values.baseDateModDays, "D"); //$NON-NLS-1$
+		addAdjustmentAmount(amounts, values.baseDateModHours, "h"); //$NON-NLS-1$
+		addAdjustmentAmount(amounts, values.baseDateModMinutes, "m"); //$NON-NLS-1$
+		addAdjustmentAmount(amounts, values.baseDateModSeconds, "s"); //$NON-NLS-1$
+		if (!amounts.isEmpty()) {
+			value += " " + String.join(" ", amounts); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return value;
+	}
+
+	private static void addAdjustmentAmount(List<String> amounts, Integer value, String suffix) {
+		if (value != null) {
+			amounts.add(value + suffix);
+		}
+	}
+
+	private static String rangeText(String from, String to) {
+		if (from.isEmpty()) {
+			return to;
+		}
+		if (to.isEmpty()) {
+			return from;
+		}
+		return from + " - " + to; //$NON-NLS-1$
+	}
+
+	private static String summaryItem(String label, String value) {
+		return label + ": " + value; //$NON-NLS-1$
+	}
+
+	private static String joinOptionsSummary(List<String> items) {
+		return String.join(" / ", items); //$NON-NLS-1$
+	}
+
+	private static String shortPathText(String path, String emptyText) {
+		String text = path.isEmpty() ? emptyText : path;
+		return shortenPath(text);
+	}
+
+	private static String shortenPath(String path) {
+		String text = path.strip();
+		while (text.length() > 1 && isPathSeparator(text.charAt(text.length() - 1))) {
+			text = text.substring(0, text.length() - 1);
+		}
+		char separator = text.indexOf('\\') >= 0 && text.indexOf('/') < 0 ? '\\' : '/';
+		List<String> parts = pathParts(text);
+		if (parts.size() <= 2) {
+			return text;
+		}
+
+		String root = pathRoot(text, separator, parts);
+		int prefixCount = root.startsWith("\\\\") ? 0 : Math.min(parts.size() - 1, root.isEmpty() ? 1 : 2); //$NON-NLS-1$
+		if (parts.size() <= prefixCount + 1) {
+			return text;
+		}
+
+		StringBuilder shortened = new StringBuilder(root);
+		for (int i = 0; i < prefixCount; i++) {
+			if (shortened.length() > 0 && shortened.charAt(shortened.length() - 1) != separator) {
+				shortened.append(separator);
+			}
+			shortened.append(parts.get(i));
+		}
+		if (shortened.length() > 0 && shortened.charAt(shortened.length() - 1) != separator) {
+			shortened.append(separator);
+		}
+		shortened.append("...").append(separator).append(parts.get(parts.size() - 1)); //$NON-NLS-1$
+		return shortened.toString();
+	}
+
+	private static List<String> pathParts(String path) {
+		List<String> parts = new ArrayList<>();
+		int start = 0;
+		for (int i = 0; i <= path.length(); i++) {
+			if (i == path.length() || isPathSeparator(path.charAt(i))) {
+				if (i > start) {
+					parts.add(path.substring(start, i));
+				}
+				start = i + 1;
+			}
+		}
+		if (!parts.isEmpty() && parts.get(0).endsWith(":")) { //$NON-NLS-1$
+			parts.remove(0);
+		}
+		return parts;
+	}
+
+	private static String pathRoot(String path, char separator, List<String> parts) {
+		if (path.length() >= 3 && Character.isLetter(path.charAt(0)) && path.charAt(1) == ':' && isPathSeparator(path.charAt(2))) {
+			return path.substring(0, 2) + separator;
+		}
+		if (path.startsWith("\\\\") && parts.size() >= 2) { //$NON-NLS-1$
+			return "\\\\" + parts.get(0) + separator + parts.get(1) + separator; //$NON-NLS-1$
+		}
+		if (!path.isEmpty() && isPathSeparator(path.charAt(0))) {
+			return String.valueOf(separator);
+		}
+		return ""; //$NON-NLS-1$
+	}
+
+	private static boolean isPathSeparator(char c) {
+		return c == '/' || c == '\\' || c == File.separatorChar;
+	}
+
+	private static String abbreviateMiddle(String text, int width, JLabel label) {
+		if (text == null || text.isEmpty() || width <= 0 || label.getFontMetrics(label.getFont()).stringWidth(text) <= width) {
+			return text;
+		}
+		String ellipsis = "..."; //$NON-NLS-1$
+		int ellipsisWidth = label.getFontMetrics(label.getFont()).stringWidth(ellipsis);
+		if (ellipsisWidth >= width) {
+			return ellipsis;
+		}
+		int left = text.length() / 2;
+		int right = text.length() - left;
+		while (left > 0 && right > 0) {
+			String abbreviated = text.substring(0, left) + ellipsis + text.substring(text.length() - right);
+			if (label.getFontMetrics(label.getFont()).stringWidth(abbreviated) <= width) {
+				return abbreviated;
+			}
+			if (left >= right) {
+				left--;
+			} else {
+				right--;
+			}
+		}
+		return ellipsis;
 	}
 
 	private void fitWindowToContent() {
 		if (!windowLayoutReady) {
 			return;
 		}
-		contentPane.revalidate();
+		invalidate();
 		if (!isShowing()) {
 			int currentWidth = getWidth();
 			pack();
@@ -1219,6 +1713,7 @@ public class MainFrame extends JFrame {
 		}
 		Dimension preferredSize = getPreferredSize();
 		setSize(getWidth(), preferredSize.height);
+		validate();
 	}
 
 	private void setOptionsToggleButtonText(JToggleButton button, String title, boolean expanded) {
@@ -1235,6 +1730,9 @@ public class MainFrame extends JFrame {
 		txtDestRootDirPath.setEnabled(enabled);
 		btnDestRootDirSelect.setEnabled(enabled);
 		btnDestOptions.setEnabled(enabled);
+		if (txtDestOptionsSummary != null) {
+			txtDestOptionsSummary.setEnabled(enabled);
+		}
 		lblDestSubPathPattern.setEnabled(enabled);
 		txtDestSubPathPattern.setEnabled(enabled);
 		lblExistingFileMethod.setEnabled(enabled);
@@ -1317,59 +1815,64 @@ public class MainFrame extends JFrame {
 		processDialog.setVisible(true);
 	}
 
-	private ProcessCondition createProcessCondition(boolean dryRun) {
+	private ProcessConditionValues collectProcessConditionValues() {
+		ProcessConditionValues values = new ProcessConditionValues();
 
-		// Get values
-		Path srcRootDirPath = Paths.get(txtSrcRootDirPath.getText()).normalize();
-		String filePattern = txtFilePattern.getText();
-		boolean filePatternRegex = getSelectedFilePatternSyntax().isRegex();
-		boolean containsHiddens = chkContainsHiddens.isEnabled() && chkContainsHiddens.isSelected();
-		boolean followLinks = false;
-		int dept = (chkContainsSubs.isEnabled() && chkContainsSubs.isSelected()) ? Integer.MAX_VALUE : 1;
+		values.srcRootDirPath = Paths.get(txtSrcRootDirPath.getText()).normalize();
+		values.filePattern = fieldText(txtFilePattern);
+		values.filePatternRegex = getSelectedFilePatternSyntax().isRegex();
+		values.containsHiddens = chkContainsHiddens.isEnabled() && chkContainsHiddens.isSelected();
+		values.followLinks = false;
+		values.dept = (chkContainsSubs.isEnabled() && chkContainsSubs.isSelected()) ? Integer.MAX_VALUE : 1;
 
-		OperationType operationType;
 		if (rdoOpeTypeMove.isSelected()) {
-			operationType = OperationType.Move;
+			values.operationType = OperationType.Move;
 		} else if (rdoOpeTypeOverwrite.isSelected()) {
-			operationType = OperationType.Overwrite;
+			values.operationType = OperationType.Overwrite;
 		} else {
-			operationType = OperationType.Copy;
+			values.operationType = OperationType.Copy;
 		}
 
-		Path destRootDirPath = Paths.get(txtDestRootDirPath.getText()).normalize();
-		String destSubPathPattern = txtDestSubPathPattern.getText();
-		ExistingFileMethod existingFileMethod = (ExistingFileMethod)cmbExistingFileMethod.getSelectedItem();
+		values.destRootDirPath = Paths.get(txtDestRootDirPath.getText()).normalize();
+		values.destSubPathPattern = fieldText(txtDestSubPathPattern);
+		values.existingFileMethod = (ExistingFileMethod)cmbExistingFileMethod.getSelectedItem();
+		values.checkDigest = chkCheckFileDigest.isEnabled() && chkCheckFileDigest.isSelected();
 
-		boolean checkDigest = chkCheckFileDigest.isEnabled() && chkCheckFileDigest.isSelected();
+		values.changeFileCreationDate = chkChangeFileCreationDate.isEnabled() && chkChangeFileCreationDate.isSelected();
+		values.changeFileModifiedDate = chkChangeFileModifiedDate.isEnabled() && chkChangeFileModifiedDate.isSelected();
+		values.changeFileAccessDate = chkChangeFileAccessDate.isEnabled() && chkChangeFileAccessDate.isSelected();
+		values.changeExifDate = chkChangeExifDate.isEnabled() && chkChangeExifDate.isSelected();
+		values.baseDateType = (DateType)cmbBaseDateType.getSelectedItem();
+		values.customBaseDate = parseDate(txtCustomBaseDate.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.baseDateModType = (DateModType)cmbDateModType.getSelectedItem();
+		values.baseDateModYears = parseInteger(txtDateModYears.getText());
+		values.baseDateModMonths = parseInteger(txtDateModMonths.getText());
+		values.baseDateModDays = parseInteger(txtDateModDays.getText());
+		values.baseDateModHours = parseInteger(txtDateModHours.getText());
+		values.baseDateModMinutes = parseInteger(txtDateModMinutes.getText());
+		values.baseDateModSeconds = parseInteger(txtDateModSeconds.getText());
 
-		boolean changeFileCreationDate = chkChangeFileCreationDate.isEnabled() && chkChangeFileCreationDate.isSelected();
-		boolean changeFileModifiedDate = chkChangeFileModifiedDate.isEnabled() && chkChangeFileModifiedDate.isSelected();
-		boolean changeFileAccessDate = chkChangeFileAccessDate.isEnabled() && chkChangeFileAccessDate.isSelected();
-		boolean changeExifDate = chkChangeExifDate.isEnabled() && chkChangeExifDate.isSelected();
-		DateType baseDateType = (DateType)cmbBaseDateType.getSelectedItem();
-		Date customBaseDate = parseDate(txtCustomBaseDate.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		DateModType baseDateModType = (DateModType)cmbDateModType.getSelectedItem();
-		Integer baseDateModYears = parseInteger(txtDateModYears.getText());
-		Integer baseDateModMonths = parseInteger(txtDateModMonths.getText());
-		Integer baseDateModDays = parseInteger(txtDateModDays.getText());
-		Integer baseDateModHours = parseInteger(txtDateModHours.getText());
-		Integer baseDateModMinutes = parseInteger(txtDateModMinutes.getText());
-		Integer baseDateModSeconds = parseInteger(txtDateModSeconds.getText());
+		values.removeExifTagsGps = chkRemoveExifTagsGps.isEnabled() && chkRemoveExifTagsGps.isSelected();
+		values.removeExifTagsAll = chkRemoveExifTagsAll.isEnabled() && chkRemoveExifTagsAll.isSelected();
 
-		boolean removeExifTagsGps = chkRemoveExifTagsGps.isEnabled() && chkRemoveExifTagsGps.isSelected();
-		boolean removeExifTagsAll = chkRemoveExifTagsAll.isEnabled() && chkRemoveExifTagsAll.isSelected();
+		FileSizeUnit fileSizeUnit = (FileSizeUnit)cmbFileSizeUnit.getSelectedItem();
+		values.sizeRangeFrom = convertSize(parseLong(txtFileSizeRangeFrom.getText()), fileSizeUnit);
+		values.sizeRangeTo = convertSize(parseLong(txtFileSizeRangeTo.getText()), fileSizeUnit);
 
-		Long sizeRangeFrom = convertSize(parseLong(txtFileSizeRangeFrom.getText()), (FileSizeUnit)cmbFileSizeUnit.getSelectedItem());
-		Long sizeRangeTo = convertSize(parseLong(txtFileSizeRangeTo.getText()), (FileSizeUnit)cmbFileSizeUnit.getSelectedItem());
+		values.creationTimeRangeFrom = parseDate(txtCreationTimeRangeFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.creationTimeRangeTo = parseDate(txtCreationTimeRangeTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+		values.modifiedTimeRangeFrom = parseDate(txtModifiedTimeRangeFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.modifiedTimeRangeTo = parseDate(txtModifiedTimeRangeTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
 
-		Date creationTimeRangeFrom = parseDate(txtCreationTimeRangeFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		Date creationTimeRangeTo = parseDate(txtCreationTimeRangeTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+		return values;
+	}
 
-		Date modifiedTimeRangeFrom = parseDate(txtModifiedTimeRangeFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		Date modifiedTimeRangeTo = parseDate(txtModifiedTimeRangeTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+	private ProcessCondition createProcessCondition(boolean dryRun) {
+
+		ProcessConditionValues values = collectProcessConditionValues();
 
 		// Validations
-		if (!Files.exists(srcRootDirPath)) {
+		if (!Files.exists(values.srcRootDirPath)) {
 			JOptionPane.showMessageDialog(
 					frame,
 					Messages.getString("message.warn.srcRootPath.not.exists"), //$NON-NLS-1$
@@ -1380,7 +1883,7 @@ public class MainFrame extends JFrame {
 		}
 
 		try {
-			FileSystems.getDefault().getPathMatcher(((filePatternRegex) ? "regex:" : "glob:") + filePattern); //$NON-NLS-1$ //$NON-NLS-2$
+			FileSystems.getDefault().getPathMatcher(((values.filePatternRegex) ? "regex:" : "glob:") + values.filePattern); //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(
 					frame,
@@ -1391,8 +1894,8 @@ public class MainFrame extends JFrame {
 			return null;
 		}
 
-		if (sizeRangeFrom != null && sizeRangeTo != null) {
-			if (sizeRangeFrom.longValue() > sizeRangeTo.longValue()) {
+		if (values.sizeRangeFrom != null && values.sizeRangeTo != null) {
+			if (values.sizeRangeFrom.longValue() > values.sizeRangeTo.longValue()) {
 				JOptionPane.showMessageDialog(
 						frame,
 						Messages.getString("message.warn.sizeRange.is.invalid.range"), //$NON-NLS-1$
@@ -1403,8 +1906,8 @@ public class MainFrame extends JFrame {
 			}
 		}
 
-		if (creationTimeRangeFrom != null && creationTimeRangeTo != null) {
-			if (creationTimeRangeFrom.compareTo(creationTimeRangeTo) > 0) {
+		if (values.creationTimeRangeFrom != null && values.creationTimeRangeTo != null) {
+			if (values.creationTimeRangeFrom.compareTo(values.creationTimeRangeTo) > 0) {
 				JOptionPane.showMessageDialog(
 						frame,
 						Messages.getString("message.warn.creationTimeRange.is.invalid.range"), //$NON-NLS-1$
@@ -1415,8 +1918,8 @@ public class MainFrame extends JFrame {
 			}
 		}
 
-		if (modifiedTimeRangeFrom != null && modifiedTimeRangeTo != null) {
-			if (modifiedTimeRangeFrom.compareTo(modifiedTimeRangeTo) > 0) {
+		if (values.modifiedTimeRangeFrom != null && values.modifiedTimeRangeTo != null) {
+			if (values.modifiedTimeRangeFrom.compareTo(values.modifiedTimeRangeTo) > 0) {
 				JOptionPane.showMessageDialog(
 						frame,
 						Messages.getString("message.warn.modifiedTimeRange.is.invalid.range"), //$NON-NLS-1$
@@ -1428,7 +1931,7 @@ public class MainFrame extends JFrame {
 		}
 
 		// Information
-		if (checkDigest && (changeExifDate || removeExifTagsGps || removeExifTagsAll)) {
+		if (values.checkDigest && (values.changeExifDate || values.removeExifTagsGps || values.removeExifTagsAll)) {
 			int ret = JOptionPane.showConfirmDialog(
 					frame,
 					Messages.getString("message.confirm.change.file.with.checkFileDigest"), //$NON-NLS-1$
@@ -1440,50 +1943,85 @@ public class MainFrame extends JFrame {
 				return null;
 			}
 
-			checkDigest = false;
+			values.checkDigest = false;
 		}
 
 		// Set values
 		PictoPathFilter pathFilter = new PictoPathFilter();
-		pathFilter.setPathPattern(filePattern, srcRootDirPath, filePatternRegex);
-		pathFilter.setContainsHiddens(containsHiddens);
-		pathFilter.setSizeRange(sizeRangeFrom, sizeRangeTo);
-		pathFilter.setCreationTimeRange(creationTimeRangeFrom, creationTimeRangeTo);
-		pathFilter.setModifiedTimeRange(modifiedTimeRangeFrom, modifiedTimeRangeTo);
+		pathFilter.setPathPattern(values.filePattern, values.srcRootDirPath, values.filePatternRegex);
+		pathFilter.setContainsHiddens(values.containsHiddens);
+		pathFilter.setSizeRange(values.sizeRangeFrom, values.sizeRangeTo);
+		pathFilter.setCreationTimeRange(values.creationTimeRangeFrom, values.creationTimeRangeTo);
+		pathFilter.setModifiedTimeRange(values.modifiedTimeRangeFrom, values.modifiedTimeRangeTo);
 //		pathFilter.setAccessTimeRange(from, to);
 
 
-		NanoTemplate destSubPathTemplate = new NanoTemplate(destSubPathPattern).timeZone(timeZone);
+		NanoTemplate destSubPathTemplate = new NanoTemplate(values.destSubPathPattern).timeZone(timeZone);
 
 		ProcessCondition processCondition = new ProcessCondition();
 		processCondition.setTimeZone(timeZone);
-		processCondition.setSrcRootPath(srcRootDirPath);
-		processCondition.setDestRootPath(destRootDirPath);
-		processCondition.setDept(dept);
+		processCondition.setSrcRootPath(values.srcRootDirPath);
+		processCondition.setDestRootPath(values.destRootDirPath);
+		processCondition.setDept(values.dept);
 		processCondition.setPathFilter(pathFilter);
-		processCondition.setFollowLinks(followLinks);
+		processCondition.setFollowLinks(values.followLinks);
 		processCondition.setDestSubPathTemplate(destSubPathTemplate);
-		processCondition.setOperationType(operationType);
-		processCondition.setExistingFileMethod(existingFileMethod);
-		processCondition.setCheckDigest(checkDigest);
-		processCondition.setChangeFileCreationDate(changeFileCreationDate);
-		processCondition.setChangeFileModifiedDate(changeFileModifiedDate);
-		processCondition.setChangeFileAccessDate(changeFileAccessDate);
-		processCondition.setChangeExifDate(changeExifDate);
-		processCondition.setBaseDateType(baseDateType);
-		processCondition.setCustomBaseDate(customBaseDate);
-		processCondition.setBaseDateModType(baseDateModType);
-		processCondition.setBaseDateModYears(baseDateModYears);
-		processCondition.setBaseDateModMonths(baseDateModMonths);
-		processCondition.setBaseDateModDays(baseDateModDays);
-		processCondition.setBaseDateModHours(baseDateModHours);
-		processCondition.setBaseDateModMinutes(baseDateModMinutes);
-		processCondition.setBaseDateModSeconds(baseDateModSeconds);
-		processCondition.setRemveExifTagsGps(removeExifTagsGps);
-		processCondition.setRemveExifTagsAll(removeExifTagsAll);
+		processCondition.setOperationType(values.operationType);
+		processCondition.setExistingFileMethod(values.existingFileMethod);
+		processCondition.setCheckDigest(values.checkDigest);
+		processCondition.setChangeFileCreationDate(values.changeFileCreationDate);
+		processCondition.setChangeFileModifiedDate(values.changeFileModifiedDate);
+		processCondition.setChangeFileAccessDate(values.changeFileAccessDate);
+		processCondition.setChangeExifDate(values.changeExifDate);
+		processCondition.setBaseDateType(values.baseDateType);
+		processCondition.setCustomBaseDate(values.customBaseDate);
+		processCondition.setBaseDateModType(values.baseDateModType);
+		processCondition.setBaseDateModYears(values.baseDateModYears);
+		processCondition.setBaseDateModMonths(values.baseDateModMonths);
+		processCondition.setBaseDateModDays(values.baseDateModDays);
+		processCondition.setBaseDateModHours(values.baseDateModHours);
+		processCondition.setBaseDateModMinutes(values.baseDateModMinutes);
+		processCondition.setBaseDateModSeconds(values.baseDateModSeconds);
+		processCondition.setRemveExifTagsGps(values.removeExifTagsGps);
+		processCondition.setRemveExifTagsAll(values.removeExifTagsAll);
 		processCondition.setDryRun(dryRun);
 
 		return processCondition;
+	}
+
+	private static class ProcessConditionValues {
+		private Path srcRootDirPath;
+		private String filePattern;
+		private boolean filePatternRegex;
+		private boolean containsHiddens;
+		private boolean followLinks;
+		private int dept;
+		private OperationType operationType;
+		private Path destRootDirPath;
+		private String destSubPathPattern;
+		private ExistingFileMethod existingFileMethod;
+		private boolean checkDigest;
+		private boolean changeFileCreationDate;
+		private boolean changeFileModifiedDate;
+		private boolean changeFileAccessDate;
+		private boolean changeExifDate;
+		private DateType baseDateType;
+		private Date customBaseDate;
+		private DateModType baseDateModType;
+		private Integer baseDateModYears;
+		private Integer baseDateModMonths;
+		private Integer baseDateModDays;
+		private Integer baseDateModHours;
+		private Integer baseDateModMinutes;
+		private Integer baseDateModSeconds;
+		private boolean removeExifTagsGps;
+		private boolean removeExifTagsAll;
+		private Long sizeRangeFrom;
+		private Long sizeRangeTo;
+		private Date creationTimeRangeFrom;
+		private Date creationTimeRangeTo;
+		private Date modifiedTimeRangeFrom;
+		private Date modifiedTimeRangeTo;
 	}
 
 	private static void allowDigitsOnly(JTextField textField) {
