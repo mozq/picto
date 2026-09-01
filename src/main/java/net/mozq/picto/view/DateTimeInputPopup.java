@@ -17,7 +17,6 @@
 package net.mozq.picto.view;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -26,6 +25,8 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -38,7 +39,6 @@ import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
@@ -47,8 +47,6 @@ import javax.swing.JPanel;
 import javax.swing.Popup;
 import javax.swing.PopupFactory;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
@@ -62,6 +60,7 @@ class DateTimeInputPopup {
 	private static final int TIME_PART_START = 11;
 	private static final int[] DATE_INDEXES = {0, 1, 2, 3, 5, 6, 8, 9};
 	private static final int[] TIME_INDEXES = {11, 12, 14, 15, 17, 18};
+	private static final String DAY_PROPERTY = "picto.day"; //$NON-NLS-1$
 	private static DateTimeInputPopup activePopup;
 
 	private final JFormattedTextField field;
@@ -71,10 +70,13 @@ class DateTimeInputPopup {
 	private final JComboBox<Integer> cmbYear = new JComboBox<>();
 	private final JComboBox<MonthItem> cmbMonth = new JComboBox<>();
 	private final JPanel pnlDays = new JPanel(new GridLayout(7, 7, 2, 2));
+	private final JLabel[] weekdayLabels = new JLabel[7];
+	private final JButton[] dayButtons = new JButton[42];
 	private JPanel datePanel;
 	private Popup popup;
 	private boolean updating;
 	private boolean windowFocusListenerInstalled;
+	private boolean refreshScheduled;
 	private PopupMode popupMode;
 	private YearMonth visibleMonth;
 
@@ -83,21 +85,9 @@ class DateTimeInputPopup {
 		this.endOfRange = endOfRange;
 		this.locale = locale;
 		this.visibleMonth = representativeMonth(parseParts(field.getText()));
-		this.popupPanel.setBorder(createPopupBorder());
+		this.popupPanel.setBorder(PopupSupport.createPopupBorder());
 		buildDatePopup();
 		installListeners();
-	}
-	
-	private static Border createPopupBorder() {
-		Border border = UIManager.getBorder("PopupMenu.border"); //$NON-NLS-1$
-		if (border != null) {
-			return border;
-		}
-		Color color = UIManager.getColor("Component.borderColor"); //$NON-NLS-1$
-		if (color == null) {
-			color = Color.GRAY;
-		}
-		return BorderFactory.createLineBorder(color);
 	}
 
 	private void installListeners() {
@@ -121,7 +111,7 @@ class DateTimeInputPopup {
 		});
 		field.addCaretListener(new CaretListener() {
 			public void caretUpdate(CaretEvent e) {
-				if (field.hasFocus()) {
+				if (!updating && field.hasFocus()) {
 					showPopupForCaret();
 				}
 			}
@@ -153,6 +143,17 @@ class DateTimeInputPopup {
 			@Override
 			public void windowLostFocus(WindowEvent e) {
 				hidePopup();
+			}
+		});
+		window.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentMoved(ComponentEvent e) {
+				refreshPopupLocation();
+			}
+
+			@Override
+			public void componentResized(ComponentEvent e) {
+				refreshPopupLocation();
 			}
 		});
 		windowFocusListenerInstalled = true;
@@ -255,6 +256,28 @@ class DateTimeInputPopup {
 		}
 	}
 
+	private void refreshPopupLocation() {
+		if (popup == null || refreshScheduled) {
+			return;
+		}
+		refreshScheduled = true;
+		SwingUtilities.invokeLater(() -> {
+			refreshScheduled = false;
+			if (popup == null || !field.isEnabled() || !isPopupFocusActive()) {
+				return;
+			}
+			hidePopupInstance();
+			showPopup();
+		});
+	}
+
+	private boolean isPopupFocusActive() {
+		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		return field.isFocusOwner()
+				|| focusOwner == field
+				|| focusOwner != null && SwingUtilities.isDescendingFrom(focusOwner, popupPanel);
+	}
+
 	private void buildDatePopup() {
 		datePanel = new JPanel(new BorderLayout(4, 4));
 		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
@@ -272,16 +295,14 @@ class DateTimeInputPopup {
 			if (!updating && cmbYear.getSelectedItem() instanceof Integer) {
 				int year = ((Integer)cmbYear.getSelectedItem()).intValue();
 				visibleMonth = YearMonth.of(year, visibleMonth.getMonthValue());
-				setDateText(year, null, null);
-				refreshDatePopup(parseParts(field.getText()));
+				updateDateFromHeader(year, null);
 			}
 		});
 		cmbMonth.addActionListener((ActionEvent e) -> {
 			if (!updating && cmbMonth.getSelectedItem() instanceof MonthItem) {
 				MonthItem month = (MonthItem)cmbMonth.getSelectedItem();
 				visibleMonth = YearMonth.of(visibleMonth.getYear(), month.value);
-				setDateText(visibleMonth.getYear(), visibleMonth.getMonthValue(), null);
-				refreshDatePopup(parseParts(field.getText()));
+				updateDateFromHeader(visibleMonth.getYear(), visibleMonth.getMonthValue());
 			}
 		});
 		JButton btnToday = new JButton(Messages.getString("DateTimeInputPopup.today")); //$NON-NLS-1$
@@ -297,6 +318,7 @@ class DateTimeInputPopup {
 		header.add(btnNext);
 		header.add(btnToday);
 		datePanel.add(header, BorderLayout.NORTH);
+		buildDayCells();
 		datePanel.add(pnlDays, BorderLayout.CENTER);
 		refreshDatePopup(parseParts(field.getText()));
 	}
@@ -322,28 +344,23 @@ class DateTimeInputPopup {
 		try {
 			cmbYear.setSelectedItem(Integer.valueOf(visibleMonth.getYear()));
 			cmbMonth.setSelectedItem(new MonthItem(visibleMonth.getMonthValue(), locale));
-			pnlDays.removeAll();
 			String[] weekdays = Messages.getString("DateTimeInputPopup.weekdays").split(","); //$NON-NLS-1$ //$NON-NLS-2$
-			for (String weekday : weekdays) {
-				pnlDays.add(new JLabel(weekday, JLabel.CENTER));
+			for (int i = 0; i < weekdayLabels.length; i++) {
+				weekdayLabels[i].setText(i < weekdays.length ? weekdays[i] : ""); //$NON-NLS-1$
 			}
 			LocalDate firstDay = visibleMonth.atDay(1);
 			int leadingDays = firstDay.getDayOfWeek().getValue() % 7;
-			for (int i = 0; i < leadingDays; i++) {
-				pnlDays.add(new JLabel()); //$NON-NLS-1$
+			for (JButton button : dayButtons) {
+				setEmptyDayButton(button);
 			}
 			for (int day = 1; day <= visibleMonth.lengthOfMonth(); day++) {
-				JButton button = new JButton(Integer.toString(day));
-				button.setMargin(new java.awt.Insets(2, 4, 2, 4));
+				JButton button = dayButtons[leadingDays + day - 1];
+				button.setText(Integer.toString(day));
+				button.putClientProperty(DAY_PROPERTY, Integer.valueOf(day));
+				button.setEnabled(true);
+				button.setBorderPainted(true);
+				button.setContentAreaFilled(true);
 				button.setSelected(parts.matches(visibleMonth.getYear(), visibleMonth.getMonthValue(), day));
-				final int selectedDay = day;
-				button.addActionListener((ActionEvent e) -> {
-					setDateAndShowTimePopup(visibleMonth.getYear(), visibleMonth.getMonthValue(), selectedDay);
-				});
-				pnlDays.add(button);
-			}
-			for (int i = pnlDays.getComponentCount(); i < 49; i++) {
-				pnlDays.add(new JLabel()); //$NON-NLS-1$
 			}
 			pnlDays.revalidate();
 			pnlDays.repaint();
@@ -352,6 +369,44 @@ class DateTimeInputPopup {
 		} finally {
 			updating = false;
 		}
+	}
+
+	private void updateDateFromHeader(int year, Integer month) {
+		updating = true;
+		try {
+			setDateText(year, month, null);
+		} finally {
+			updating = false;
+		}
+		refreshDatePopup(parseParts(field.getText()));
+	}
+
+	private void buildDayCells() {
+		for (int i = 0; i < weekdayLabels.length; i++) {
+			weekdayLabels[i] = new JLabel("", JLabel.CENTER); //$NON-NLS-1$
+			pnlDays.add(weekdayLabels[i]);
+		}
+		for (int i = 0; i < dayButtons.length; i++) {
+			JButton button = new JButton();
+			button.setMargin(new java.awt.Insets(2, 4, 2, 4));
+			button.addActionListener((ActionEvent e) -> {
+				Object day = button.getClientProperty(DAY_PROPERTY);
+				if (day instanceof Integer) {
+					setDateAndShowTimePopup(visibleMonth.getYear(), visibleMonth.getMonthValue(), ((Integer)day).intValue());
+				}
+			});
+			dayButtons[i] = button;
+			pnlDays.add(button);
+		}
+	}
+
+	private static void setEmptyDayButton(JButton button) {
+		button.setText(""); //$NON-NLS-1$
+		button.putClientProperty(DAY_PROPERTY, null);
+		button.setSelected(false);
+		button.setEnabled(false);
+		button.setBorderPainted(false);
+		button.setContentAreaFilled(false);
 	}
 
 	private void setDateText(int year, Integer month, Integer day) {

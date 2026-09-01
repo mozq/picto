@@ -18,6 +18,7 @@ package net.mozq.picto.view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -69,6 +70,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -80,7 +82,10 @@ import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
+import javax.swing.text.JTextComponent;
 import javax.swing.text.MaskFormatter;
+
+import com.formdev.flatlaf.FlatClientProperties;
 
 import net.mozq.appsettings.AppSettings;
 import net.mozq.nanotemplate.NanoTemplate;
@@ -117,9 +122,10 @@ public class MainFrame extends JFrame {
 	private static final int SECTION_HEADER_GAP = 4;
 	private static final int SECTION_GAP = 10;
 	private static final int OPERATION_BOTTOM_GAP = 14;
-	private static final int FIELD_BUTTON_GAP = 6;
 	private static final int INLINE_HGAP = 6;
 	private static final int INLINE_VGAP = 2;
+	private static final int RUN_SPLIT_BUTTON_OVERLAP = 4;
+	private static final int RUN_MENU_BUTTON_WIDTH = 28;
 
 	private TimeZone timeZone = TimeZone.getDefault();
 
@@ -229,6 +235,13 @@ public class MainFrame extends JFrame {
 	private JMenuItem mntmImportSettings;
 	private JMenuItem mntmExportSettings;
 	private boolean processing;
+	
+	private enum LabelFocusBehavior {
+		FOCUS_ONLY,
+		CARET_START,
+		CARET_END,
+		SELECT_ALL
+	}
 	
 	private static final class MainFrameState {
 		private final Rectangle bounds;
@@ -476,26 +489,22 @@ public class MainFrame extends JFrame {
 		gbc_pnlSrcRootDirPath.gridx = 2;
 		gbc_pnlSrcRootDirPath.gridy = 0;
 		pnlSrcConditions.add(pnlSrcRootDirPath, gbc_pnlSrcRootDirPath);
-		pnlSrcRootDirPath.setLayout(new BorderLayout(0, 0));
+		pnlSrcRootDirPath.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
 		btnSrcRootDirSelect = new JButton(Messages.getString("MainFrame.srcRootDirSelect")); //$NON-NLS-1$
+		configureFolderSelectButton(btnSrcRootDirSelect);
 		btnSrcOptions = newOptionsToggleButton(Messages.getString("MainFrame.srcOptionsTitle")); //$NON-NLS-1$
-		JPanel pnlSrcRootDirActions = new JPanel(new BorderLayout(FIELD_BUTTON_GAP, 0));
-		pnlSrcRootDirActions.add(btnSrcRootDirSelect, BorderLayout.CENTER);
+		JPanel pnlSrcRootDirActions = new JPanel(new BorderLayout(0, 0));
 		pnlSrcRootDirActions.add(btnSrcOptions, BorderLayout.EAST);
 		pnlSrcRootDirPath.add(pnlSrcRootDirActions, BorderLayout.EAST);
 
 		txtSrcRootDirPath = new JTextField();
+		txtSrcRootDirPath.putClientProperty("JTextField.trailingComponent", btnSrcRootDirSelect); //$NON-NLS-1$
 		lblSrcRootDirPath.setLabelFor(txtSrcRootDirPath);
 		txtSrcRootDirPath.setToolTipText(Messages.getString("MainFrame.srcRootDirPath")); //$NON-NLS-1$
 		pnlSrcRootDirPath.add(txtSrcRootDirPath, BorderLayout.CENTER);
 		txtSrcRootDirPath.setColumns(10);
-		lblSrcRootDirPath.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				txtSrcRootDirPath.requestFocusInWindow();
-			}
-		});
+		installLabelFocusAction(lblSrcRootDirPath, txtSrcRootDirPath, LabelFocusBehavior.CARET_END);
 		btnSrcRootDirSelect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -543,7 +552,6 @@ public class MainFrame extends JFrame {
 			pnlSrcConditions.add(txtSrcOptionsSummary, gbc_txtSrcOptionsSummary);
 
 		lblFilePattern = new JLabel(Messages.getString("MainFrame.filePattern")); //$NON-NLS-1$
-		lblFilePattern.setToolTipText(Messages.getString("MainFrame.filePattern.tooltip")); //$NON-NLS-1$
 			GridBagConstraints gbc_lblFilePattern = new GridBagConstraints();
 			gbc_lblFilePattern.anchor = GridBagConstraints.WEST;
 			gbc_lblFilePattern.insets = new Insets(0, 0, 5, 5);
@@ -567,7 +575,7 @@ public class MainFrame extends JFrame {
 
 		txtFilePattern = new JTextField();
 		lblFilePattern.setLabelFor(txtFilePattern);
-		txtFilePattern.setToolTipText(Messages.getString("MainFrame.filePattern.tooltip")); //$NON-NLS-1$
+		installLabelFocusAction(lblFilePattern, txtFilePattern, LabelFocusBehavior.CARET_END);
 		GridBagConstraints gbc_txtFilePattern = new GridBagConstraints();
 		gbc_txtFilePattern.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtFilePattern.insets = new Insets(0, 0, 0, 5);
@@ -577,8 +585,13 @@ public class MainFrame extends JFrame {
 		txtFilePattern.setColumns(10);
 
 		cmbFilePatternSyntax = new JComboBox<>();
-		cmbFilePatternSyntax.setToolTipText(Messages.getString("MainFrame.filePattern.tooltip")); //$NON-NLS-1$
 		cmbFilePatternSyntax.setModel(new DefaultComboBoxModel<>(FilePatternSyntax.values()));
+		FileNamePatternPopup fileNamePatternPopup = new FileNamePatternPopup(txtFilePattern, () -> getSelectedFilePatternSyntax().isRegex());
+		cmbFilePatternSyntax.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				fileNamePatternPopup.refresh();
+			}
+		});
 		GridBagConstraints gbc_cmbFilePatternSyntax = new GridBagConstraints();
 		gbc_cmbFilePatternSyntax.anchor = GridBagConstraints.WEST;
 		gbc_cmbFilePatternSyntax.gridx = 1;
@@ -621,6 +634,7 @@ public class MainFrame extends JFrame {
 		txtFileSizeRangeFrom = new JTextField();
 		allowDigitsOnly(txtFileSizeRangeFrom);
 		lblFileSizeRange.setLabelFor(txtFileSizeRangeFrom);
+		installLabelFocusAction(lblFileSizeRange, txtFileSizeRangeFrom, LabelFocusBehavior.SELECT_ALL);
 		txtFileSizeRangeFrom.setColumns(5);
 		pnlFileSizeRange.add(txtFileSizeRangeFrom);
 
@@ -655,6 +669,7 @@ public class MainFrame extends JFrame {
 
 		txtCreationTimeRangeFrom = new JFormattedTextField(newMaskFormatter(DATE_MASK_PATTERN));
 		lblCreationTimeRange.setLabelFor(txtCreationTimeRangeFrom);
+		installLabelFocusAction(lblCreationTimeRange, txtCreationTimeRangeFrom, LabelFocusBehavior.CARET_START);
 		txtCreationTimeRangeFrom.setColumns(20);
 		txtCreationTimeRangeFrom.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
 		txtCreationTimeRangeFrom.setToolTipText(Messages.getString("MainFrame.creationTimeRangeFrom.tooltip")); //$NON-NLS-1$
@@ -691,6 +706,7 @@ public class MainFrame extends JFrame {
 
 		txtModifiedTimeRangeFrom = new JFormattedTextField(newMaskFormatter(DATE_MASK_PATTERN));
 		lblModifiedTimeRange.setLabelFor(txtModifiedTimeRangeFrom);
+		installLabelFocusAction(lblModifiedTimeRange, txtModifiedTimeRangeFrom, LabelFocusBehavior.CARET_START);
 		txtModifiedTimeRangeFrom.setColumns(20);
 		txtModifiedTimeRangeFrom.setFont(new Font("Monospaced", Font.PLAIN, 13)); //$NON-NLS-1$
 		txtModifiedTimeRangeFrom.setToolTipText(Messages.getString("MainFrame.modifiedTimeRangeFrom.tooltip")); //$NON-NLS-1$
@@ -787,26 +803,22 @@ public class MainFrame extends JFrame {
 		gbc_pnlDestRootDirPath.gridx = 2;
 		gbc_pnlDestRootDirPath.gridy = 0;
 		pnlDestConditions.add(pnlDestRootDirPath, gbc_pnlDestRootDirPath);
-		pnlDestRootDirPath.setLayout(new BorderLayout(0, 0));
+		pnlDestRootDirPath.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
 		btnDestRootDirSelect = new JButton(Messages.getString("MainFrame.destRootDirSelect")); //$NON-NLS-1$
+		configureFolderSelectButton(btnDestRootDirSelect);
 		btnDestOptions = newOptionsToggleButton(Messages.getString("MainFrame.destOptionsTitle")); //$NON-NLS-1$
-		JPanel pnlDestRootDirActions = new JPanel(new BorderLayout(FIELD_BUTTON_GAP, 0));
-		pnlDestRootDirActions.add(btnDestRootDirSelect, BorderLayout.CENTER);
+		JPanel pnlDestRootDirActions = new JPanel(new BorderLayout(0, 0));
 		pnlDestRootDirActions.add(btnDestOptions, BorderLayout.EAST);
 		pnlDestRootDirPath.add(pnlDestRootDirActions, BorderLayout.EAST);
 
 		txtDestRootDirPath = new JTextField();
+		txtDestRootDirPath.putClientProperty("JTextField.trailingComponent", btnDestRootDirSelect); //$NON-NLS-1$
 		lblDestRootDirPath.setLabelFor(txtDestRootDirPath);
 		txtDestRootDirPath.setToolTipText(Messages.getString("MainFrame.destRootDirPath")); //$NON-NLS-1$
 		pnlDestRootDirPath.add(txtDestRootDirPath, BorderLayout.CENTER);
 		txtDestRootDirPath.setColumns(10);
-		lblDestRootDirPath.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				txtDestRootDirPath.requestFocusInWindow();
-			}
-		});
+		installLabelFocusAction(lblDestRootDirPath, txtDestRootDirPath, LabelFocusBehavior.CARET_END);
 		btnDestRootDirSelect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -863,6 +875,7 @@ public class MainFrame extends JFrame {
 
 		txtDestSubPathPattern = new JTextField();
 		lblDestSubPathPattern.setLabelFor(txtDestSubPathPattern);
+		installLabelFocusAction(lblDestSubPathPattern, txtDestSubPathPattern, LabelFocusBehavior.CARET_END);
 		txtDestSubPathPattern.setColumns(10);
 		new SubfolderTemplatePopup(txtDestSubPathPattern);
 		GridBagConstraints gbc_txtDestSubPathPattern = new GridBagConstraints();
@@ -882,6 +895,7 @@ public class MainFrame extends JFrame {
 
 		cmbExistingFileMethod = new JComboBox<>();
 		lblExistingFileMethod.setLabelFor(cmbExistingFileMethod);
+		installLabelFocusAction(lblExistingFileMethod, cmbExistingFileMethod, LabelFocusBehavior.FOCUS_ONLY);
 		GridBagConstraints gbc_cmbExistingFileMethod = new GridBagConstraints();
 			gbc_cmbExistingFileMethod.insets = new Insets(0, 0, 5, 0);
 			gbc_cmbExistingFileMethod.anchor = GridBagConstraints.WEST;
@@ -900,6 +914,7 @@ public class MainFrame extends JFrame {
 
 		chkCheckFileDigest = new JCheckBox(Messages.getString("MainFrame.checkFileDigest")); //$NON-NLS-1$
 		lblValidateFile.setLabelFor(chkCheckFileDigest);
+		installLabelFocusAction(lblValidateFile, chkCheckFileDigest, LabelFocusBehavior.FOCUS_ONLY);
 			GridBagConstraints gbc_chkCheckFileDigest = new GridBagConstraints();
 			gbc_chkCheckFileDigest.anchor = GridBagConstraints.WEST;
 			gbc_chkCheckFileDigest.gridx = 1;
@@ -964,6 +979,7 @@ public class MainFrame extends JFrame {
 
 		chkChangeFileCreationDate = new JCheckBox(Messages.getString("MainFrame.changeFileCreationDate")); //$NON-NLS-1$
 		lblTargetDate.setLabelFor(chkChangeFileCreationDate);
+		installLabelFocusAction(lblTargetDate, chkChangeFileCreationDate, LabelFocusBehavior.FOCUS_ONLY);
 		chkChangeFileCreationDate.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				changeEnableFileDateModConditions();
@@ -1014,6 +1030,7 @@ public class MainFrame extends JFrame {
 
 		cmbBaseDateType = new JComboBox<>();
 		lblBaseDateType.setLabelFor(cmbBaseDateType);
+		installLabelFocusAction(lblBaseDateType, cmbBaseDateType, LabelFocusBehavior.FOCUS_ONLY);
 		cmbBaseDateType.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
 				DateType dateType = (DateType)e.getItem();
@@ -1058,6 +1075,7 @@ public class MainFrame extends JFrame {
 
 		cmbDateModType = new JComboBox<DateModType>();
 		lblEditBaseDate.setLabelFor(cmbDateModType);
+		installLabelFocusAction(lblEditBaseDate, cmbDateModType, LabelFocusBehavior.FOCUS_ONLY);
 		cmbDateModType.setModel(new DefaultComboBoxModel<>(DateModType.values()));
 		cmbDateModType.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
@@ -1167,7 +1185,12 @@ public class MainFrame extends JFrame {
 		});
 
 		btnStartMenu = new JButton("\u25be"); //$NON-NLS-1$
-		btnStartMenu.setMargin(new Insets(7, 10, 7, 10));
+		btnStartMenu.putClientProperty(FlatClientProperties.BUTTON_TYPE, "default"); //$NON-NLS-1$
+		btnStartMenu.putClientProperty(FlatClientProperties.MINIMUM_WIDTH, 0);
+		btnStartMenu.setMargin(new Insets(7, 5, 7, 5));
+		Dimension btnStartMenuSize = btnStartMenu.getPreferredSize();
+		btnStartMenuSize.width = RUN_MENU_BUTTON_WIDTH;
+		btnStartMenu.setPreferredSize(btnStartMenuSize);
 		JPopupMenu runMenu = new JPopupMenu();
 		JMenuItem mntmDryRun = new JMenuItem(Messages.getString("MainFrame.dryRun")); //$NON-NLS-1$
 		mntmDryRun.addActionListener(new ActionListener() {
@@ -1183,8 +1206,8 @@ public class MainFrame extends JFrame {
 		});
 		
 		JPanel pnlRunButton = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-		pnlRunButton.add(btnStart);
-		pnlRunButton.add(btnStartMenu);
+		pnlRunButton.setBorder(null);
+		pnlRunButton.add(newRunSplitButtonPanel(btnStart, btnStartMenu));
 		pnlControls.add(pnlRunButton, BorderLayout.CENTER);
 
 		lblRunSummary = newRunSummaryLabel();
@@ -1409,6 +1432,71 @@ public class MainFrame extends JFrame {
 		label.setPreferredSize(size);
 		return label;
 	}
+	
+	private static void installLabelFocusAction(JLabel label, Component target, LabelFocusBehavior behavior) {
+		label.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		label.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				target.requestFocusInWindow();
+				if (target instanceof JTextComponent) {
+					SwingUtilities.invokeLater(() ->
+							SwingUtilities.invokeLater(() -> applyTextFocusBehavior((JTextComponent)target, behavior)));
+				}
+			}
+		});
+	}
+	
+	private static JPanel newRunSplitButtonPanel(JButton mainButton, JButton menuButton) {
+		JPanel panel = new JPanel(null) {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Dimension getPreferredSize() {
+				Dimension mainSize = mainButton.getPreferredSize();
+				Dimension menuSize = menuButton.getPreferredSize();
+				return new Dimension(
+						mainSize.width + menuSize.width - RUN_SPLIT_BUTTON_OVERLAP,
+						Math.max(mainSize.height, menuSize.height));
+			}
+			
+			@Override
+			public Dimension getMinimumSize() {
+				return getPreferredSize();
+			}
+			
+			@Override
+			public void doLayout() {
+				Dimension mainSize = mainButton.getPreferredSize();
+				Dimension menuSize = menuButton.getPreferredSize();
+				int height = Math.max(mainSize.height, menuSize.height);
+				mainButton.setBounds(0, 0, mainSize.width, height);
+				menuButton.setBounds(mainSize.width - RUN_SPLIT_BUTTON_OVERLAP, 0, menuSize.width, height);
+			}
+		};
+		panel.setOpaque(false);
+		panel.add(mainButton);
+		panel.add(menuButton);
+		return panel;
+	}
+	
+	private static void applyTextFocusBehavior(JTextComponent textComponent, LabelFocusBehavior behavior) {
+		switch (behavior) {
+		case CARET_START:
+			textComponent.select(0, 0);
+			break;
+		case CARET_END:
+			int end = textComponent.getDocument().getLength();
+			textComponent.select(end, end);
+			break;
+		case SELECT_ALL:
+			textComponent.selectAll();
+			break;
+		case FOCUS_ONLY:
+		default:
+			break;
+		}
+	}
 
 	private JToggleButton newOptionsToggleButton(String title) {
 		JToggleButton button = new JToggleButton();
@@ -1418,6 +1506,45 @@ public class MainFrame extends JFrame {
 		button.setMargin(new Insets(2, 4, 2, 4));
 		setOptionsToggleButtonText(button, title, false);
 		return button;
+	}
+
+	private static void configureFolderSelectButton(JButton button) {
+		Color textFieldBackground = color("TextField.background", new Color(0xffffff)); //$NON-NLS-1$
+		Color buttonBackground = color("Button.background", new Color(0xf3f3f3)); //$NON-NLS-1$
+		Color buttonHoverBackground = color("Button.hoverBackground", buttonBackground); //$NON-NLS-1$
+		Color normalBackground = blend(textFieldBackground, buttonBackground, 0.45f);
+		Color hoverBackground = blend(normalBackground, buttonHoverBackground, 0.45f);
+
+		button.putClientProperty(FlatClientProperties.MINIMUM_WIDTH, 0);
+		button.setMargin(new Insets(2, 8, 2, 8));
+		button.setBackground(normalBackground);
+		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		button.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				if (button.isEnabled()) {
+					button.setBackground(hoverBackground);
+				}
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				button.setBackground(normalBackground);
+			}
+		});
+	}
+
+	private static Color color(String key, Color fallback) {
+		Color color = UIManager.getColor(key);
+		return color != null ? color : fallback;
+	}
+
+	private static Color blend(Color base, Color overlay, float overlayRatio) {
+		float baseRatio = 1.0f - overlayRatio;
+		return new Color(
+				Math.round(base.getRed() * baseRatio + overlay.getRed() * overlayRatio),
+				Math.round(base.getGreen() * baseRatio + overlay.getGreen() * overlayRatio),
+				Math.round(base.getBlue() * baseRatio + overlay.getBlue() * overlayRatio));
 	}
 
 	private JTextArea newOptionsSummaryText(JToggleButton button, JComponent optionsBody, String title) {
