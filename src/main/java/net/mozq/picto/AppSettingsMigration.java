@@ -28,10 +28,10 @@ import java.util.Map;
 import net.mozq.appsettings.AppSettings;
 
 final class AppSettingsMigration {
-	private static final String LEGACY_GROUP_NAME = "Mozq"; //$NON-NLS-1$
-	private static final String LEGACY_APP_NAME = "Picto"; //$NON-NLS-1$
-	private static final String LEGACY_CONFIG_FILE_NAME = "settings.properties"; //$NON-NLS-1$
-	private static final String SUBFOLDER_PATTERN_KEY = "dest.sub.path.pattern"; //$NON-NLS-1$
+	private static final String LEGACY_GROUP_NAME = "Mozq";
+	private static final String LEGACY_APP_NAME = "Picto";
+	private static final String LEGACY_CONFIG_FILE_NAME = "settings.properties";
+	private static final String SUBFOLDER_PATTERN_KEY = "dest.sub.path.pattern";
 
 	private AppSettingsMigration() {
 		// NOP
@@ -86,12 +86,12 @@ final class AppSettingsMigration {
 			String logicalLine;
 			while ((logicalLine = readLogicalLine(reader)) != null) {
 				String trimmed = logicalLine.stripLeading();
-				if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("!")) { //$NON-NLS-1$ //$NON-NLS-2$
+				if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("!")) {
 					continue;
 				}
 				int separator = findSeparator(logicalLine);
 				if (separator < 0) {
-					values.put(unescape(logicalLine.strip()), ""); //$NON-NLS-1$
+					values.put(unescape(logicalLine.strip()), "");
 				} else {
 					String key = logicalLine.substring(0, separator).strip();
 					String value = logicalLine.substring(separator + 1);
@@ -200,17 +200,17 @@ final class AppSettingsMigration {
 		int formatIndex = expression.indexOf('%');
 		int matchIndex = expression.indexOf('/');
 		if (formatIndex >= 0 && (matchIndex < 0 || formatIndex < matchIndex)) {
-			return "${" + expression.substring(0, formatIndex) + ':' + expression.substring(formatIndex + 1) + '}'; //$NON-NLS-1$
+			return "${" + expression.substring(0, formatIndex) + ':' + expression.substring(formatIndex + 1) + '}';
 		}
 		if (matchIndex >= 0) {
-			return "${" + expression.substring(0, matchIndex) + "?{" + migrateMatchCases(expression.substring(matchIndex + 1)) + "}}"; //$NON-NLS-1$ //$NON-NLS-2$
+			return "${" + expression.substring(0, matchIndex) + "?{" + migrateMatchCases(expression.substring(matchIndex + 1)) + "}}";
 		}
-		return "${" + expression + '}'; //$NON-NLS-1$
+		return "${" + expression + '}';
 	}
 
 	private static String migrateMatchCases(String cases) {
 		StringBuilder result = new StringBuilder();
-		String[] entries = cases.split("/"); //$NON-NLS-1$
+		String[] entries = cases.split("/");
 		for (String entry : entries) {
 			if (entry.isEmpty()) {
 				continue;
@@ -225,7 +225,7 @@ final class AppSettingsMigration {
 			result.append(entry, 0, separator)
 					.append(':')
 					.append('\'')
-					.append(entry.substring(separator + 1).replace("'", "''")) //$NON-NLS-1$ //$NON-NLS-2$
+					.append(entry.substring(separator + 1).replace("'", "''"))
 					.append('\'');
 		}
 		return result.toString();

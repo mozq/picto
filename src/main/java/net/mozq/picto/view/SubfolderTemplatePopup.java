@@ -24,7 +24,7 @@ import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
 class SubfolderTemplatePopup {
-	private static final String KEY_PREFIX = "MainFrame.destSubPathInsert."; //$NON-NLS-1$
+	private static final String KEY_PREFIX = "MainFrame.destSubPathInsert.";
 	private static final int POPUP_MAX_HEIGHT = 280;
 	private static final int POPUP_MIN_WIDTH = 440;
 
@@ -39,29 +39,29 @@ class SubfolderTemplatePopup {
 
 	private static List<SuggestionSection> sections() {
 		return List.of(
-				section("template", //$NON-NLS-1$
-						item("byPhotoDate", "${PhotoTakenDate:uuuu-MM-dd}/${FileName}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("byPhotoYearMonthDate", "${PhotoTakenDate:uuuu/MM/dd}/${FileName}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("byParentAndPhotoDate", "${ParentSubPath}/${PhotoTakenDate:uuuu-MM-dd}/${FileName}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("byCamera", "${Make}/${Model}/${FileName}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("byCameraAndPhotoDate", "${Make}/${Model}/${PhotoTakenDate:uuuu-MM-dd}/${FileName}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("byPhotoDateAndCamera", "${PhotoTakenDate:uuuu-MM-dd}/${Make}/${Model}/${FileName}")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("date", //$NON-NLS-1$
-						item("photoTakenDate", "${PhotoTakenDate:uuuu-MM-dd}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("photoTakenYearMonthDate", "${PhotoTakenDate:uuuu/MM/dd}")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("file", //$NON-NLS-1$
-						item("parentSubfolder", "${ParentSubPath}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("fileName", "${FileName}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("baseName", "${BaseName}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("extension", "${Extension}")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("exif", //$NON-NLS-1$
-						item("make", "${Make}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("model", "${Model}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("fNumber", "${FNumber:0.0}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("iso", "${ISO}")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("gps", //$NON-NLS-1$
-						item("latitude", "${GPSLat:0.000000}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("longitude", "${GPSLon:0.000000}"))); //$NON-NLS-1$ //$NON-NLS-2$
+				section("template",
+						item("byPhotoDate", "${PhotoTakenDate:uuuu-MM-dd}/${FileName}"),
+						item("byPhotoYearMonthDate", "${PhotoTakenDate:uuuu/MM/dd}/${FileName}"),
+						item("byParentAndPhotoDate", "${ParentSubPath}/${PhotoTakenDate:uuuu-MM-dd}/${FileName}"),
+						item("byCamera", "${Make}/${Model}/${FileName}"),
+						item("byCameraAndPhotoDate", "${Make}/${Model}/${PhotoTakenDate:uuuu-MM-dd}/${FileName}"),
+						item("byPhotoDateAndCamera", "${PhotoTakenDate:uuuu-MM-dd}/${Make}/${Model}/${FileName}")),
+				section("date",
+						item("photoTakenDate", "${PhotoTakenDate:uuuu-MM-dd}"),
+						item("photoTakenYearMonthDate", "${PhotoTakenDate:uuuu/MM/dd}")),
+				section("file",
+						item("parentSubfolder", "${ParentSubPath}"),
+						item("fileName", "${FileName}"),
+						item("baseName", "${BaseName}"),
+						item("extension", "${Extension}")),
+				section("exif",
+						item("make", "${Make}"),
+						item("model", "${Model}"),
+						item("fNumber", "${FNumber:0.0}"),
+						item("iso", "${ISO}")),
+				section("gps",
+						item("latitude", "${GPSLat:0.000000}"),
+						item("longitude", "${GPSLon:0.000000}")));
 	}
 
 	private static SuggestionSection section(String key, SuggestionItem... items) {

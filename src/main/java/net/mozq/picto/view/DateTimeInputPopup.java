@@ -52,15 +52,13 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import net.mozq.picto.view.DateTimeText.DateParts;
+
 class DateTimeInputPopup {
 
 	private static final int FIRST_YEAR = 1900;
 	private static final int FUTURE_YEARS = 5;
-	private static final int DATE_PART_END = 10;
-	private static final int TIME_PART_START = 11;
-	private static final int[] DATE_INDEXES = {0, 1, 2, 3, 5, 6, 8, 9};
-	private static final int[] TIME_INDEXES = {11, 12, 14, 15, 17, 18};
-	private static final String DAY_PROPERTY = "picto.day"; //$NON-NLS-1$
+	private static final String DAY_PROPERTY = "picto.day";
 	private static DateTimeInputPopup activePopup;
 
 	private final JFormattedTextField field;
@@ -84,7 +82,7 @@ class DateTimeInputPopup {
 		this.field = field;
 		this.endOfRange = endOfRange;
 		this.locale = locale;
-		this.visibleMonth = representativeMonth(parseParts(field.getText()));
+		this.visibleMonth = representativeMonth(DateTimeText.parseParts(field.getText()));
 		this.popupPanel.setBorder(PopupSupport.createPopupBorder());
 		buildDatePopup();
 		installListeners();
@@ -97,7 +95,7 @@ class DateTimeInputPopup {
 			public void focusGained(FocusEvent e) {
 				SwingUtilities.invokeLater(DateTimeInputPopup.this::showPopupForCaret);
 			}
-			
+
 			@Override
 			public void focusLost(FocusEvent e) {
 				SwingUtilities.invokeLater(DateTimeInputPopup.this::hidePopupIfFocusMovedAway);
@@ -130,7 +128,7 @@ class DateTimeInputPopup {
 			}
 		});
 	}
-	
+
 	private void installWindowFocusListener() {
 		if (windowFocusListenerInstalled) {
 			return;
@@ -164,7 +162,7 @@ class DateTimeInputPopup {
 			hidePopup();
 			return;
 		}
-		DateParts parts = parseParts(field.getText());
+		DateParts parts = DateTimeText.parseParts(field.getText());
 		if (isTimePart(field.getCaretPosition()) && parts.hasDate()) {
 			showTimePopup();
 		} else {
@@ -187,10 +185,10 @@ class DateTimeInputPopup {
 			return;
 		}
 		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
-		addTimeButton(panel, Messages.getString("DateTimeInputPopup.currentTime"), LocalTime.now()); //$NON-NLS-1$
-		addTimeButton(panel, "00:00:00", LocalTime.MIDNIGHT); //$NON-NLS-1$
-		addTimeButton(panel, "12:00:00", LocalTime.NOON); //$NON-NLS-1$
-		addTimeButton(panel, "23:59:59", LocalTime.of(23, 59, 59)); //$NON-NLS-1$
+		addTimeButton(panel, Messages.getString("DateTimeInputPopup.currentTime"), LocalTime.now());
+		addTimeButton(panel, "00:00:00", LocalTime.MIDNIGHT);
+		addTimeButton(panel, "12:00:00", LocalTime.NOON);
+		addTimeButton(panel, "23:59:59", LocalTime.of(23, 59, 59));
 		setPopupContent(panel, PopupMode.TIME);
 		showPopup();
 	}
@@ -220,7 +218,7 @@ class DateTimeInputPopup {
 			hidePopup();
 		}
 	}
-	
+
 	private void setPopupContent(JPanel content, PopupMode mode) {
 		hidePopupInstance();
 		popupPanel.removeAll();
@@ -229,7 +227,7 @@ class DateTimeInputPopup {
 		popupPanel.repaint();
 		popupMode = mode;
 	}
-	
+
 	private void hidePopup() {
 		hidePopupInstance();
 		popupMode = null;
@@ -237,7 +235,7 @@ class DateTimeInputPopup {
 			activePopup = null;
 		}
 	}
-	
+
 	private void hidePopupIfFocusMovedAway() {
 		if (cmbYear.isPopupVisible() || cmbMonth.isPopupVisible()) {
 			return;
@@ -248,7 +246,7 @@ class DateTimeInputPopup {
 		}
 		hidePopup();
 	}
-	
+
 	private void hidePopupInstance() {
 		if (popup != null) {
 			popup.hide();
@@ -281,8 +279,8 @@ class DateTimeInputPopup {
 	private void buildDatePopup() {
 		datePanel = new JPanel(new BorderLayout(4, 4));
 		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
-		JButton btnPrev = new JButton("<"); //$NON-NLS-1$
-		JButton btnNext = new JButton(">"); //$NON-NLS-1$
+		JButton btnPrev = new JButton("<");
+		JButton btnNext = new JButton(">");
 		btnPrev.addActionListener((ActionEvent e) -> moveMonth(-1));
 		btnNext.addActionListener((ActionEvent e) -> moveMonth(1));
 		for (int year = FIRST_YEAR; year <= LocalDate.now().getYear() + FUTURE_YEARS; year++) {
@@ -305,7 +303,7 @@ class DateTimeInputPopup {
 				updateDateFromHeader(visibleMonth.getYear(), visibleMonth.getMonthValue());
 			}
 		});
-		JButton btnToday = new JButton(Messages.getString("DateTimeInputPopup.today")); //$NON-NLS-1$
+		JButton btnToday = new JButton(Messages.getString("DateTimeInputPopup.today"));
 		btnToday.addActionListener((ActionEvent e) -> {
 			LocalDate today = LocalDate.now();
 			visibleMonth = YearMonth.from(today);
@@ -313,26 +311,26 @@ class DateTimeInputPopup {
 		});
 		header.add(btnPrev);
 		header.add(cmbYear);
-		header.add(new JLabel("/")); //$NON-NLS-1$
+		header.add(new JLabel("/"));
 		header.add(cmbMonth);
 		header.add(btnNext);
 		header.add(btnToday);
 		datePanel.add(header, BorderLayout.NORTH);
 		buildDayCells();
 		datePanel.add(pnlDays, BorderLayout.CENTER);
-		refreshDatePopup(parseParts(field.getText()));
+		refreshDatePopup(DateTimeText.parseParts(field.getText()));
 	}
 
 	private void moveMonth(int months) {
 		visibleMonth = visibleMonth.plusMonths(months);
-		refreshDatePopup(parseParts(field.getText()));
+		refreshDatePopup(DateTimeText.parseParts(field.getText()));
 	}
 
 	private void refreshFromField() {
 		if (updating || popup == null || popupMode != PopupMode.DATE) {
 			return;
 		}
-		DateParts parts = parseParts(field.getText());
+		DateParts parts = DateTimeText.parseParts(field.getText());
 		if (!isTimePart(field.getCaretPosition()) || !parts.hasDate()) {
 			visibleMonth = representativeMonth(parts);
 			refreshDatePopup(parts);
@@ -344,9 +342,9 @@ class DateTimeInputPopup {
 		try {
 			cmbYear.setSelectedItem(Integer.valueOf(visibleMonth.getYear()));
 			cmbMonth.setSelectedItem(new MonthItem(visibleMonth.getMonthValue(), locale));
-			String[] weekdays = Messages.getString("DateTimeInputPopup.weekdays").split(","); //$NON-NLS-1$ //$NON-NLS-2$
+			String[] weekdays = Messages.getString("DateTimeInputPopup.weekdays").split(",");
 			for (int i = 0; i < weekdayLabels.length; i++) {
-				weekdayLabels[i].setText(i < weekdays.length ? weekdays[i] : ""); //$NON-NLS-1$
+				weekdayLabels[i].setText(i < weekdays.length ? weekdays[i] : "");
 			}
 			LocalDate firstDay = visibleMonth.atDay(1);
 			int leadingDays = firstDay.getDayOfWeek().getValue() % 7;
@@ -378,12 +376,12 @@ class DateTimeInputPopup {
 		} finally {
 			updating = false;
 		}
-		refreshDatePopup(parseParts(field.getText()));
+		refreshDatePopup(DateTimeText.parseParts(field.getText()));
 	}
 
 	private void buildDayCells() {
 		for (int i = 0; i < weekdayLabels.length; i++) {
-			weekdayLabels[i] = new JLabel("", JLabel.CENTER); //$NON-NLS-1$
+			weekdayLabels[i] = new JLabel("", JLabel.CENTER);
 			pnlDays.add(weekdayLabels[i]);
 		}
 		for (int i = 0; i < dayButtons.length; i++) {
@@ -401,7 +399,7 @@ class DateTimeInputPopup {
 	}
 
 	private static void setEmptyDayButton(JButton button) {
-		button.setText(""); //$NON-NLS-1$
+		button.setText("");
 		button.putClientProperty(DAY_PROPERTY, null);
 		button.setSelected(false);
 		button.setEnabled(false);
@@ -411,61 +409,54 @@ class DateTimeInputPopup {
 
 	private void setDateText(int year, Integer month, Integer day) {
 		StringBuilder text = new StringBuilder();
-		text.append(String.format(Locale.ROOT, "%04d", Integer.valueOf(year))); //$NON-NLS-1$
+		text.append(String.format(Locale.ROOT, "%04d", Integer.valueOf(year)));
 		if (month != null) {
-			text.append('/').append(String.format(Locale.ROOT, "%02d", month)); //$NON-NLS-1$
+			text.append('/').append(String.format(Locale.ROOT, "%02d", month));
 		}
 		if (day != null) {
 			YearMonth yearMonth = YearMonth.of(year, month.intValue());
 			int normalizedDay = Math.min(day.intValue(), yearMonth.lengthOfMonth());
-			text.append('/').append(String.format(Locale.ROOT, "%02d", Integer.valueOf(normalizedDay))); //$NON-NLS-1$
+			text.append('/').append(String.format(Locale.ROOT, "%02d", Integer.valueOf(normalizedDay)));
 		}
 		setDatePart(text.toString());
 	}
-	
+
 	private void setDateAndShowTimePopup(int year, int month, int day) {
 		setDateText(year, Integer.valueOf(month), Integer.valueOf(day));
-		field.setCaretPosition(TIME_PART_START);
+		field.setCaretPosition(DateTimeText.TIME_PART_START);
 		showTimePopup();
 	}
 
 	private void setDatePart(String dateText) {
-		char[] chars = ensureMaskText(field.getText()).toCharArray();
-		for (int index : DATE_INDEXES) {
+		char[] chars = DateTimeText.ensureMaskText(field.getText()).toCharArray();
+		for (int index : DateTimeText.DATE_INDEXES) {
 			chars[index] = '_';
 		}
-		String digits = dateText.replace("/", ""); //$NON-NLS-1$ //$NON-NLS-2$
-		for (int i = 0; i < DATE_INDEXES.length && i < digits.length(); i++) {
-			chars[DATE_INDEXES[i]] = digits.charAt(i);
+		String digits = dateText.replace("/", "");
+		for (int i = 0; i < DateTimeText.DATE_INDEXES.length && i < digits.length(); i++) {
+			chars[DateTimeText.DATE_INDEXES[i]] = digits.charAt(i);
 		}
 		setFieldText(new String(chars));
-		field.setCaretPosition(Math.min(dateText.length(), DATE_PART_END));
+		field.setCaretPosition(Math.min(dateText.length(), DateTimeText.DATE_PART_END));
 	}
 
 	private void setTime(LocalTime time) {
-		String current = ensureMaskText(field.getText());
+		String current = DateTimeText.ensureMaskText(field.getText());
 		char[] chars = current.toCharArray();
-		String formattedTime = String.format(Locale.ROOT, "%02d%02d%02d", //$NON-NLS-1$
+		String formattedTime = String.format(Locale.ROOT, "%02d%02d%02d",
 				Integer.valueOf(time.getHour()), Integer.valueOf(time.getMinute()), Integer.valueOf(time.getSecond()));
-		for (int i = 0; i < TIME_INDEXES.length && i < formattedTime.length(); i++) {
-			if (TIME_INDEXES[i] < chars.length) {
-				chars[TIME_INDEXES[i]] = formattedTime.charAt(i);
+		for (int i = 0; i < DateTimeText.TIME_INDEXES.length && i < formattedTime.length(); i++) {
+			if (DateTimeText.TIME_INDEXES[i] < chars.length) {
+				chars[DateTimeText.TIME_INDEXES[i]] = formattedTime.charAt(i);
 			}
 		}
 		setFieldText(new String(chars));
-		field.setCaretPosition(Math.min(current.length(), TIME_PART_START + 8));
+		field.setCaretPosition(Math.min(current.length(), DateTimeText.TIME_PART_START + 8));
 	}
-	
+
 	private void setFieldText(String text) {
 		field.setValue(text);
 		field.setText(text);
-	}
-
-	private static String ensureMaskText(String text) {
-		if (text == null || text.length() < TIME_INDEXES[TIME_INDEXES.length - 1] + 1) {
-			return "____/__/__ __:__:__"; //$NON-NLS-1$
-		}
-		return text;
 	}
 
 	private YearMonth representativeMonth(DateParts parts) {
@@ -478,62 +469,7 @@ class DateTimeInputPopup {
 	}
 
 	private static boolean isTimePart(int caretPosition) {
-		return caretPosition >= TIME_PART_START;
-	}
-
-	private static DateParts parseParts(String text) {
-		if (text == null) {
-			return new DateParts(null, null, null);
-		}
-		String[] dateTime = text.split(" ", 2); //$NON-NLS-1$
-		String[] dateParts = dateTime.length > 0 ? dateTime[0].split("/", -1) : new String[0]; //$NON-NLS-1$
-		Integer year = getNumber(dateParts, 0);
-		Integer month = getNumber(dateParts, 1);
-		Integer day = getNumber(dateParts, 2);
-		if (month != null) {
-			month = Integer.valueOf(Math.max(1, Math.min(12, month.intValue())));
-		}
-		if (year != null && month != null && day != null) {
-			day = Integer.valueOf(Math.max(1, Math.min(YearMonth.of(year.intValue(), month.intValue()).lengthOfMonth(), day.intValue())));
-		}
-		return new DateParts(year, month, day);
-	}
-
-	private static Integer getNumber(String[] values, int index) {
-		if (index >= values.length) {
-			return null;
-		}
-		String value = values[index].replace("_", ""); //$NON-NLS-1$ //$NON-NLS-2$
-		if (value.isEmpty()) {
-			return null;
-		}
-		try {
-			return Integer.valueOf(value);
-		} catch (NumberFormatException e) {
-			return null;
-		}
-	}
-
-	private static class DateParts {
-		final Integer year;
-		final Integer month;
-		final Integer day;
-
-		DateParts(Integer year, Integer month, Integer day) {
-			this.year = year;
-			this.month = month;
-			this.day = day;
-		}
-
-		boolean hasDate() {
-			return year != null || month != null || day != null;
-		}
-
-		boolean matches(int year, int month, int day) {
-			return this.year != null && this.year.intValue() == year
-					&& this.month != null && this.month.intValue() == month
-					&& this.day != null && this.day.intValue() == day;
-		}
+		return caretPosition >= DateTimeText.TIME_PART_START;
 	}
 
 	private static class MonthItem {
@@ -560,7 +496,7 @@ class DateTimeInputPopup {
 			return Integer.hashCode(value);
 		}
 	}
-	
+
 	private enum PopupMode {
 		DATE,
 		TIME

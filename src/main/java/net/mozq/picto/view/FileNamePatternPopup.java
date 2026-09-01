@@ -26,7 +26,7 @@ import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
 class FileNamePatternPopup {
-	private static final String KEY_PREFIX = "MainFrame.filePatternPreset."; //$NON-NLS-1$
+	private static final String KEY_PREFIX = "MainFrame.filePatternPreset.";
 	private static final int POPUP_MAX_HEIGHT = 260;
 	private static final int POPUP_MIN_WIDTH = 430;
 
@@ -55,38 +55,38 @@ class FileNamePatternPopup {
 
 	private static List<SuggestionSection> wildcardSections() {
 		return List.of(
-				section("images", //$NON-NLS-1$
-						item("allImages", "*.{jpg,jpeg,png,gif,webp,heic,heif}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("jpegImages", "*.{jpg,jpeg}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("pngImages", "*.png"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("heifImages", "*.{heic,heif}")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("videos", //$NON-NLS-1$
-						item("allVideos", "*.{mp4,mov,m4v,avi,mkv,webm}"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("mp4Videos", "*.mp4"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("movVideos", "*.mov")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("camera", //$NON-NLS-1$
-						item("cameraFiles", "IMG_*.*"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("cameraNumberedFiles", "IMG_????.*")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("general", //$NON-NLS-1$
-						item("allFiles", "*"))); //$NON-NLS-1$ //$NON-NLS-2$
+				section("images",
+						item("allImages", "*.{jpg,jpeg,png,gif,webp,heic,heif}"),
+						item("jpegImages", "*.{jpg,jpeg}"),
+						item("pngImages", "*.png"),
+						item("heifImages", "*.{heic,heif}")),
+				section("videos",
+						item("allVideos", "*.{mp4,mov,m4v,avi,mkv,webm}"),
+						item("mp4Videos", "*.mp4"),
+						item("movVideos", "*.mov")),
+				section("camera",
+						item("cameraFiles", "IMG_*.*"),
+						item("cameraNumberedFiles", "IMG_????.*")),
+				section("general",
+						item("allFiles", "*")));
 	}
 
 	private static List<SuggestionSection> regexSections() {
 		return List.of(
-				section("images", //$NON-NLS-1$
-						item("allImages", ".*\\.(jpg|jpeg|png|gif|webp|heic|heif)"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("jpegImages", ".*\\.(jpg|jpeg)"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("pngImages", ".*\\.png"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("heifImages", ".*\\.(heic|heif)")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("videos", //$NON-NLS-1$
-						item("allVideos", ".*\\.(mp4|mov|m4v|avi|mkv|webm)"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("mp4Videos", ".*\\.mp4"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("movVideos", ".*\\.mov")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("camera", //$NON-NLS-1$
-						item("cameraFiles", "IMG_.*\\..*"), //$NON-NLS-1$ //$NON-NLS-2$
-						item("cameraNumberedFiles", "IMG_[0-9]{4}\\..*")), //$NON-NLS-1$ //$NON-NLS-2$
-				section("general", //$NON-NLS-1$
-						item("allFiles", ".*"))); //$NON-NLS-1$ //$NON-NLS-2$
+				section("images",
+						item("allImages", ".*\\.(jpg|jpeg|png|gif|webp|heic|heif)"),
+						item("jpegImages", ".*\\.(jpg|jpeg)"),
+						item("pngImages", ".*\\.png"),
+						item("heifImages", ".*\\.(heic|heif)")),
+				section("videos",
+						item("allVideos", ".*\\.(mp4|mov|m4v|avi|mkv|webm)"),
+						item("mp4Videos", ".*\\.mp4"),
+						item("movVideos", ".*\\.mov")),
+				section("camera",
+						item("cameraFiles", "IMG_.*\\..*"),
+						item("cameraNumberedFiles", "IMG_[0-9]{4}\\..*")),
+				section("general",
+						item("allFiles", ".*")));
 	}
 
 	private static SuggestionSection section(String key, SuggestionItem... items) {

@@ -35,33 +35,33 @@ class AppSettingsMigrationTest {
 
 	@Test
 	void migratesLegacyPropertiesInDefinitionOrder() throws IOException {
-		Path legacySettings = tempDir.resolve("settings.properties"); //$NON-NLS-1$
+		Path legacySettings = tempDir.resolve("settings.properties");
 		Files.writeString(legacySettings, String.join(System.lineSeparator(),
-				"# Legacy settings", //$NON-NLS-1$
-				"src.root.dir=/photos", //$NON-NLS-1$
-				"dest.sub.path.pattern=${FNumber%0.0}/${WhiteBalance/0:Auto/1:Manual/default:Others}", //$NON-NLS-1$
-				"contains.subs=true")); //$NON-NLS-1$
-		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf"); //$NON-NLS-1$ //$NON-NLS-2$
+				"# Legacy settings",
+				"src.root.dir=/photos",
+				"dest.sub.path.pattern=${FNumber%0.0}/${WhiteBalance/0:Auto/1:Manual/default:Others}",
+				"contains.subs=true"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		assertEquals(List.of("locale", "appearance", "src.root.dir", "dest.sub.path.pattern", "contains.subs"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		assertEquals(List.of("locale", "appearance", "src.root.dir", "dest.sub.path.pattern", "contains.subs"),
 				List.copyOf(settings.asStringMap().keySet()));
-		assertEquals("system", settings.getString("locale", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("system", settings.getString("appearance", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("/photos", settings.getString("src.root.dir", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		assertEquals("${FNumber:0.0}/${WhiteBalance?{0:'Auto',1:'Manual',default:'Others'}}", //$NON-NLS-1$
-				settings.getString("dest.sub.path.pattern", "")); //$NON-NLS-1$ //$NON-NLS-2$
-		assertEquals("true", settings.getString("contains.subs", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("system", settings.getString("locale", ""));
+		assertEquals("system", settings.getString("appearance", ""));
+		assertEquals("/photos", settings.getString("src.root.dir", ""));
+		assertEquals("${FNumber:0.0}/${WhiteBalance?{0:'Auto',1:'Manual',default:'Others'}}",
+				settings.getString("dest.sub.path.pattern", ""));
+		assertEquals("true", settings.getString("contains.subs", ""));
 	}
 
 	@Test
 	void deletesLegacySettingsLogsAndEmptyDirectories() throws IOException {
-		Path legacyDirectory = tempDir.resolve("Mozq").resolve("Picto"); //$NON-NLS-1$ //$NON-NLS-2$
+		Path legacyDirectory = tempDir.resolve("Mozq").resolve("Picto");
 		Files.createDirectories(legacyDirectory);
-		Path legacySettings = Files.writeString(legacyDirectory.resolve("settings.properties"), "theme=dark"); //$NON-NLS-1$ //$NON-NLS-2$
-		Path warnsLog = Files.writeString(legacyDirectory.resolve(App.WARNS_FILE_NAME), "warn"); //$NON-NLS-1$
-		Path errorsLog = Files.writeString(legacyDirectory.resolve(App.ERRORS_FILE_NAME), "error"); //$NON-NLS-1$
+		Path legacySettings = Files.writeString(legacyDirectory.resolve("settings.properties"), "theme=dark");
+		Path warnsLog = Files.writeString(legacyDirectory.resolve(App.WARNS_FILE_NAME), "warn");
+		Path errorsLog = Files.writeString(legacyDirectory.resolve(App.ERRORS_FILE_NAME), "error");
 
 		AppSettingsMigration.deleteLegacyFiles(new AppSettingsMigration.Result(true, legacySettings));
 

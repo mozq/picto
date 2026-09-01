@@ -35,27 +35,27 @@ import net.mozq.picto.view.MainFrame;
 import net.mozq.picto.view.Messages;
 
 public class AppMain {
-	public static final String PREF_LOCALE_KEY = "locale"; //$NON-NLS-1$
-	public static final String PREF_APPEARANCE_KEY = "appearance"; //$NON-NLS-1$
-	public static final String PREF_SYSTEM = "system"; //$NON-NLS-1$
-	public static final String PREF_LOCALE_EN = "en"; //$NON-NLS-1$
-	public static final String PREF_LOCALE_JA = "ja"; //$NON-NLS-1$
-	public static final String PREF_APPEARANCE_LIGHT = "light"; //$NON-NLS-1$
-	public static final String PREF_APPEARANCE_DARK = "dark"; //$NON-NLS-1$
+	public static final String PREF_LOCALE_KEY = "locale";
+	public static final String PREF_APPEARANCE_KEY = "appearance";
+	public static final String PREF_SYSTEM = "system";
+	public static final String PREF_LOCALE_EN = "en";
+	public static final String PREF_LOCALE_JA = "ja";
+	public static final String PREF_APPEARANCE_LIGHT = "light";
+	public static final String PREF_APPEARANCE_DARK = "dark";
 	private static final Locale SYSTEM_LOCALE = Locale.getDefault();
-	
+
 	public static void main(String[] args) throws Exception {
-		System.setProperty("apple.awt.application.appearance", "system"); //$NON-NLS-1$ //$NON-NLS-2$
-		
+		System.setProperty("apple.awt.application.appearance", "system");
+
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					// Load config
 					App.init();
-					
+
 					// Initialize settings
 					applyConfiguredUiSettings();
-					
+
 					MainFrame frame = new MainFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
@@ -63,22 +63,22 @@ public class AppMain {
 					if (!(e instanceof PictoException)) {
 						message = Messages.getString("message.error", message);
 					}
-					
+
 					JOptionPane.showMessageDialog(null, message, null, JOptionPane.ERROR_MESSAGE);
-					
+
 					App.handleError(e.getMessage(), e);
 				}
 			}
 		});
 	}
-	
+
 	public static void applyConfiguredUiSettings() {
 		Locale.setDefault(configuredLocale());
 		Messages.load(Locale.getDefault());
 		configureLookAndFeel();
 		SwingUtilities.invokeLater(com.formdev.flatlaf.FlatLaf::updateUI);
 	}
-	
+
 	private static Locale configuredLocale() {
 		String locale = App.config().getString(PREF_LOCALE_KEY, PREF_SYSTEM);
 		if (PREF_LOCALE_EN.equals(locale)) {
@@ -89,7 +89,7 @@ public class AppMain {
 		}
 		return SYSTEM_LOCALE;
 	}
-	
+
 	private static void configureLookAndFeel() {
 		boolean darkMode = configuredDarkMode();
 		if (darkMode) {
@@ -97,30 +97,30 @@ public class AppMain {
 		} else {
 			FlatLightLaf.setup();
 		}
-		
-		UIManager.put("Component.arc", 6); //$NON-NLS-1$
-		UIManager.put("TextComponent.arc", 6); //$NON-NLS-1$
-		UIManager.put("Button.arc", 6); //$NON-NLS-1$
-		UIManager.put("Component.focusWidth", 1); //$NON-NLS-1$
-		UIManager.put("Component.innerFocusWidth", 1); //$NON-NLS-1$
-		UIManager.put("TextComponent.margin", new Insets(3, 6, 3, 6)); //$NON-NLS-1$
-		
+
+		UIManager.put("Component.arc", 6);
+		UIManager.put("TextComponent.arc", 6);
+		UIManager.put("Button.arc", 6);
+		UIManager.put("Component.focusWidth", 1);
+		UIManager.put("Component.innerFocusWidth", 1);
+		UIManager.put("TextComponent.margin", new Insets(3, 6, 3, 6));
+
 		Color inputBackground = darkMode ? new Color(0x2f3337) : new Color(0xffffff);
 		Color disabledInputBackground = darkMode ? new Color(0x3a3d40) : new Color(0xf2f2f2);
 		Color inputBorder = darkMode ? new Color(0x6b7178) : new Color(0xb8bec4);
-		UIManager.put("TextField.background", inputBackground); //$NON-NLS-1$
-		UIManager.put("TextField.disabledBackground", disabledInputBackground); //$NON-NLS-1$
-		UIManager.put("TextField.inactiveBackground", disabledInputBackground); //$NON-NLS-1$
-		UIManager.put("FormattedTextField.background", inputBackground); //$NON-NLS-1$
-		UIManager.put("FormattedTextField.disabledBackground", disabledInputBackground); //$NON-NLS-1$
-		UIManager.put("FormattedTextField.inactiveBackground", disabledInputBackground); //$NON-NLS-1$
-		UIManager.put("TextComponent.disabledBackground", disabledInputBackground); //$NON-NLS-1$
-		UIManager.put("TextComponent.inactiveBackground", disabledInputBackground); //$NON-NLS-1$
-		UIManager.put("CheckBox.icon.borderColor", inputBorder); //$NON-NLS-1$
-		UIManager.put("CheckBox.icon.focusWidth", 1); //$NON-NLS-1$
-		UIManager.put("CheckBox.icon.borderWidth", 1.2f); //$NON-NLS-1$
+		UIManager.put("TextField.background", inputBackground);
+		UIManager.put("TextField.disabledBackground", disabledInputBackground);
+		UIManager.put("TextField.inactiveBackground", disabledInputBackground);
+		UIManager.put("FormattedTextField.background", inputBackground);
+		UIManager.put("FormattedTextField.disabledBackground", disabledInputBackground);
+		UIManager.put("FormattedTextField.inactiveBackground", disabledInputBackground);
+		UIManager.put("TextComponent.disabledBackground", disabledInputBackground);
+		UIManager.put("TextComponent.inactiveBackground", disabledInputBackground);
+		UIManager.put("CheckBox.icon.borderColor", inputBorder);
+		UIManager.put("CheckBox.icon.focusWidth", 1);
+		UIManager.put("CheckBox.icon.borderWidth", 1.2f);
 	}
-	
+
 	private static boolean configuredDarkMode() {
 		String appearance = App.config().getString(PREF_APPEARANCE_KEY, PREF_SYSTEM);
 		if (PREF_APPEARANCE_DARK.equals(appearance)) {
@@ -131,24 +131,24 @@ public class AppMain {
 		}
 		return isSystemDarkMode();
 	}
-	
+
 	private static boolean isSystemDarkMode() {
-		String osName = System.getProperty("os.name").toLowerCase(Locale.ROOT); //$NON-NLS-1$
-		if (osName.contains("mac")) { //$NON-NLS-1$
+		String osName = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+		if (osName.contains("mac")) {
 			return isMacDarkMode();
 		}
-		if (osName.contains("windows")) { //$NON-NLS-1$
+		if (osName.contains("windows")) {
 			return isWindowsDarkMode();
 		}
-		if (osName.contains("linux")) { //$NON-NLS-1$
+		if (osName.contains("linux")) {
 			return isLinuxDarkMode();
 		}
 		return false;
 	}
-	
+
 	private static boolean isMacDarkMode() {
 		try {
-			Process process = new ProcessBuilder("defaults", "read", "-g", "AppleInterfaceStyle").start(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			Process process = new ProcessBuilder("defaults", "read", "-g", "AppleInterfaceStyle").start();
 			return process.waitFor() == 0;
 		} catch (IOException | InterruptedException e) {
 			if (e instanceof InterruptedException) {
@@ -157,18 +157,18 @@ public class AppMain {
 			return false;
 		}
 	}
-	
+
 	private static boolean isWindowsDarkMode() {
 		try {
 			Process process = new ProcessBuilder(
-					"reg", //$NON-NLS-1$
-					"query", //$NON-NLS-1$
-					"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize", //$NON-NLS-1$
-					"/v", //$NON-NLS-1$
-					"AppsUseLightTheme") //$NON-NLS-1$
+					"reg",
+					"query",
+					"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+					"/v",
+					"AppsUseLightTheme")
 					.start();
 			String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-			return process.waitFor() == 0 && output.contains("0x0"); //$NON-NLS-1$
+			return process.waitFor() == 0 && output.contains("0x0");
 		} catch (IOException | InterruptedException e) {
 			if (e instanceof InterruptedException) {
 				Thread.currentThread().interrupt();
@@ -176,18 +176,18 @@ public class AppMain {
 			return false;
 		}
 	}
-	
+
 	private static boolean isLinuxDarkMode() {
 		try {
 			Process process = new ProcessBuilder(
-					"gsettings", //$NON-NLS-1$
-					"get", //$NON-NLS-1$
-					"org.gnome.desktop.interface", //$NON-NLS-1$
-					"color-scheme") //$NON-NLS-1$
+					"gsettings",
+					"get",
+					"org.gnome.desktop.interface",
+					"color-scheme")
 					.start();
 			String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8)
 					.toLowerCase(Locale.ROOT);
-			return process.waitFor() == 0 && output.contains("prefer-dark"); //$NON-NLS-1$
+			return process.waitFor() == 0 && output.contains("prefer-dark");
 		} catch (IOException | InterruptedException e) {
 			if (e instanceof InterruptedException) {
 				Thread.currentThread().interrupt();

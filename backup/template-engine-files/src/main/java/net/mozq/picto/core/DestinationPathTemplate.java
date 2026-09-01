@@ -42,10 +42,10 @@ public class DestinationPathTemplate {
 
 		for (int index = 0; index < template.length(); index++) {
 			char current = template.charAt(index);
-			if (current == '\\' && startsWith(index + 1, "${")) { //$NON-NLS-1$
-				text.append("${"); //$NON-NLS-1$
+			if (current == '\\' && startsWith(index + 1, "${")) {
+				text.append("${");
 				index += 2;
-			} else if (current == '$' && startsWith(index + 1, "{")) { //$NON-NLS-1$
+			} else if (current == '$' && startsWith(index + 1, "{")) {
 				int endIndex = findExpressionEnd(index + 2);
 				if (endIndex < 0) {
 					throw new IllegalArgumentException("Missing template expression terminator.");
@@ -113,15 +113,15 @@ public class DestinationPathTemplate {
 	}
 
 	private Object applyFilter(Object value, String filterExpression) {
-		if (filterExpression.startsWith("format(") && filterExpression.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
-			return formatValue(value, parseSingleArgument(filterExpression, "format")); //$NON-NLS-1$
+		if (filterExpression.startsWith("format(") && filterExpression.endsWith(")")) {
+			return formatValue(value, parseSingleArgument(filterExpression, "format"));
 		}
-		if (filterExpression.startsWith("choice(") && filterExpression.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
-			return chooseValue(value, parseChoiceArguments(filterExpression.substring("choice(".length(), filterExpression.length() - 1))); //$NON-NLS-1$
+		if (filterExpression.startsWith("choice(") && filterExpression.endsWith(")")) {
+			return chooseValue(value, parseChoiceArguments(filterExpression.substring("choice(".length(), filterExpression.length() - 1)));
 		}
-		if (filterExpression.startsWith("default(") && filterExpression.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
+		if (filterExpression.startsWith("default(") && filterExpression.endsWith(")")) {
 			String text = stringify(value);
-			return text.isEmpty() ? parseSingleArgument(filterExpression, "default") : text; //$NON-NLS-1$
+			return text.isEmpty() ? parseSingleArgument(filterExpression, "default") : text;
 		}
 		throw new IllegalArgumentException("Unknown template filter: " + filterExpression);
 	}
@@ -132,7 +132,7 @@ public class DestinationPathTemplate {
 
 	private String formatValue(Object value, String pattern) {
 		if (value == null) {
-			return ""; //$NON-NLS-1$
+			return "";
 		}
 		if (value instanceof Date) {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern).withZone(timeZone.toZoneId());
@@ -148,7 +148,7 @@ public class DestinationPathTemplate {
 		String text = stringify(value);
 		String defaultValue = null;
 		for (Choice choice : choices) {
-			if ("default".equals(choice.value)) { //$NON-NLS-1$
+			if ("default".equals(choice.value)) {
 				defaultValue = choice.label;
 			} else if (choice.value.equals(text)) {
 				return choice.label;
@@ -158,7 +158,7 @@ public class DestinationPathTemplate {
 	}
 
 	private String stringify(Object value) {
-		return value == null ? "" : String.valueOf(value); //$NON-NLS-1$
+		return value == null ? "" : String.valueOf(value);
 	}
 
 	private String parseSingleArgument(String filterExpression, String filterName) {

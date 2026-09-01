@@ -30,17 +30,17 @@ public class ProcessCondition {
 
 	private Path srcRootPath;
 	private PictoPathFilter pathFilter;
-	boolean followLinks = false;
-	int dept = Integer.MAX_VALUE;
+	private boolean followLinks = false;
+	private int depth = Integer.MAX_VALUE;
 
 	private Path destRootPath;
 	private NanoTemplate destSubPathTemplate;
 
 	private OperationType operationType;
 	private ExistingFileMethod existingFileMethod;
-	
+
 	private boolean checkDigest;
-	
+
 	private boolean changeFileCreationDate = false;
 	private boolean changeFileModifiedDate = false;
 	private boolean changeFileAccessDate = false;
@@ -54,15 +54,15 @@ public class ProcessCondition {
 	private Integer baseDateModHours = null;
 	private Integer baseDateModMinutes = null;
 	private Integer baseDateModSeconds = null;
-	
-	private boolean remveExifTagsAll = false;
-	private boolean remveExifTagsGps = false;
-	
-	
+
+	private boolean removeExifTagsAll = false;
+	private boolean removeExifTagsGps = false;
+
+
 	private TimeZone timeZone;
-	
-	boolean dryRun = false;
-	
+
+	private boolean dryRun = false;
+
 	public ProcessCondition() {
 	}
 
@@ -90,12 +90,12 @@ public class ProcessCondition {
 		this.followLinks = followLinks;
 	}
 
-	public int getDept() {
-		return dept;
+	public int getDepth() {
+		return depth;
 	}
 
-	public void setDept(int dept) {
-		this.dept = dept;
+	public void setDepth(int depth) {
+		this.depth = depth;
 	}
 
 	public Path getDestRootPath() {
@@ -242,20 +242,20 @@ public class ProcessCondition {
 		this.baseDateModSeconds = baseDateModSeconds;
 	}
 
-	public boolean isRemveExifTagsAll() {
-		return remveExifTagsAll;
+	public boolean isRemoveExifTagsAll() {
+		return removeExifTagsAll;
 	}
 
-	public void setRemveExifTagsAll(boolean remveExifTagsAll) {
-		this.remveExifTagsAll = remveExifTagsAll;
+	public void setRemoveExifTagsAll(boolean removeExifTagsAll) {
+		this.removeExifTagsAll = removeExifTagsAll;
 	}
 
-	public boolean isRemveExifTagsGps() {
-		return remveExifTagsGps;
+	public boolean isRemoveExifTagsGps() {
+		return removeExifTagsGps;
 	}
 
-	public void setRemveExifTagsGps(boolean remveExifTagsGps) {
-		this.remveExifTagsGps = remveExifTagsGps;
+	public void setRemoveExifTagsGps(boolean removeExifTagsGps) {
+		this.removeExifTagsGps = removeExifTagsGps;
 	}
 
 	public TimeZone getTimeZone() {

@@ -32,7 +32,7 @@ public class App {
 	public static final String CONFIG_FILE_NAME = "settings.conf";
 	public static final String WARNS_FILE_NAME = "warns.log";
 	public static final String ERRORS_FILE_NAME = "errors.log";
-	
+
 	private static AppSettings config = null;
 	private static AppSettingsMigration.Result settingsMigrationResult = AppSettingsMigration.Result.none();
 	private static Path warnsFilePath = null;
@@ -41,7 +41,7 @@ public class App {
 	private App() {
 		// NOP
 	}
-	
+
 	public static void init() throws IOException {
 		// Load config
 		config = AppSettings.of(GROUP_NAME, APP_NAME, CONFIG_FILE_NAME);
@@ -49,11 +49,11 @@ public class App {
 		if (!settingsMigrationResult.migrated()) {
 			config.load();
 		}
-		
+
 		Path appDirectory = config.path().getParent();
 		warnsFilePath = appDirectory.resolve(WARNS_FILE_NAME);
 		errorsFilePath = appDirectory.resolve(ERRORS_FILE_NAME);
-		
+
 		// Clear old logs
 		Files.deleteIfExists(warnsFilePath);
 		Files.deleteIfExists(errorsFilePath);
@@ -62,7 +62,7 @@ public class App {
 	public static AppSettings config() {
 		return config;
 	}
-	
+
 	public static void deleteMigratedLegacySettingsIfNeeded() {
 		AppSettingsMigration.deleteLegacyFiles(settingsMigrationResult);
 		settingsMigrationResult = AppSettingsMigration.Result.none();

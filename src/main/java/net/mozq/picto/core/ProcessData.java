@@ -23,18 +23,18 @@ import java.util.Date;
 import net.mozq.picto.enums.ProcessDataStatus;
 
 public class ProcessData {
-	
+
 	private Path srcPath;
 	private BasicFileAttributes srcFileAttributes;
-	
+
 	private Path destPath;
-	
+
 	private Date baseDate;
-	
+
 	private ProcessDataStatus status;
-	
+
 	private String message;
-	
+
 	public ProcessData() {
 	}
 

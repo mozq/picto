@@ -99,9 +99,9 @@ class SuggestionPopup {
 
 	private void installListeners() {
 		KeyboardFocusManager.getCurrentKeyboardFocusManager()
-				.addPropertyChangeListener("permanentFocusOwner", focusOwnerListener); //$NON-NLS-1$
+				.addPropertyChangeListener("permanentFocusOwner", focusOwnerListener);
 		KeyboardFocusManager.getCurrentKeyboardFocusManager()
-				.addPropertyChangeListener("focusOwner", focusOwnerListener); //$NON-NLS-1$
+				.addPropertyChangeListener("focusOwner", focusOwnerListener);
 		SwingUtilities.invokeLater(this::installWindowFocusListener);
 		field.addFocusListener(new FocusAdapter() {
 			@Override
@@ -330,11 +330,11 @@ class SuggestionPopup {
 	}
 
 	private static Color createHoverBackground(Color defaultBackground) {
-		Color color = UIManager.getColor("List.hoverBackground"); //$NON-NLS-1$
+		Color color = UIManager.getColor("List.hoverBackground");
 		if (color != null) {
 			return color;
 		}
-		color = UIManager.getColor("MenuItem.selectionBackground"); //$NON-NLS-1$
+		color = UIManager.getColor("MenuItem.selectionBackground");
 		if (color != null) {
 			return color;
 		}

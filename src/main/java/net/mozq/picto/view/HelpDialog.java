@@ -29,30 +29,30 @@ public class HelpDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 
 	public HelpDialog() {
-		setTitle(Messages.getString("HelpDialog.title")); //$NON-NLS-1$
+		setTitle(Messages.getString("HelpDialog.title"));
 		setBounds(100, 100, 700, 530);
-		
+
 		JEditorPane editorPane = new JEditorPane();
 		editorPane.setEditable(false);
-		editorPane.setContentType("text/html"); //$NON-NLS-1$
-		editorPane.setText(readResourceText(Messages.getString("HelpDialog.help.path"))); //$NON-NLS-1$
+		editorPane.setContentType("text/html");
+		editorPane.setText(readResourceText(Messages.getString("HelpDialog.help.path")));
 		editorPane.setCaretPosition(0);
-		
+
 		JScrollPane scrollPane = new JScrollPane(editorPane);
 		getContentPane().add(scrollPane, BorderLayout.CENTER);
 	}
 
 	private String readResourceText(String resourceName) {
 		StringBuilder sb = new StringBuilder();
-		try (InputStreamReader br = new InputStreamReader(this.getClass().getResourceAsStream(resourceName), "UTF-8")) { //$NON-NLS-1$
+		try (InputStreamReader br = new InputStreamReader(this.getClass().getResourceAsStream(resourceName), "UTF-8")) {
 			int ch;
 			while ((ch = br.read()) != -1) {
 				sb.append((char)ch);
 			}
 		} catch (Exception e) {
 			App.handleError(e.getMessage(), e);
-			
-			return Messages.getString("message.error.load.help"); //$NON-NLS-1$
+
+			return Messages.getString("message.error.load.help");
 		}
 		return sb.toString();
 	}

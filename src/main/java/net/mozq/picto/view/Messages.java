@@ -22,14 +22,14 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 public class Messages {
-	private static final String BUNDLE_NAME = "net.mozq.picto.view.messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "net.mozq.picto.view.messages";
 
 	private static Locale locale = Locale.getDefault();
 	private static ResourceBundle bundle = ResourceBundle.getBundle(BUNDLE_NAME, locale);
 
 	private Messages() {
 	}
-	
+
 	public static void load(Locale locale) {
 		Messages.locale = locale;
 		Messages.bundle = ResourceBundle.getBundle(BUNDLE_NAME, locale);
@@ -48,8 +48,8 @@ public class Messages {
 		MessageFormat format = new MessageFormat(message, locale);
 		return format.format(params);
 	}
-	
+
 	public static String getString(Enum<?> enumKey) {
-		return getString("enum." + enumKey.getClass().getSimpleName() + "." + enumKey.name()); //$NON-NLS-1$ //$NON-NLS-2$
+		return getString("enum." + enumKey.getClass().getSimpleName() + "." + enumKey.name());
 	}
 }

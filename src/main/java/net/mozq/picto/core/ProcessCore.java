@@ -16,12 +16,7 @@
  */
 package net.mozq.picto.core;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.CopyOption;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitOption;
@@ -33,12 +28,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -49,39 +38,23 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 
-import org.apache.commons.imaging.ImagingException;
-import org.apache.commons.imaging.Imaging;
 import org.apache.commons.imaging.common.ImageMetadata;
-import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata;
-import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter;
-import org.apache.commons.imaging.formats.tiff.TiffField;
-import org.apache.commons.imaging.formats.tiff.TiffImageMetadata;
-import org.apache.commons.imaging.formats.tiff.TiffImageMetadata.GpsInfo;
 import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
 import org.apache.commons.imaging.formats.tiff.constants.GpsTagConstants;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
-import org.apache.commons.imaging.formats.tiff.taginfos.TagInfo;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
-import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 
 import net.mozq.nanotemplate.NanoTemplateException;
 import net.mozq.picto.App;
 import net.mozq.picto.core.exception.PictoException;
-import net.mozq.picto.core.exception.PictoFileChangeException;
-import net.mozq.picto.core.exception.PictoFileDigestMismatchException;
 import net.mozq.picto.core.exception.PictoInvalidDestinationPathException;
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.OperationType;
 import net.mozq.picto.enums.ProcessDataStatus;
+import net.mozq.picto.util.FileNameSupport;
 import net.mozq.picto.view.Messages;
 
-public class ProcessCore {
-	
-	private static final String FILE_DIGEST_ALGORITHM = "MD5";
-	
-	private static final String EXIF_DATE_PATTERN = "yyyy:MM:dd HH:mm:ss";
-	private static final String EXIF_SUBSEC_PATTERN = "00";
-	
+public final class ProcessCore {
+
 	private static final CopyOption[] OPTIONS_COPY = {
 			//StandardCopyOption.COPY_ATTRIBUTES,
 	};
@@ -99,57 +72,56 @@ public class ProcessCore {
 			//StandardCopyOption.ATOMIC_MOVE,
 			StandardCopyOption.REPLACE_EXISTING,
 	};
-	
-	public ProcessCore() {
-		// NOP
+
+	private ProcessCore() {
 	}
-	
+
 	public static void findFiles(
 			ProcessCondition processCondition,
 			Consumer<ProcessData> processDataSetter,
 			BooleanSupplier processStopper
 			) throws IOException {
-		
+
 		Set<FileVisitOption> fileVisitOptionSet;
 		if (processCondition.isFollowLinks()) {
 			fileVisitOptionSet = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
 		} else {
 			fileVisitOptionSet = Collections.emptySet();
 		}
-		
+
 		Files.walkFileTree(
 				processCondition.getSrcRootPath(),
 				fileVisitOptionSet,
-				processCondition.getDept(),
+				processCondition.getDepth(),
 				new SimpleFileVisitor<Path>() {
 					@Override
 					public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 						if (processStopper.getAsBoolean()) {
 							return FileVisitResult.TERMINATE;
 						}
-						
+
 						return FileVisitResult.CONTINUE;
 					}
-					
+
 					@Override
 					public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 
 						if (attrs.isDirectory()) {
 							return FileVisitResult.SKIP_SUBTREE;
 						}
-						
+
 						if (processStopper.getAsBoolean()) {
 							return FileVisitResult.TERMINATE;
 						}
-						
+
 						if (!processCondition.getPathFilter().accept(file, attrs)) {
 							return FileVisitResult.SKIP_SUBTREE;
 						}
-						
+
 						Path rootRelativeSubPath = processCondition.getSrcRootPath().relativize(file.getParent());
 
-						ImageMetadata imageMetadata = getImageMetadata(file);
-						
+						ImageMetadata imageMetadata = ExifMetadataSupport.loadMetadata(file);
+
 						Date baseDate;
 						if (processCondition.isChangeFileCreationDate()
 								|| processCondition.isChangeFileModifiedDate()
@@ -160,7 +132,7 @@ public class ProcessCore {
 						} else {
 							baseDate = null;
 						}
-						
+
 						String destSubPathname;
 						try {
 							destSubPathname = processCondition.getDestSubPathTemplate().render(varName -> {
@@ -169,52 +141,52 @@ public class ProcessCore {
 									case "Now": return new Date();
 									case "ParentSubPath": return rootRelativeSubPath.toString();
 									case "FileName": return file.getFileName().toString();
-									case "BaseName": return getBaseName(file.getFileName().toString());
-									case "Extension": return getExtension(file.getFileName().toString());
+									case "BaseName": return FileNameSupport.baseName(file.getFileName().toString());
+									case "Extension": return FileNameSupport.extension(file.getFileName().toString());
 									case "Size": return Long.valueOf(Files.size(file));
 									case "CreationDate": return (processCondition.isChangeFileCreationDate()) ? baseDate : new Date(attrs.creationTime().toMillis());
 									case "ModifiedDate": return (processCondition.isChangeFileModifiedDate()) ? baseDate : new Date(attrs.lastModifiedTime().toMillis());
 									case "AccessDate": return (processCondition.isChangeFileAccessDate()) ? baseDate : new Date(attrs.lastAccessTime().toMillis());
-									case "PhotoTakenDate": return (processCondition.isChangeExifDate()) ? baseDate : getPhotoTakenDate(file, imageMetadata);
-									case "Width": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);
-									case "Height": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);
-									case "FNumber": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FNUMBER);
-									case "Aperture": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_APERTURE_VALUE);
-									case "MaxAperture": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_MAX_APERTURE_VALUE);
-									case "ISO": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_ISO);
-									case "FocalLength": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH); // 焦点距離
-									case "FocalLength35mm": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH_IN_35MM_FORMAT);
-									case "ShutterSpeed": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_SHUTTER_SPEED_VALUE);
-									case "Exposure": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE); // 露出
-									case "ExposureTime": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_TIME); // 露出時間（秒）
-									case "ExposureMode": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_MODE);
-									case "ExposureProgram": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_PROGRAM);
-									case "Brightness": return getEXIFDoubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_BRIGHTNESS_VALUE);
-									case "WhiteBalance": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_WHITE_BALANCE_1);
-									case "LightSource": return getEXIFIntValue(imageMetadata, ExifTagConstants.EXIF_TAG_LIGHT_SOURCE);
-									case "Lens": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS);
-									case "LensMake": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MAKE);
-									case "LensModel": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MODEL);
-									case "LensSerialNumber": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_SERIAL_NUMBER);
-									case "Make": return getEXIFStringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MAKE);
-									case "Model": return getEXIFStringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MODEL);
-									case "SerialNumber": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SERIAL_NUMBER);
-									case "Software": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SOFTWARE);
-									case "ProcessingSoftware": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_PROCESSING_SOFTWARE);
-									case "OwnerName": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_OWNER_NAME);
-									case "CameraOwnerName": return getEXIFStringValue(imageMetadata, ExifTagConstants.EXIF_TAG_CAMERA_OWNER_NAME);
-									case "GPSLat": return getEXIFGpsLat(imageMetadata);
-									case "GPSLatDeg": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 0);
-									case "GPSLatMin": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 1);
-									case "GPSLatSec": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 2);
-									case "GPSLatRef": return getEXIFStringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE_REF);
-									case "GPSLon": return getEXIFGpsLon(imageMetadata);
-									case "GPSLonDeg": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 0);
-									case "GPSLonMin": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 1);
-									case "GPSLonSec": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 2);
-									case "GPSLonRef": return getEXIFStringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE_REF);
-									case "GPSAlt": return getEXIFDoubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE);
-									case "GPSAltRef": return getEXIFIntValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF);
+									case "PhotoTakenDate": return (processCondition.isChangeExifDate()) ? baseDate : ExifMetadataSupport.photoTakenDate(file, imageMetadata);
+									case "Width": return ExifMetadataSupport.intValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);
+									case "Height": return ExifMetadataSupport.intValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);
+									case "FNumber": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FNUMBER);
+									case "Aperture": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_APERTURE_VALUE);
+									case "MaxAperture": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_MAX_APERTURE_VALUE);
+									case "ISO": return ExifMetadataSupport.intValue(imageMetadata, ExifTagConstants.EXIF_TAG_ISO);
+									case "FocalLength": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH);
+									case "FocalLength35mm": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_FOCAL_LENGTH_IN_35MM_FORMAT);
+									case "ShutterSpeed": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_SHUTTER_SPEED_VALUE);
+									case "Exposure": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE);
+									case "ExposureTime": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_TIME);
+									case "ExposureMode": return ExifMetadataSupport.intValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_MODE);
+									case "ExposureProgram": return ExifMetadataSupport.intValue(imageMetadata, ExifTagConstants.EXIF_TAG_EXPOSURE_PROGRAM);
+									case "Brightness": return ExifMetadataSupport.doubleValue(imageMetadata, ExifTagConstants.EXIF_TAG_BRIGHTNESS_VALUE);
+									case "WhiteBalance": return ExifMetadataSupport.intValue(imageMetadata, ExifTagConstants.EXIF_TAG_WHITE_BALANCE_1);
+									case "LightSource": return ExifMetadataSupport.intValue(imageMetadata, ExifTagConstants.EXIF_TAG_LIGHT_SOURCE);
+									case "Lens": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS);
+									case "LensMake": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MAKE);
+									case "LensModel": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_MODEL);
+									case "LensSerialNumber": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_LENS_SERIAL_NUMBER);
+									case "Make": return ExifMetadataSupport.stringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MAKE);
+									case "Model": return ExifMetadataSupport.stringValue(imageMetadata, TiffTagConstants.TIFF_TAG_MODEL);
+									case "SerialNumber": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SERIAL_NUMBER);
+									case "Software": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_SOFTWARE);
+									case "ProcessingSoftware": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_PROCESSING_SOFTWARE);
+									case "OwnerName": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_OWNER_NAME);
+									case "CameraOwnerName": return ExifMetadataSupport.stringValue(imageMetadata, ExifTagConstants.EXIF_TAG_CAMERA_OWNER_NAME);
+									case "GPSLat": return ExifMetadataSupport.gpsLatitude(imageMetadata);
+									case "GPSLatDeg": return ExifMetadataSupport.doubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 0);
+									case "GPSLatMin": return ExifMetadataSupport.doubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 1);
+									case "GPSLatSec": return ExifMetadataSupport.doubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE, 2);
+									case "GPSLatRef": return ExifMetadataSupport.stringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LATITUDE_REF);
+									case "GPSLon": return ExifMetadataSupport.gpsLongitude(imageMetadata);
+									case "GPSLonDeg": return ExifMetadataSupport.doubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 0);
+									case "GPSLonMin": return ExifMetadataSupport.doubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 1);
+									case "GPSLonSec": return ExifMetadataSupport.doubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE, 2);
+									case "GPSLonRef": return ExifMetadataSupport.stringValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_LONGITUDE_REF);
+									case "GPSAlt": return ExifMetadataSupport.doubleValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE);
+									case "GPSAltRef": return ExifMetadataSupport.intValue(imageMetadata, GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF);
 									default: throw new PictoInvalidDestinationPathException(
 												Messages.getString("message.warn.invalid.destSubPath.varName", varName)
 												);
@@ -238,29 +210,29 @@ public class ProcessCore {
 									e
 									);
 						}
-						
+
 						Path destSubPath = processCondition.getDestRootPath().resolve(destSubPathname).normalize();
-						
+
 						if (!destSubPath.startsWith(processCondition.getDestRootPath())) {
 							throw new PictoInvalidDestinationPathException(
 									Messages.getString("message.warn.invalid.destination.path", destSubPath)
 									);
 						}
-						
+
 						ProcessData processData = new ProcessData();
 						processData.setSrcPath(file);
 						processData.setSrcFileAttributes(attrs);
 						processData.setDestPath(destSubPath);
 						processData.setBaseDate(baseDate);
-						
+
 						processDataSetter.accept(processData);
-						
+
 						return FileVisitResult.CONTINUE;
 					}
 				}
 				);
 	}
-	
+
 	public static void processFiles(
 			ProcessCondition processCondition,
 			Function<Integer, ProcessData> processDataGetter,
@@ -271,7 +243,7 @@ public class ProcessCore {
 
 		int index = 0;
 		while (!processStopper.getAsBoolean()) {
-			
+
 			ProcessData processData = processDataGetter.apply(index);
 			if (processData == null) {
 				try {
@@ -284,7 +256,7 @@ public class ProcessCore {
 
 			processData.setStatus(ProcessDataStatus.Processing);
 			processDataUpdater.accept(index);
-			
+
 			ProcessDataStatus status;
 			try {
 				if (processCondition.isDryRun()) {
@@ -299,17 +271,17 @@ public class ProcessCore {
 				processData.setMessage(e.getLocalizedMessage());
 				App.handleWarn(e.getMessage(), e);
 			}
-			
+
 			processDataUpdater.accept(index);
 			if (processData.getStatus() == ProcessDataStatus.Error
 					|| processData.getStatus() == ProcessDataStatus.Terminated) {
 				break;
 			}
-			
+
 			index++;
 		}
 	}
-	
+
 	private static ProcessDataStatus confirmOverwrite(
 			ProcessCondition processCondition,
 			ProcessData processData,
@@ -328,112 +300,43 @@ public class ProcessCore {
 			throw new IllegalStateException(processCondition.getExistingFileMethod().toString());
 		}
 	}
-	
+
 	private static ProcessDataStatus process(
-			ProcessCondition processCondition, 
+			ProcessCondition processCondition,
 			ProcessData processData,
 			Function<ProcessData, ProcessDataStatus> overwriteConfirm
 			) throws IOException {
 
 		ProcessDataStatus status;
-		
+
 		Path destParentPath = processData.getDestPath().getParent();
 		if (destParentPath != null) {
 			Files.createDirectories(destParentPath);
 		}
-		
+
 		if (processCondition.isCheckDigest()
 				|| (processCondition.isChangeExifDate() && processData.getBaseDate() != null)
-				|| processCondition.isRemveExifTagsGps()
-				|| processCondition.isRemveExifTagsAll()
+				|| processCondition.isRemoveExifTagsGps()
+				|| processCondition.isRemoveExifTagsAll()
 				) {
 			Path destTempPath = null;
 			try {
 				destTempPath = Files.createTempFile(processData.getDestPath().getParent(), processData.getDestPath().getFileName().toString(), null);
-				
+
 				if (processCondition.isCheckDigest()) {
-					String algorithm = FILE_DIGEST_ALGORITHM;
-					
-					MessageDigest srcMD = newMessageDigest(algorithm);
-					try (InputStream is = new DigestInputStream(new BufferedInputStream(Files.newInputStream(processData.getSrcPath())), srcMD)) {
-						Files.copy(is, destTempPath, OPTIONS_COPY_REPLACE);
-					}
-					byte[] srcDigest = srcMD.digest();
-					
-					MessageDigest destMD = newMessageDigest(algorithm);
-					try (InputStream is = new DigestInputStream(new BufferedInputStream(Files.newInputStream(destTempPath)), destMD)) {
-						byte[] b = new byte[1024];
-						while(is.read(b) != -1) { }
-					}
-					byte[] destDigest = destMD.digest();
-					
-					if (!isSame(srcDigest, destDigest)) {
-						throw new PictoFileDigestMismatchException(Messages.getString("message.error.digest.mismatch"));
-					}
-				} else if (processCondition.isRemveExifTagsAll()) {
-					ExifRewriter exifRewriter = new ExifRewriter();
-					try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(destTempPath))) {
-						exifRewriter.removeExifMetadata(processData.getSrcPath().toFile(), os);
-					} catch (ImagingException e) {
-						throw new PictoFileChangeException(Messages.getString("message.error.edit.file"), e);
-					}
-				} else if (processCondition.isChangeExifDate() || processCondition.isRemveExifTagsGps()) {
-					ImageMetadata imageMetadata = getImageMetadata(processData.getSrcPath());
-					TiffOutputSet outputSet = getOutputSet(imageMetadata);
-					if (outputSet == null) {
-						Files.copy(processData.getSrcPath(), destTempPath, OPTIONS_COPY_REPLACE);
-					} else {
-						if (processCondition.isChangeExifDate()) {
-							SimpleDateFormat exifDateFormat = new SimpleDateFormat(EXIF_DATE_PATTERN);
-							exifDateFormat.setTimeZone(processCondition.getTimeZone());
-							String exifBaseDate = exifDateFormat.format(processData.getBaseDate());
-							
-							DecimalFormat exifSubsecFormat = new DecimalFormat(EXIF_SUBSEC_PATTERN);
-							String exifBaseSubsec = exifSubsecFormat.format((int)(processData.getBaseDate().getTime() / 10) % 100);
-							
-							try {
-								TiffOutputDirectory rootDirectory = outputSet.getRootDirectory();
-								TiffOutputDirectory exifDirectory = outputSet.getExifDirectory();
-								if (rootDirectory != null) {
-									rootDirectory.removeField(TiffTagConstants.TIFF_TAG_DATE_TIME);
-									rootDirectory.add(TiffTagConstants.TIFF_TAG_DATE_TIME, exifBaseDate);
-								}
-								if (exifDirectory != null) {
-									exifDirectory.removeField(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME);
-									exifDirectory.add(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME, exifBaseSubsec);
-									
-									exifDirectory.removeField(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL);
-									exifDirectory.add(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL, exifBaseDate);
-									exifDirectory.removeField(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_ORIGINAL);
-									exifDirectory.add(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_ORIGINAL, exifBaseSubsec);
-									
-									exifDirectory.removeField(ExifTagConstants.EXIF_TAG_DATE_TIME_DIGITIZED);
-									exifDirectory.add(ExifTagConstants.EXIF_TAG_DATE_TIME_DIGITIZED, exifBaseDate);
-									exifDirectory.removeField(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_DIGITIZED);
-									exifDirectory.add(ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_DIGITIZED, exifBaseSubsec);
-								}
-							} catch (ImagingException e) {
-								throw new PictoFileChangeException(Messages.getString("message.error.edit.file"), e);
-							}
-						}
-						
-						if (processCondition.isRemveExifTagsGps()) {
-							outputSet.removeField(ExifTagConstants.EXIF_TAG_GPSINFO);
-							TiffOutputDirectory gpsDirectory = outputSet.getGpsDirectory();
-							if (gpsDirectory != null) {
-								GpsTagConstants.ALL_GPS_TAGS.forEach(gpsDirectory::removeField);
-							}
-						}
-						
-						ExifRewriter exifRewriter = new ExifRewriter();
-						try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(destTempPath))) {
-							exifRewriter.updateExifMetadataLossless(processData.getSrcPath().toFile(), os, outputSet);
-						} catch (ImagingException e) {
-							throw new PictoFileChangeException(Messages.getString("message.error.edit.file"), e);
-						}
-					}
+					FileDigestSupport.copyAndVerify(processData.getSrcPath(), destTempPath);
+				} else if (processCondition.isRemoveExifTagsAll()) {
+					ExifMetadataSupport.removeAll(processData.getSrcPath(), destTempPath);
+				} else if (processCondition.isChangeExifDate() || processCondition.isRemoveExifTagsGps()) {
+					Date exifDate = processCondition.isChangeExifDate() ? processData.getBaseDate() : null;
+					ExifMetadataSupport.updateLossless(
+							processData.getSrcPath(),
+							destTempPath,
+							exifDate,
+							processCondition.getTimeZone(),
+							processCondition.isRemoveExifTagsGps());
 				}
-				
+
 				Path destPath;
 				if (processCondition.getOperationType() == OperationType.Overwrite) {
 					destPath = processData.getSrcPath();
@@ -496,7 +399,7 @@ public class ProcessCore {
 				throw new IllegalStateException(processCondition.getOperationType().toString());
 			}
 		}
-		
+
 		if (status == ProcessDataStatus.Success) {
 			FileTime creationFileTime = processData.getSrcFileAttributes().creationTime();
 			FileTime modifiedFileTime = processData.getSrcFileAttributes().lastModifiedTime();
@@ -521,10 +424,10 @@ public class ProcessCore {
 			BasicFileAttributeView attributeView = Files.getFileAttributeView(processData.getDestPath(), BasicFileAttributeView.class);
 			attributeView.setTimes(modifiedFileTime, accessFileTime, creationFileTime);
 		}
-		
+
 		return status;
 	}
-	
+
 	private static Date getBaseDate(
 			ProcessCondition processCondition,
 			Path file, BasicFileAttributes attrs,
@@ -546,7 +449,7 @@ public class ProcessCore {
 			baseDate = toDate(attrs.lastAccessTime());
 			break;
 		case ExifDate:
-			baseDate = getExifDate(imageMetadata);
+			baseDate = ExifMetadataSupport.exifDate(imageMetadata);
 			break;
 		case CustomDate:
 			baseDate = processCondition.getCustomBaseDate();
@@ -554,7 +457,7 @@ public class ProcessCore {
 		default:
 			throw new IllegalStateException(processCondition.getBaseDateType().toString());
 		}
-		
+
 		if (baseDate != null) {
 			if (processCondition.getBaseDateModType() != DateModType.None) {
 				Calendar cal = Calendar.getInstance(processCondition.getTimeZone());
@@ -588,333 +491,33 @@ public class ProcessCore {
 				baseDate = cal.getTime();
 			}
 		}
-		
+
 		return baseDate;
 	}
-	
+
 	private static Date toDate(FileTime fileTime) {
 		if (fileTime == null) {
 			return null;
 		}
 		return new Date(fileTime.toMillis());
 	}
-	
+
 	private static boolean addField(Calendar cal, int field, Integer amount, int signum) {
 		if (amount == null) {
 			return false;
 		}
-		
+
 		cal.add(field, signum * amount.intValue());
 		return true;
 	}
-	
+
 	private static boolean setField(Calendar cal, int field, Integer amount) {
 		if (amount == null) {
 			return false;
 		}
-		
+
 		cal.set(field, amount.intValue());
 		return true;
 	}
 
-	private static String getBaseName(String filename) {
-		int extensionSeparator = getExtensionSeparator(filename);
-		if (extensionSeparator < 0) {
-			return filename;
-		}
-		return filename.substring(0, extensionSeparator);
-	}
-
-	private static String getExtension(String filename) {
-		int extensionSeparator = getExtensionSeparator(filename);
-		if (extensionSeparator < 0 || extensionSeparator == filename.length() - 1) {
-			return ""; //$NON-NLS-1$
-		}
-		return filename.substring(extensionSeparator + 1);
-	}
-
-	private static int getExtensionSeparator(String filename) {
-		int separator = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
-		int extensionSeparator = filename.lastIndexOf('.');
-		if (extensionSeparator <= separator || extensionSeparator < 1) {
-			return -1;
-		}
-		return extensionSeparator;
-	}
-	
-	private static Date getPhotoTakenDate(Path imagePath, ImageMetadata imageImageMetadata) {
-		File imageFile = imagePath.toFile();
-		
-		Date photoTakenDate;
-		try {
-			photoTakenDate = getExifDate(imageImageMetadata);
-		} catch (IOException e) {
-			photoTakenDate = null;
-		}
-		
-		if (photoTakenDate == null) {
-			photoTakenDate = new Date(imageFile.lastModified());
-		}
-		
-		return photoTakenDate;
-	}
-	
-	private static ImageMetadata getImageMetadata(Path imagePath) throws IOException {
-		File imageFile = imagePath.toFile();
-		
-		ImageMetadata imageMetadata;
-		try {
-			imageMetadata = Imaging.getMetadata(imageFile);
-		} catch (ImagingException | IllegalArgumentException e) {
-			imageMetadata = null;
-		}
-		
-		return imageMetadata;
-	}
-	
-	private static TiffOutputSet getOutputSet(ImageMetadata imageMetadata) {
-		if (imageMetadata == null) {
-			return null;
-		}
-
-		TiffOutputSet outputSet = null;
-		if (imageMetadata instanceof JpegImageMetadata) {
-			try {
-				TiffImageMetadata exifMetadata = ((JpegImageMetadata)imageMetadata).getExif();
-				if (exifMetadata != null) {
-					outputSet = exifMetadata.getOutputSet();
-				}
-			} catch (ImagingException e) {
-				// NOP
-			}
-		} else if (imageMetadata instanceof TiffImageMetadata) {
-			try {
-				outputSet = ((TiffImageMetadata)imageMetadata).getOutputSet();
-			} catch (ImagingException e) {
-				// NOP
-			}
-		}
-		
-		return outputSet;
-	}
-	
-	private static Date getExifDate(ImageMetadata imageMetadata) throws IOException {
-		Date photoTakenDate = getEXIFDateValue(imageMetadata, ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL, ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_ORIGINAL);
-		if (photoTakenDate == null) {
-			photoTakenDate = getEXIFDateValue(imageMetadata, ExifTagConstants.EXIF_TAG_DATE_TIME_DIGITIZED, ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_DIGITIZED);
-			if (photoTakenDate == null) {
-				photoTakenDate = getEXIFDateValue(imageMetadata, TiffTagConstants.TIFF_TAG_DATE_TIME, ExifTagConstants.EXIF_TAG_SUB_SEC_TIME);
-			}
-		}
-		
-		return photoTakenDate;
-	}
-	
-	private static TiffField getTiffField(ImageMetadata imageMetadata, TagInfo tagInfo) {
-		if (imageMetadata == null) {
-			return null;
-		}
-		
-		TiffField field;
-		if (imageMetadata instanceof JpegImageMetadata) {
-			field = ((JpegImageMetadata)imageMetadata).findExifValueWithExactMatch(tagInfo);
-		} else if (imageMetadata instanceof TiffImageMetadata) {
-			try {
-				field = ((TiffImageMetadata)imageMetadata).findField(tagInfo, true);
-			} catch (ImagingException e) {
-				field = null;
-			}
-		} else {
-			field = null;
-		}
-		
-		return field;
-	}
-	
-	private static String getEXIFStringValue(ImageMetadata imageMetadata, TagInfo tagInfo) {
-		TiffField field = getTiffField(imageMetadata, tagInfo);
-		if (field == null) {
-			return null;
-		}
-		
-		String exifStr;
-		try {
-			exifStr = field.getStringValue();
-		} catch (ImagingException e) {
-			return null;
-		}
-		if (exifStr != null) {
-			int nullIdx = exifStr.indexOf('\u0000');
-			if (nullIdx != -1) {
-				exifStr = exifStr.substring(0, nullIdx);
-			}
-		}
-		
-		return exifStr;
-	}
-	
-	private static Integer getEXIFIntValue(ImageMetadata imageMetadata, TagInfo tagInfo) {
-		TiffField field = getTiffField(imageMetadata, tagInfo);
-		if (field == null) {
-			return null;
-		}
-		
-		Integer value;
-		try {
-			value = Integer.valueOf(field.getIntValue());
-		} catch (ImagingException e) {
-			value = null;
-		}
-		
-		return value;
-	}
-	
-	private static Double getEXIFDoubleValue(ImageMetadata imageMetadata, TagInfo tagInfo) {
-		TiffField field = getTiffField(imageMetadata, tagInfo);
-		if (field == null) {
-			return null;
-		}
-		
-		Double value;
-		try {
-			value = Double.valueOf(field.getDoubleValue());
-		} catch (ImagingException e) {
-			value = null;
-		}
-		
-		return value;
-	}
-	
-	private static Double getEXIFDoubleValue(ImageMetadata imageMetadata, TagInfo tagInfo, int index) {
-		TiffField field = getTiffField(imageMetadata, tagInfo);
-		if (field == null) {
-			return null;
-		}
-		
-		Double value;
-		try {
-			double[] v = field.getDoubleArrayValue();
-			if (v == null) {
-				value = null;
-			} else {
-				value = Double.valueOf(v[index]);
-			}
-		} catch (ImagingException e) {
-			value = null;
-		}
-		
-		return value;
-	}
-	
-	private static Date getEXIFDateValue(ImageMetadata imageMetadata, TagInfo tagInfo, TagInfo subTagInfo) {
-		if (imageMetadata == null) {
-			return null;
-		}
-		
-		String exifDateStr = getEXIFStringValue(imageMetadata, tagInfo);
-		if (exifDateStr == null) {
-			return null;
-		}
-		
-		Date date;
-		try {
-			SimpleDateFormat dateFormat = new SimpleDateFormat(EXIF_DATE_PATTERN);
-			date = dateFormat.parse(exifDateStr);
-		} catch (ParseException e) {
-			date = null;
-		}
-		if (date != null && subTagInfo != null) {
-			String subSec = getEXIFStringValue(imageMetadata, subTagInfo);
-			if (subSec != null && !subSec.isEmpty()) {
-				try {
-					date = new Date(date.getTime() + (Integer.parseInt(subSec) * 10));
-				} catch (NumberFormatException e) {
-					// NOP
-				}
-			}
-		}
-		
-		return date;
-	}
-	
-	private static GpsInfo getEXIFGpsInfo(ImageMetadata imageMetadata) {
-		if (imageMetadata == null) {
-			return null;
-		}
-		
-		TiffImageMetadata tiffImageMetadata = null;
-		if (imageMetadata instanceof JpegImageMetadata) {
-			JpegImageMetadata jpegMetadata = (JpegImageMetadata)imageMetadata;
-			tiffImageMetadata = jpegMetadata.getExif();
-		} else if (imageMetadata instanceof TiffImageMetadata) {
-			tiffImageMetadata = (TiffImageMetadata)imageMetadata;
-		}
-		
-		if (tiffImageMetadata == null) {
-			return null;
-		}
-		
-		GpsInfo gpsInfo;
-		try {
-			gpsInfo = tiffImageMetadata.getGpsInfo();
-		} catch (ImagingException e) {
-			return null;
-		}
-		
-		return gpsInfo;
-	}
-	
-	private static Double getEXIFGpsLat(ImageMetadata imageMetadata) {
-		GpsInfo gpsInfo = getEXIFGpsInfo(imageMetadata);
-		if (gpsInfo == null) {
-			return null;
-		}
-		
-		try {
-			return Double.valueOf(gpsInfo.getLatitudeAsDegreesNorth());
-		} catch (ImagingException e) {
-			return null;
-		}
-	}
-	
-	private static Double getEXIFGpsLon(ImageMetadata imageMetadata) {
-		GpsInfo gpsInfo = getEXIFGpsInfo(imageMetadata);
-		if (gpsInfo == null) {
-			return null;
-		}
-		
-		try {
-			return Double.valueOf(gpsInfo.getLongitudeAsDegreesEast());
-		} catch (ImagingException e) {
-			return null;
-		}
-	}
-	
-	private static MessageDigest newMessageDigest(String algorithm) {
-		MessageDigest md = null;
-		try {
-			md = MessageDigest.getInstance(algorithm);
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-		return md;
-	}
-	
-	private static boolean isSame(byte[] b1, byte[] b2) {
-		if (b1 == null || b2 == null) {
-			return (b1 == null && b2 == null);
-		}
-		
-		if (b1.length != b2.length) {
-			return false;
-		}
-		
-		for (int i = 0; i < b1.length; i++) {
-			if (b1[i] != b2[i]) {
-				return false;
-			}
-		}
-		
-		return true;
-	}
 }

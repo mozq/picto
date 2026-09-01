@@ -223,7 +223,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.jpg");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemveExifTagsAll(true);
+		condition.setRemoveExifTagsAll(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -237,7 +237,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.jpg");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemveExifTagsGps(true);
+		condition.setRemoveExifTagsGps(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -291,7 +291,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.txt");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemveExifTagsGps(true);
+		condition.setRemoveExifTagsGps(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -305,7 +305,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.txt");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemveExifTagsAll(true);
+		condition.setRemoveExifTagsAll(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -480,7 +480,7 @@ class ProcessCoreTest {
 		condition.setDestRootPath(destRoot);
 		condition.setPathFilter(new PictoPathFilter());
 		condition.setDestSubPathTemplate(new NanoTemplate(destSubPathPattern).timeZone(UTC));
-		condition.setDept(Integer.MAX_VALUE);
+		condition.setDepth(Integer.MAX_VALUE);
 		return condition;
 	}
 

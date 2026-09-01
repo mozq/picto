@@ -21,11 +21,11 @@ public class ProcessStatus {
 	private boolean endFindingFiles;
 	private boolean stopRequests;
 	private int currentProcessDataIndex;
-	
+
 	public ProcessStatus() {
 		init();
 	}
-	
+
 	public void init() {
 		endFindingFiles = false;
 		stopRequests = false;

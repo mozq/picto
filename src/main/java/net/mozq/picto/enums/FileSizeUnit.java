@@ -25,13 +25,13 @@ public enum FileSizeUnit {
 	GB(1 * 1024 * 1024 * 1024),
 	TB(1 * 1024 * 1024 * 1024 * 1024),
 	;
-	
+
 	private final long unitBytes;
-	
+
 	private FileSizeUnit(final long unitBytes) {
 		this.unitBytes = unitBytes;
 	}
-	
+
 	public long getUnitBytes() {
 		return this.unitBytes;
 	}

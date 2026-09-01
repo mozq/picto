@@ -160,7 +160,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
     例)
     "${FNumber:0.0}"
     -> "8.0", "16.0"
-    
+
     "${GPSLatDeg:0}°${GPSLatMin:0}'${GPSLatSec:0.0#} ${GPSLatRef}"
     -> "35°39'30.89 N"
 
@@ -303,32 +303,32 @@ Pictoは下記のオープンソース・ソフトウェアを使用していま
 ### FlatLaf
 > FlatLaf
 > Copyright 2019 FormDev Software GmbH
-> 
+>
 > Licensed under the Apache License, Version 2.0.
 
 ### app-settings4j
 > app-settings4j
 > Copyright 2026 Mozq
-> 
+>
 > Licensed under the Apache License, Version 2.0.
 
 ### Apache Commons Imaging
 > Apache Commons Imaging
 > Copyright 2007-2025 The Apache Software Foundation
-> 
+>
 > This product includes software developed at
 > The Apache Software Foundation (https://www.apache.org/).
 
 ### Apache Commons IO
 > Apache Commons IO
 > Copyright 2002-2025 The Apache Software Foundation
-> 
+>
 > This product includes software developed at
 > The Apache Software Foundation (https://www.apache.org/).
 
 ### Apache Commons Lang
 > Apache Commons Lang
 > Copyright 2001-2024 The Apache Software Foundation
-> 
+>
 > This product includes software developed at
 > The Apache Software Foundation (https://www.apache.org/).

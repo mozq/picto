@@ -28,11 +28,11 @@ final class PopupSupport {
 	}
 
 	static Border createPopupBorder() {
-		Border border = UIManager.getBorder("PopupMenu.border"); //$NON-NLS-1$
+		Border border = UIManager.getBorder("PopupMenu.border");
 		if (border != null) {
 			return border;
 		}
-		Color color = UIManager.getColor("Component.borderColor"); //$NON-NLS-1$
+		Color color = UIManager.getColor("Component.borderColor");
 		if (color == null) {
 			color = Color.GRAY;
 		}
