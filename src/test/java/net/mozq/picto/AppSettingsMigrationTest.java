@@ -45,7 +45,10 @@ class AppSettingsMigrationTest {
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		assertEquals(List.of("src.root.dir", "dest.sub.path.pattern", "contains.subs"), List.copyOf(settings.asStringMap().keySet())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals(List.of("locale", "appearance", "src.root.dir", "dest.sub.path.pattern", "contains.subs"), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+				List.copyOf(settings.asStringMap().keySet()));
+		assertEquals("system", settings.getString("locale", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		assertEquals("system", settings.getString("appearance", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertEquals("/photos", settings.getString("src.root.dir", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		assertEquals("${FNumber:0.0}/${WhiteBalance?{0:'Auto',1:'Manual',default:'Others'}}", //$NON-NLS-1$
 				settings.getString("dest.sub.path.pattern", "")); //$NON-NLS-1$ //$NON-NLS-2$

@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatDarkLaf;
@@ -34,20 +35,26 @@ import net.mozq.picto.view.MainFrame;
 import net.mozq.picto.view.Messages;
 
 public class AppMain {
+	public static final String PREF_LOCALE_KEY = "locale"; //$NON-NLS-1$
+	public static final String PREF_APPEARANCE_KEY = "appearance"; //$NON-NLS-1$
+	public static final String PREF_SYSTEM = "system"; //$NON-NLS-1$
+	public static final String PREF_LOCALE_EN = "en"; //$NON-NLS-1$
+	public static final String PREF_LOCALE_JA = "ja"; //$NON-NLS-1$
+	public static final String PREF_APPEARANCE_LIGHT = "light"; //$NON-NLS-1$
+	public static final String PREF_APPEARANCE_DARK = "dark"; //$NON-NLS-1$
+	private static final Locale SYSTEM_LOCALE = Locale.getDefault();
+	
 	public static void main(String[] args) throws Exception {
 		System.setProperty("apple.awt.application.appearance", "system"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					configureLookAndFeel();
-					
 					// Load config
 					App.init();
 					
 					// Initialize settings
-					Locale.setDefault(App.config().getLocale("locale", Locale.getDefault()));
-					Messages.load(Locale.getDefault());
+					applyConfiguredUiSettings();
 					
 					MainFrame frame = new MainFrame();
 					frame.setVisible(true);
@@ -65,8 +72,26 @@ public class AppMain {
 		});
 	}
 	
+	public static void applyConfiguredUiSettings() {
+		Locale.setDefault(configuredLocale());
+		Messages.load(Locale.getDefault());
+		configureLookAndFeel();
+		SwingUtilities.invokeLater(com.formdev.flatlaf.FlatLaf::updateUI);
+	}
+	
+	private static Locale configuredLocale() {
+		String locale = App.config().getString(PREF_LOCALE_KEY, PREF_SYSTEM);
+		if (PREF_LOCALE_EN.equals(locale)) {
+			return Locale.ENGLISH;
+		}
+		if (PREF_LOCALE_JA.equals(locale)) {
+			return Locale.JAPANESE;
+		}
+		return SYSTEM_LOCALE;
+	}
+	
 	private static void configureLookAndFeel() {
-		boolean darkMode = isSystemDarkMode();
+		boolean darkMode = configuredDarkMode();
 		if (darkMode) {
 			FlatDarkLaf.setup();
 		} else {
@@ -94,6 +119,17 @@ public class AppMain {
 		UIManager.put("CheckBox.icon.borderColor", inputBorder); //$NON-NLS-1$
 		UIManager.put("CheckBox.icon.focusWidth", 1); //$NON-NLS-1$
 		UIManager.put("CheckBox.icon.borderWidth", 1.2f); //$NON-NLS-1$
+	}
+	
+	private static boolean configuredDarkMode() {
+		String appearance = App.config().getString(PREF_APPEARANCE_KEY, PREF_SYSTEM);
+		if (PREF_APPEARANCE_DARK.equals(appearance)) {
+			return true;
+		}
+		if (PREF_APPEARANCE_LIGHT.equals(appearance)) {
+			return false;
+		}
+		return isSystemDarkMode();
 	}
 	
 	private static boolean isSystemDarkMode() {

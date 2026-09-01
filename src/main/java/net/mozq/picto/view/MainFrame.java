@@ -21,11 +21,13 @@ import java.awt.Color;
 import java.awt.Dialog.ModalityType;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Dimension;
 import java.awt.Cursor;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -62,6 +64,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -82,6 +85,7 @@ import javax.swing.text.MaskFormatter;
 import net.mozq.appsettings.AppSettings;
 import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
+import net.mozq.picto.AppMain;
 import net.mozq.picto.core.PictoPathFilter;
 import net.mozq.picto.core.ProcessCondition;
 import net.mozq.picto.enums.DateModType;
@@ -217,17 +221,48 @@ public class MainFrame extends JFrame {
 	private JLabel lblRunSummary;
 	private boolean showingRunSummary;
 	private JMenuBar menuBar;
-	private JMenu mnFile;
+	private JMenu mnPreferences;
+	private JMenu mnLanguage;
+	private JMenu mnAppearance;
 	private JMenu mnHelp;
 	private JMenuItem mntmHelp;
 	private JMenuItem mntmImportSettings;
 	private JMenuItem mntmExportSettings;
+	private boolean processing;
+	
+	private static final class MainFrameState {
+		private final Rectangle bounds;
+		private final int extendedState;
+		private final boolean srcOptionsExpanded;
+		private final boolean destOptionsExpanded;
+		private final boolean changesExpanded;
+		private final int changesTabIndex;
+		
+		private MainFrameState(
+				Rectangle bounds,
+				int extendedState,
+				boolean srcOptionsExpanded,
+				boolean destOptionsExpanded,
+				boolean changesExpanded,
+				int changesTabIndex) {
+			this.bounds = bounds;
+			this.extendedState = extendedState;
+			this.srcOptionsExpanded = srcOptionsExpanded;
+			this.destOptionsExpanded = destOptionsExpanded;
+			this.changesExpanded = changesExpanded;
+			this.changesTabIndex = changesTabIndex;
+		}
+	}
 
 
 	/**
 	 * Create the frame.
 	 */
 	public MainFrame() {
+		this(null);
+	}
+	
+	private MainFrame(MainFrameState state) {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -253,10 +288,56 @@ public class MainFrame extends JFrame {
 		menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
-		mnFile = new JMenu(Messages.getString("MainFrame.menu.file")); //$NON-NLS-1$
-		menuBar.add(mnFile);
+		mnPreferences = new JMenu(Messages.getString("MainFrame.menu.preferences")); //$NON-NLS-1$
+		menuBar.add(mnPreferences);
 
-		mntmImportSettings = new JMenuItem(Messages.getString("MainFrame.menu.file.importSettings")); //$NON-NLS-1$
+		mnLanguage = new JMenu(Messages.getString("MainFrame.menu.preferences.language")); //$NON-NLS-1$
+		mnPreferences.add(mnLanguage);
+		ButtonGroup languageGroup = new ButtonGroup();
+		addPreferenceMenuItem(
+				mnLanguage,
+				languageGroup,
+				Messages.getString("MainFrame.menu.preferences.language.system"), //$NON-NLS-1$
+				AppMain.PREF_LOCALE_KEY,
+				AppMain.PREF_SYSTEM);
+		addPreferenceMenuItem(
+				mnLanguage,
+				languageGroup,
+				Messages.getString("MainFrame.menu.preferences.language.en"), //$NON-NLS-1$
+				AppMain.PREF_LOCALE_KEY,
+				AppMain.PREF_LOCALE_EN);
+		addPreferenceMenuItem(
+				mnLanguage,
+				languageGroup,
+				Messages.getString("MainFrame.menu.preferences.language.ja"), //$NON-NLS-1$
+				AppMain.PREF_LOCALE_KEY,
+				AppMain.PREF_LOCALE_JA);
+
+		mnAppearance = new JMenu(Messages.getString("MainFrame.menu.preferences.appearance")); //$NON-NLS-1$
+		mnPreferences.add(mnAppearance);
+		ButtonGroup appearanceGroup = new ButtonGroup();
+		addPreferenceMenuItem(
+				mnAppearance,
+				appearanceGroup,
+				Messages.getString("MainFrame.menu.preferences.appearance.system"), //$NON-NLS-1$
+				AppMain.PREF_APPEARANCE_KEY,
+				AppMain.PREF_SYSTEM);
+		addPreferenceMenuItem(
+				mnAppearance,
+				appearanceGroup,
+				Messages.getString("MainFrame.menu.preferences.appearance.light"), //$NON-NLS-1$
+				AppMain.PREF_APPEARANCE_KEY,
+				AppMain.PREF_APPEARANCE_LIGHT);
+		addPreferenceMenuItem(
+				mnAppearance,
+				appearanceGroup,
+				Messages.getString("MainFrame.menu.preferences.appearance.dark"), //$NON-NLS-1$
+				AppMain.PREF_APPEARANCE_KEY,
+				AppMain.PREF_APPEARANCE_DARK);
+
+		mnPreferences.addSeparator();
+
+		mntmImportSettings = new JMenuItem(Messages.getString("MainFrame.menu.preferences.importSettings")); //$NON-NLS-1$
 		mntmImportSettings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -289,9 +370,9 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		mnFile.add(mntmImportSettings);
+		mnPreferences.add(mntmImportSettings);
 
-		mntmExportSettings = new JMenuItem(Messages.getString("MainFrame.menu.file.exportSettings")); //$NON-NLS-1$
+		mntmExportSettings = new JMenuItem(Messages.getString("MainFrame.menu.preferences.exportSettings")); //$NON-NLS-1$
 		mntmExportSettings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -328,7 +409,7 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		mnFile.add(mntmExportSettings);
+		mnPreferences.add(mntmExportSettings);
 
 		mnHelp = new JMenu(Messages.getString("MainFrame.menu.help")); //$NON-NLS-1$
 		menuBar.add(mnHelp);
@@ -1131,6 +1212,7 @@ public class MainFrame extends JFrame {
 			loadSettings();
 			changeEnableDestConditions();
 			changeEnableFileDateModConditions();
+			restoreFrameState(state);
 			updateOptionsSummaries();
 
 			frame = this;
@@ -1185,6 +1267,9 @@ public class MainFrame extends JFrame {
 	protected void storeSettings() throws IOException {
 		AppSettings conf = App.config();
 
+		conf.set(AppMain.PREF_LOCALE_KEY, conf.getString(AppMain.PREF_LOCALE_KEY, AppMain.PREF_SYSTEM));
+		conf.set(AppMain.PREF_APPEARANCE_KEY, conf.getString(AppMain.PREF_APPEARANCE_KEY, AppMain.PREF_SYSTEM));
+
 		conf.set("src.root.dir", txtSrcRootDirPath.getText()); //$NON-NLS-1$
 		conf.set("file.pattern", txtFilePattern.getText()); //$NON-NLS-1$
 		conf.set("file.pattern.regex", getSelectedFilePatternSyntax().isRegex()); //$NON-NLS-1$
@@ -1226,6 +1311,94 @@ public class MainFrame extends JFrame {
 
 		conf.store(null);
 		App.deleteMigratedLegacySettingsIfNeeded();
+	}
+
+	private void addPreferenceMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value) {
+		JRadioButtonMenuItem item = new JRadioButtonMenuItem(label);
+		item.setActionCommand(value);
+		item.setSelected(value.equals(App.config().getString(key, AppMain.PREF_SYSTEM)));
+		item.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (processing) {
+					selectCurrentPreferenceMenuItem(group, key);
+					showPreferencesProcessingMessage();
+					return;
+				}
+				if (!value.equals(App.config().getString(key, AppMain.PREF_SYSTEM))) {
+					App.config().set(key, value);
+					try {
+						storeSettings();
+						applyPreferencesImmediately();
+					} catch (IOException e1) {
+						JOptionPane.showMessageDialog(
+								frame,
+								Messages.getString("message.error.store.settings", e1.getLocalizedMessage()), //$NON-NLS-1$
+								null,
+								JOptionPane.ERROR_MESSAGE
+								);
+						App.handleError(e1.getMessage(), e1);
+					}
+				}
+			}
+		});
+		group.add(item);
+		menu.add(item);
+	}
+	
+	private static void selectCurrentPreferenceMenuItem(ButtonGroup group, String key) {
+		String currentValue = App.config().getString(key, AppMain.PREF_SYSTEM);
+		for (java.util.Enumeration<AbstractButton> e = group.getElements(); e.hasMoreElements();) {
+			AbstractButton button = e.nextElement();
+			if (currentValue.equals(button.getActionCommand())) {
+				button.setSelected(true);
+				break;
+			}
+		}
+	}
+	
+	private void showPreferencesProcessingMessage() {
+		JOptionPane.showMessageDialog(
+				frame,
+				Messages.getString("message.warn.preferences.processing"), //$NON-NLS-1$
+				null,
+				JOptionPane.WARNING_MESSAGE
+				);
+	}
+	
+	private void applyPreferencesImmediately() {
+		MainFrameState state = captureFrameState();
+		AppMain.applyConfiguredUiSettings();
+		MainFrame nextFrame = new MainFrame(state);
+		nextFrame.setVisible(true);
+		dispose();
+	}
+	
+	private MainFrameState captureFrameState() {
+		return new MainFrameState(
+				getBounds(),
+				getExtendedState(),
+				btnSrcOptions.isSelected(),
+				btnDestOptions.isSelected(),
+				btnChanges.isSelected(),
+				tabModConditions.getSelectedIndex());
+	}
+	
+	private void restoreFrameState(MainFrameState state) {
+		if (state == null) {
+			return;
+		}
+		if (state.bounds != null) {
+			setBounds(state.bounds);
+		}
+		setOptionsExpanded(btnSrcOptions, pnlSrcOptionsBody, Messages.getString("MainFrame.srcOptionsTitle"), state.srcOptionsExpanded); //$NON-NLS-1$
+		setOptionsExpanded(btnDestOptions, pnlDestOptionsBody, Messages.getString("MainFrame.destOptionsTitle"), state.destOptionsExpanded); //$NON-NLS-1$
+		setOptionsExpanded(btnChanges, tabModConditions, Messages.getString("MainFrame.changesTitle"), state.changesExpanded); //$NON-NLS-1$
+		if (state.changesTabIndex >= 0 && state.changesTabIndex < tabModConditions.getTabCount()) {
+			tabModConditions.setSelectedIndex(state.changesTabIndex);
+		}
+		if (state.extendedState != Frame.NORMAL) {
+			setExtendedState(state.extendedState);
+		}
 	}
 
 	private JLabel newMainLabel(String title) {
@@ -1811,8 +1984,15 @@ public class MainFrame extends JFrame {
 		ProcessDialog processDialog = new ProcessDialog(frame);
 		processDialog.setModalityType(ModalityType.DOCUMENT_MODAL);
 		processDialog.setLocationRelativeTo(frame);
-		processDialog.doProcess(processCondition);
-		processDialog.setVisible(true);
+		processing = true;
+		mnPreferences.setEnabled(false);
+		try {
+			processDialog.doProcess(processCondition);
+			processDialog.setVisible(true);
+		} finally {
+			processing = false;
+			mnPreferences.setEnabled(true);
+		}
 	}
 
 	private ProcessConditionValues collectProcessConditionValues() {
