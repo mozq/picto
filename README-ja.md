@@ -312,6 +312,12 @@ Pictoは下記のオープンソース・ソフトウェアを使用していま
 >
 > Licensed under the Apache License, Version 2.0.
 
+### nano-template4j
+> nano-template4j
+> Copyright 2026 Mozq
+>
+> Licensed under the Apache License, Version 2.0.
+
 ### Apache Commons Imaging
 > Apache Commons Imaging
 > Copyright 2007-2025 The Apache Software Foundation
