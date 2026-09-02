@@ -110,7 +110,8 @@ public class PictoPathFilter implements Filter<Path> {
 
 		if (this.creationTimeRange != null
 				|| this.modifiedTimeRange != null
-				|| this.accessTimeRange != null) {
+				|| this.accessTimeRange != null
+				|| this.sizeRange != null) {
 			fileAttrs = Files.readAttributes(path, BasicFileAttributes.class);
 		}
 
@@ -159,8 +160,7 @@ public class PictoPathFilter implements Filter<Path> {
 		}
 
 		if (this.sizeRange != null) {
-			long size = Files.size(path);
-			if (!this.sizeRange.contains(size)) {
+			if (!this.sizeRange.contains(fileAttrs.size())) {
 				return false;
 			}
 		}

@@ -33,10 +33,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 
 import org.apache.commons.imaging.common.ImageMetadata;
 
@@ -116,7 +117,7 @@ public final class ProcessCore {
 
 						Path rootRelativeSubPath = processCondition.getSrcRootPath().relativize(file.getParent());
 
-						ImageMetadata imageMetadata = ExifMetadataSupport.loadMetadata(file);
+						Supplier<ImageMetadata> imageMetadataSupplier = memoize(() -> ExifMetadataSupport.loadMetadata(file));
 
 						Date baseDate;
 						if (processCondition.isChangeFileCreationDate()
@@ -124,7 +125,7 @@ public final class ProcessCore {
 								|| processCondition.isChangeFileAccessDate()
 								|| processCondition.isChangeExifDate()
 								) {
-							baseDate = getBaseDate(processCondition, file, attrs, imageMetadata);
+							baseDate = getBaseDate(processCondition, file, attrs, imageMetadataSupplier);
 						} else {
 							baseDate = null;
 						}
@@ -136,7 +137,7 @@ public final class ProcessCore {
 									file,
 									attrs,
 									rootRelativeSubPath,
-									imageMetadata,
+									imageMetadataSupplier,
 									baseDate);
 							destSubPathname = processCondition.getDestSubPathTemplate().render(varName -> {
 								try {
@@ -185,8 +186,8 @@ public final class ProcessCore {
 
 	public static void processFiles(
 			ProcessCondition processCondition,
-			Function<Integer, ProcessData> processDataGetter,
-			IntConsumer processDataUpdater,
+			Supplier<ProcessData> processDataGetter,
+			BiConsumer<Integer, ProcessData> processDataUpdater,
 			Function<ProcessData, ProcessDataStatus> overwriteConfirm,
 			BooleanSupplier processStopper
 			) throws IOException {
@@ -194,18 +195,13 @@ public final class ProcessCore {
 		int index = 0;
 		while (!processStopper.getAsBoolean()) {
 
-			ProcessData processData = processDataGetter.apply(index);
+			ProcessData processData = processDataGetter.get();
 			if (processData == null) {
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					// NOP
-				}
-				continue;
+				break;
 			}
 
 			processData.setStatus(ProcessDataStatus.Processing);
-			processDataUpdater.accept(index);
+			processDataUpdater.accept(index, processData);
 
 			ProcessDataStatus status;
 			try {
@@ -222,7 +218,7 @@ public final class ProcessCore {
 				App.handleWarn(e.getMessage(), e);
 			}
 
-			processDataUpdater.accept(index);
+			processDataUpdater.accept(index, processData);
 			if (processData.getStatus() == ProcessDataStatus.Error
 					|| processData.getStatus() == ProcessDataStatus.Terminated) {
 				break;
@@ -245,7 +241,8 @@ public final class ProcessCore {
 			return overwriteConfirm.apply(processData);
 		case Terminate:
 			return ProcessDataStatus.Terminated;
-		case Overwrite: // FALLTHRU
+		case Overwrite:
+			return ProcessDataStatus.Processing;
 		default:
 			throw new IllegalStateException(processCondition.getExistingFileMethod().toString());
 		}
@@ -258,10 +255,11 @@ public final class ProcessCore {
 			) throws IOException {
 
 		ProcessDataStatus status;
+		Path outputPath = outputPath(processCondition, processData);
 
-		Path destParentPath = processData.getDestPath().getParent();
-		if (destParentPath != null) {
-			Files.createDirectories(destParentPath);
+		Path outputParentPath = outputPath.getParent();
+		if (outputParentPath != null) {
+			Files.createDirectories(outputParentPath);
 		}
 
 		if (processCondition.isCheckDigest()
@@ -271,7 +269,7 @@ public final class ProcessCore {
 				) {
 			Path destTempPath = null;
 			try {
-				destTempPath = Files.createTempFile(processData.getDestPath().getParent(), processData.getDestPath().getFileName().toString(), null);
+				destTempPath = createTempFile(outputPath);
 
 				if (processCondition.isCheckDigest()) {
 					FileDigestSupport.copyAndVerify(processData.getSrcPath(), destTempPath);
@@ -287,14 +285,12 @@ public final class ProcessCore {
 							processCondition.isRemoveExifTagsGps());
 				}
 
-				Path destPath;
-				if (processCondition.getOperationType() == OperationType.Overwrite) {
-					destPath = processData.getSrcPath();
-				} else {
-					destPath = processData.getDestPath();
-				}
 				try {
-					Files.move(destTempPath, destPath, OPTIONS_MOVE);
+					if (processCondition.getOperationType() == OperationType.Overwrite) {
+						Files.move(destTempPath, outputPath, OPTIONS_MOVE_REPLACE);
+					} else {
+						Files.move(destTempPath, outputPath, OPTIONS_MOVE);
+					}
 					if (processCondition.getOperationType() == OperationType.Move) {
 						Files.deleteIfExists(processData.getSrcPath());
 					}
@@ -303,7 +299,7 @@ public final class ProcessCore {
 					status = confirmOverwrite(processCondition, processData, overwriteConfirm);
 					if (status == ProcessDataStatus.Processing) {
 						// Overwrite
-						Files.move(destTempPath, destPath, OPTIONS_MOVE_REPLACE);
+						Files.move(destTempPath, outputPath, OPTIONS_MOVE_REPLACE);
 						if (processCondition.getOperationType() == OperationType.Move) {
 							Files.deleteIfExists(processData.getSrcPath());
 						}
@@ -319,24 +315,24 @@ public final class ProcessCore {
 			switch (processCondition.getOperationType()) {
 			case Copy:
 				try {
-					Files.copy(processData.getSrcPath(), processData.getDestPath(), OPTIONS_COPY);
+					Files.copy(processData.getSrcPath(), outputPath, OPTIONS_COPY);
 					status = ProcessDataStatus.Success;
 				} catch (FileAlreadyExistsException e) {
 					status = confirmOverwrite(processCondition, processData, overwriteConfirm);
 					if (status == ProcessDataStatus.Processing) {
-						Files.copy(processData.getSrcPath(), processData.getDestPath(), OPTIONS_COPY_REPLACE);
+						Files.copy(processData.getSrcPath(), outputPath, OPTIONS_COPY_REPLACE);
 						status = ProcessDataStatus.Success;
 					}
 				}
 				break;
 			case Move:
 				try {
-					Files.move(processData.getSrcPath(), processData.getDestPath(), OPTIONS_MOVE);
+					Files.move(processData.getSrcPath(), outputPath, OPTIONS_MOVE);
 					status = ProcessDataStatus.Success;
 				} catch (FileAlreadyExistsException e) {
 					status = confirmOverwrite(processCondition, processData, overwriteConfirm);
 					if (status == ProcessDataStatus.Processing) {
-						Files.move(processData.getSrcPath(), processData.getDestPath(), OPTIONS_MOVE_REPLACE);
+						Files.move(processData.getSrcPath(), outputPath, OPTIONS_MOVE_REPLACE);
 						status = ProcessDataStatus.Success;
 					}
 				}
@@ -371,17 +367,31 @@ public final class ProcessCore {
 					}
 				}
 			}
-			BasicFileAttributeView attributeView = Files.getFileAttributeView(processData.getDestPath(), BasicFileAttributeView.class);
+			BasicFileAttributeView attributeView = Files.getFileAttributeView(outputPath, BasicFileAttributeView.class);
 			attributeView.setTimes(modifiedFileTime, accessFileTime, creationFileTime);
 		}
 
 		return status;
 	}
 
+	private static Path outputPath(ProcessCondition processCondition, ProcessData processData) {
+		return processCondition.getOperationType() == OperationType.Overwrite
+				? processData.getSrcPath()
+				: processData.getDestPath();
+	}
+
+	private static Path createTempFile(Path outputPath) throws IOException {
+		Path parentPath = outputPath.getParent();
+		String prefix = outputPath.getFileName().toString();
+		return parentPath != null
+				? Files.createTempFile(parentPath, prefix, null)
+				: Files.createTempFile(prefix, null);
+	}
+
 	private static Date getBaseDate(
 			ProcessCondition processCondition,
 			Path file, BasicFileAttributes attrs,
-			ImageMetadata imageMetadata
+			Supplier<ImageMetadata> imageMetadataSupplier
 			) throws IOException {
 
 		Date baseDate = null;
@@ -399,7 +409,7 @@ public final class ProcessCore {
 			baseDate = toDate(attrs.lastAccessTime());
 			break;
 		case ExifDate:
-			baseDate = ExifMetadataSupport.exifDate(imageMetadata);
+			baseDate = ExifMetadataSupport.exifDate(imageMetadataSupplier.get());
 			break;
 		case CustomDate:
 			baseDate = processCondition.getCustomBaseDate();
@@ -443,6 +453,22 @@ public final class ProcessCore {
 		}
 
 		return baseDate;
+	}
+
+	private static <T> Supplier<T> memoize(Supplier<T> supplier) {
+		return new Supplier<>() {
+			private boolean loaded;
+			private T value;
+
+			@Override
+			public T get() {
+				if (!loaded) {
+					value = supplier.get();
+					loaded = true;
+				}
+				return value;
+			}
+		};
 	}
 
 	private static Date toDate(FileTime fileTime) {

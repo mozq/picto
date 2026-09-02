@@ -27,8 +27,10 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -38,6 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
@@ -45,9 +48,8 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import net.mozq.picto.App;
 import net.mozq.picto.core.ProcessCondition;
-import net.mozq.picto.core.ProcessCore;
 import net.mozq.picto.core.ProcessData;
-import net.mozq.picto.core.ProcessStatus;
+import net.mozq.picto.core.ProcessRunner;
 import net.mozq.picto.core.exception.PictoException;
 import net.mozq.picto.enums.ExistingFileOption;
 import net.mozq.picto.enums.ProcessDataStatus;
@@ -64,8 +66,9 @@ public class ProcessDialog extends JDialog {
 	private static final ImageIcon ICON_ERROR = loadImageIcon("net/mozq/picto/resources/icons/icon-error.png", ProcessDataStatus.Error.toString());
 
 	private ProcessCondition processCondition;
-	private final ProcessStatus processStatus = new ProcessStatus();
-	private ExistingFileOption overwriteConfirmResult = null;
+	private ProcessRunner processRunner;
+	private volatile int currentProcessDataIndex = -1;
+	private volatile ExistingFileOption overwriteConfirmResult = null;
 
 	private final JDialog dialog;
 	private JPanel contentPane;
@@ -119,6 +122,9 @@ public class ProcessDialog extends JDialog {
 				Point p = ev.getPoint();
 				int rowIndex = rowAtPoint(p);
 				int columnIndex = columnAtPoint(p);
+				if (rowIndex < 0 || columnIndex < 0) {
+					return null;
+				}
 				Object value = getValueAt(rowIndex, columnIndex);
 				if (value == null) {
 					value = "";
@@ -159,7 +165,9 @@ public class ProcessDialog extends JDialog {
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				btnStop.setEnabled(false);
-				processStatus.setStopRequests(true);
+				if (processRunner != null) {
+					processRunner.stop();
+				}
 			}
 		});
 		pnlControls.add(btnStop);
@@ -174,7 +182,7 @@ public class ProcessDialog extends JDialog {
 		pnlControls.add(btnClose);
 
 		tableModel.addTableModelListener(e -> {
-			int currentCount = processStatus.getCurrentProcessDataIndex() + 1;
+			int currentCount = currentProcessDataIndex + 1;
 			int totalCount = tableModel.getRowCount();
 			progressBar.setString(String.format("%d / %d (%d%%)", currentCount, totalCount, (currentCount * 100 / totalCount)));
 			progressBar.setValue(currentCount);
@@ -186,65 +194,59 @@ public class ProcessDialog extends JDialog {
 
 	public void doProcess(ProcessCondition processCondition) {
 		this.processCondition = processCondition;
-		this.processStatus.init();
+		this.currentProcessDataIndex = -1;
+		this.processRunner = new ProcessRunner(processCondition, this::confirmOverwrite, new ProcessRunner.Listener() {
+			@Override
+			public void processDataFound(ProcessData processData) {
+				addProcessData(processData);
+			}
 
-		// Find files thread
-		final Thread findFilesThread = new Thread(() -> {
-			try {
-				ProcessCore.findFiles(processCondition, this::addProcessData, this::isStopRequests);
-				processStatus.setEndFindingFiles(true);
-			} catch (Exception e) {
-				String message = e.getLocalizedMessage();
-				if (!(e instanceof PictoException)) {
-					message = Messages.getString("message.error.find.files", message);
-				}
+			@Override
+			public void processDataUpdated(int index) {
+				updateProcessData(index);
+			}
 
-				JOptionPane.showMessageDialog(dialog, message, null, JOptionPane.ERROR_MESSAGE);
+			@Override
+			public void findingFailed(Exception e) {
+				handleError(e, "message.error.find.files");
+			}
 
-				App.handleError(e.getMessage(), e);
+			@Override
+			public void processingFailed(Exception e) {
+				handleError(e, "message.error.process.files");
+			}
+
+			@Override
+			public void completed() {
+				processCompleted();
 			}
 		});
-		findFilesThread.start();
-
-		// Process files thread
-		final Thread processFilesThread = new Thread(() -> {
-			try {
-				ProcessCore.processFiles(processCondition, this::getProcessData, this::updateProcessData, this::confirmOverwrite, this::isProcessCompleted);
-				btnStop.setVisible(false);
-				btnClose.setVisible(true);
-				progressBar.setForeground(Color.LIGHT_GRAY);
-				progressBar.setUI(new BasicProgressBarUI());
-			} catch (Exception e) {
-				String message = e.getLocalizedMessage();
-				if (!(e instanceof PictoException)) {
-					message = Messages.getString("message.error.process.files", message);
-				}
-
-				JOptionPane.showMessageDialog(dialog, message, null, JOptionPane.ERROR_MESSAGE);
-
-				App.handleError(e.getMessage(), e);
-			}
-		});
-		processFilesThread.start();
+		processRunner.start();
 	}
 
 	public void addProcessData(ProcessData processData) {
-		tableModel.addRow(processData);
-	}
-
-	public ProcessData getProcessData(int index) {
-		if (tableModel.getRowCount() <= index) {
-			return null;
-		}
-		return tableModel.getRow(index);
+		runOnEventDispatchThreadAndWait(() -> tableModel.addRow(processData));
 	}
 
 	public void updateProcessData(int index) {
+		currentProcessDataIndex = index;
 		tableModel.updateRow(index);
-		processStatus.setCurrentProcessDataIndex(index);
 	}
 
 	public ProcessDataStatus confirmOverwrite(ProcessData processData) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			AtomicReference<ProcessDataStatus> result = new AtomicReference<>();
+			try {
+				SwingUtilities.invokeAndWait(() -> result.set(confirmOverwrite(processData)));
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return ProcessDataStatus.Terminated;
+			} catch (InvocationTargetException e) {
+				throw new IllegalStateException(e.getCause());
+			}
+			return result.get();
+		}
+
 		ExistingFileOption confirmResult;
 		if (overwriteConfirmResult != null) {
 			confirmResult = overwriteConfirmResult;
@@ -267,7 +269,7 @@ public class ProcessDialog extends JDialog {
 					options,
 					ExistingFileOption.No
 					);
-			confirmResult = options[ret];
+			confirmResult = ret >= 0 ? options[ret] : ExistingFileOption.Cancel;
 		}
 
 		switch (confirmResult) {
@@ -287,20 +289,50 @@ public class ProcessDialog extends JDialog {
 		}
 	}
 
-	public boolean isStopRequests() {
-		return processStatus.isStopRequests();
+	private void showErrorMessage(String message) {
+		runOnEventDispatchThread(() -> JOptionPane.showMessageDialog(dialog, message, null, JOptionPane.ERROR_MESSAGE));
 	}
 
-	public boolean isProcessCompleted() {
-		if (isStopRequests()) {
-			return true;
+	private void handleError(Exception e, String fallbackMessageKey) {
+		String message = e.getLocalizedMessage();
+		if (!(e instanceof PictoException)) {
+			message = Messages.getString(fallbackMessageKey, message);
 		}
-		if (processStatus.isEndFindingFiles()) {
-			if (tableModel.getRowCount() - 1 <= processStatus.getCurrentProcessDataIndex()) {
-				return true;
-			}
+
+		showErrorMessage(message);
+		App.handleError(e.getMessage(), e);
+	}
+
+	private void processCompleted() {
+		runOnEventDispatchThread(() -> {
+			btnStop.setVisible(false);
+			btnClose.setVisible(true);
+			progressBar.setForeground(Color.LIGHT_GRAY);
+			progressBar.setUI(new BasicProgressBarUI());
+		});
+	}
+
+	private static void runOnEventDispatchThread(Runnable runnable) {
+		if (SwingUtilities.isEventDispatchThread()) {
+			runnable.run();
+		} else {
+			SwingUtilities.invokeLater(runnable);
 		}
-		return false;
+	}
+
+	private static void runOnEventDispatchThreadAndWait(Runnable runnable) {
+		if (SwingUtilities.isEventDispatchThread()) {
+			runnable.run();
+			return;
+		}
+		try {
+			SwingUtilities.invokeAndWait(runnable);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IllegalStateException(e);
+		} catch (InvocationTargetException e) {
+			throw new IllegalStateException(e.getCause());
+		}
 	}
 
 	private static ImageIcon loadImageIcon(String filename, String description) {
@@ -386,12 +418,8 @@ public class ProcessDialog extends JDialog {
 			fireTableRowsInserted(rowIndex, rowIndex);
 		}
 
-		ProcessData getRow(int rowIndex) {
-			return rows.get(rowIndex);
-		}
-
 		void updateRow(int rowIndex) {
-			fireTableRowsUpdated(rowIndex, rowIndex);
+			runOnEventDispatchThread(() -> fireTableRowsUpdated(rowIndex, rowIndex));
 		}
 
 		private ImageIcon getStatusIcon(ProcessDataStatus status) {

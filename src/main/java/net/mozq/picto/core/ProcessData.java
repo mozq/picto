@@ -31,9 +31,9 @@ public class ProcessData {
 
 	private Date baseDate;
 
-	private ProcessDataStatus status;
+	private volatile ProcessDataStatus status;
 
-	private String message;
+	private volatile String message;
 
 	public ProcessData() {
 	}

@@ -131,6 +131,24 @@ class ProcessCoreTest {
 	}
 
 	@Test
+	void overwritesExistingDestinationWhenConfiguredToOverwrite() throws IOException {
+		Path src = Files.writeString(tempDir.resolve("source.txt"), "source");
+		Path dest = Files.writeString(tempDir.resolve("dest.txt"), "existing");
+		ProcessData data = processData(src, dest);
+		ProcessCondition condition = condition(OperationType.Copy);
+		AtomicBoolean confirmed = new AtomicBoolean(false);
+
+		runSingle(condition, data, ignored -> {
+			confirmed.set(true);
+			return ProcessDataStatus.Terminated;
+		});
+
+		assertEquals(ProcessDataStatus.Success, data.getStatus());
+		assertFalse(confirmed.get());
+		assertEquals("source", Files.readString(dest));
+	}
+
+	@Test
 	void skipsExistingDestinationWhenConfirmCallbackSkips() throws IOException {
 		Path src = Files.writeString(tempDir.resolve("source.txt"), "source");
 		Path dest = Files.writeString(tempDir.resolve("dest.txt"), "existing");
@@ -215,6 +233,26 @@ class ProcessCoreTest {
 
 		assertEquals(ProcessDataStatus.Success, data.getStatus());
 		assertEquals("source", Files.readString(dest));
+	}
+
+	@Test
+	void checkDigestOverwritesSourceWhenOperationIsOverwrite() throws IOException {
+		Path src = Files.writeString(tempDir.resolve("source.txt"), "source");
+		Path unusedDest = tempDir.resolve("unused/dest.txt");
+		ProcessData data = processData(src, unusedDest);
+		ProcessCondition condition = condition(OperationType.Overwrite);
+		condition.setCheckDigest(true);
+		AtomicBoolean confirmed = new AtomicBoolean(false);
+
+		runSingle(condition, data, ignored -> {
+			confirmed.set(true);
+			return ProcessDataStatus.Terminated;
+		});
+
+		assertEquals(ProcessDataStatus.Success, data.getStatus());
+		assertEquals("source", Files.readString(src));
+		assertFalse(Files.exists(unusedDest.getParent()));
+		assertFalse(confirmed.get());
 	}
 
 	@Test
@@ -357,11 +395,11 @@ class ProcessCoreTest {
 
 		ProcessCore.processFiles(
 				condition,
-				index -> {
+				() -> {
 					readCount.incrementAndGet();
 					return null;
 				},
-				ignored -> {},
+				(index, processData) -> {},
 				ignored -> ProcessDataStatus.Processing,
 				() -> true
 				);
@@ -512,16 +550,17 @@ class ProcessCoreTest {
 			) throws IOException {
 
 		AtomicBoolean stopped = new AtomicBoolean(false);
+		AtomicBoolean supplied = new AtomicBoolean(false);
 		ProcessCore.processFiles(
 				condition,
-				index -> {
-					if (index == 0) {
+				() -> {
+					if (supplied.compareAndSet(false, true)) {
 						return data;
 					}
 					stopped.set(true);
 					return null;
 				},
-				ignored -> {},
+				(index, processData) -> {},
 				overwriteConfirm,
 				stopped::get
 				);
