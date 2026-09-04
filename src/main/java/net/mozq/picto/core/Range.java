@@ -16,14 +16,7 @@
  */
 package net.mozq.picto.core;
 
-public final class Range<T extends Comparable<? super T>> {
-	private final T from;
-	private final T to;
-
-	public Range(T from, T to) {
-		this.from = from;
-		this.to = to;
-	}
+public record Range<T extends Comparable<? super T>>(T from, T to) {
 
 	public static <T extends Comparable<? super T>> Range<T> of(T from, T to) {
 		if (from == null && to == null) {
@@ -32,13 +25,6 @@ public final class Range<T extends Comparable<? super T>> {
 		return new Range<>(from, to);
 	}
 
-	public T getFrom() {
-		return from;
-	}
-
-	public T getTo() {
-		return to;
-	}
 
 	public boolean contains(T value) {
 		if (value == null) {

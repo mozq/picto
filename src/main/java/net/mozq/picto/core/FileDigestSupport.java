@@ -19,6 +19,7 @@ package net.mozq.picto.core;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -45,10 +46,7 @@ final class FileDigestSupport {
 
 		MessageDigest destinationDigest = newMessageDigest();
 		try (InputStream is = new DigestInputStream(new BufferedInputStream(Files.newInputStream(destinationPath)), destinationDigest)) {
-			byte[] buffer = new byte[1024];
-			while (is.read(buffer) != -1) {
-				// Read through the stream to update the digest.
-			}
+			is.transferTo(OutputStream.nullOutputStream());
 		}
 
 		if (!Arrays.equals(sourceDigest.digest(), destinationDigest.digest())) {

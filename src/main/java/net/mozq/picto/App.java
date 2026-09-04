@@ -21,8 +21,9 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import net.mozq.appsettings.AppSettings;
 
@@ -32,6 +33,9 @@ public class App {
 	public static final String CONFIG_FILE_NAME = "settings.conf";
 	public static final String WARNS_FILE_NAME = "warns.log";
 	public static final String ERRORS_FILE_NAME = "errors.log";
+
+	private static final DateTimeFormatter LOG_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+			.withZone(ZoneId.systemDefault());
 
 	private static AppSettings config = null;
 	private static AppSettingsMigration.Result settingsMigrationResult = AppSettingsMigration.Result.none();
@@ -76,7 +80,7 @@ public class App {
 		writeLog(errorsFilePath, message, throwable);
 	}
 
-	private static void writeLog(Path filePath, String message, Throwable throwable) {
+	private static synchronized void writeLog(Path filePath, String message, Throwable throwable) {
 		if (filePath == null) {
 			return;
 		}
@@ -91,7 +95,7 @@ public class App {
 				StandardOpenOption.APPEND
 				))) {
 			writer.println("--");
-			writer.println(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(new Date()));
+			writer.println(LOG_DATE_FORMATTER.format(Instant.now()));
 			if (message == null) {
 				if (throwable != null) {
 					writer.println(throwable.getMessage());

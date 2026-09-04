@@ -40,7 +40,7 @@ public final class FileNameSupport {
 	private static int extensionSeparator(String filename) {
 		int separator = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
 		int extensionSeparator = filename.lastIndexOf('.');
-		if (extensionSeparator <= separator || extensionSeparator < 1) {
+		if (extensionSeparator <= separator + 1) {
 			return -1;
 		}
 		return extensionSeparator;

@@ -28,6 +28,8 @@ public class ProcessData {
 	private BasicFileAttributes srcFileAttributes;
 
 	private Path destPath;
+	private String srcRelativePath;
+	private String destRelativePath;
 
 	private Date baseDate;
 
@@ -60,6 +62,22 @@ public class ProcessData {
 
 	public void setDestPath(Path destPath) {
 		this.destPath = destPath;
+	}
+
+	public String getSrcRelativePath() {
+		return srcRelativePath;
+	}
+
+	public void setSrcRelativePath(String srcRelativePath) {
+		this.srcRelativePath = srcRelativePath;
+	}
+
+	public String getDestRelativePath() {
+		return destRelativePath;
+	}
+
+	public void setDestRelativePath(String destRelativePath) {
+		this.destRelativePath = destRelativePath;
 	}
 
 	public Date getBaseDate() {

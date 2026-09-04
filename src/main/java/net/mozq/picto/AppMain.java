@@ -44,30 +44,41 @@ public class AppMain {
 	public static final String PREF_APPEARANCE_DARK = "dark";
 	private static final Locale SYSTEM_LOCALE = Locale.getDefault();
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		System.setProperty("apple.awt.application.appearance", "system");
 
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					// Load config
-					App.init();
+		try {
+			// Load config outside EDT
+			App.init();
+		} catch (Exception e) {
+			App.handleError(e.getMessage(), e);
+			String message = e.getLocalizedMessage();
+			if (!(e instanceof PictoException)) {
+				message = Messages.getString("message.error", message);
+			}
+			final String errorMessage = message;
+			EventQueue.invokeLater(() -> {
+				JOptionPane.showMessageDialog(null, errorMessage, null, JOptionPane.ERROR_MESSAGE);
+			});
+			return;
+		}
 
-					// Initialize settings
-					applyConfiguredUiSettings();
+		EventQueue.invokeLater(() -> {
+			try {
+				// Initialize settings
+				applyConfiguredUiSettings();
 
-					MainFrame frame = new MainFrame();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					String message = e.getLocalizedMessage();
-					if (!(e instanceof PictoException)) {
-						message = Messages.getString("message.error", message);
-					}
-
-					JOptionPane.showMessageDialog(null, message, null, JOptionPane.ERROR_MESSAGE);
-
-					App.handleError(e.getMessage(), e);
+				MainFrame frame = new MainFrame();
+				frame.setVisible(true);
+			} catch (Exception e) {
+				String message = e.getLocalizedMessage();
+				if (!(e instanceof PictoException)) {
+					message = Messages.getString("message.error", message);
 				}
+
+				JOptionPane.showMessageDialog(null, message, null, JOptionPane.ERROR_MESSAGE);
+
+				App.handleError(e.getMessage(), e);
 			}
 		});
 	}

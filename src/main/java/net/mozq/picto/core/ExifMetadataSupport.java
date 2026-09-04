@@ -23,8 +23,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -51,6 +53,7 @@ final class ExifMetadataSupport {
 
 	private static final String EXIF_DATE_PATTERN = "yyyy:MM:dd HH:mm:ss";
 	private static final String EXIF_SUBSEC_PATTERN = "00";
+	private static final DateTimeFormatter EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern(EXIF_DATE_PATTERN);
 
 	private ExifMetadataSupport() {
 	}
@@ -192,9 +195,7 @@ final class ExifMetadataSupport {
 	}
 
 	private static void updateDate(TiffOutputSet outputSet, Date exifDate, TimeZone timeZone) {
-		SimpleDateFormat exifDateFormat = new SimpleDateFormat(EXIF_DATE_PATTERN);
-		exifDateFormat.setTimeZone(timeZone);
-		String exifBaseDate = exifDateFormat.format(exifDate);
+		String exifBaseDate = EXIF_DATE_FORMATTER.withZone(timeZone.toZoneId()).format(exifDate.toInstant());
 		String exifBaseSubsec = new DecimalFormat(EXIF_SUBSEC_PATTERN).format((int)(exifDate.getTime() / 10) % 100);
 
 		try {
@@ -275,21 +276,37 @@ final class ExifMetadataSupport {
 
 		Date date;
 		try {
-			date = new SimpleDateFormat(EXIF_DATE_PATTERN).parse(exifDateStr);
-		} catch (ParseException e) {
+			LocalDateTime ldt = LocalDateTime.parse(exifDateStr, EXIF_DATE_FORMATTER);
+			date = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+		} catch (DateTimeParseException e) {
 			return null;
 		}
 		if (subTagInfo != null) {
 			String subSec = stringValue(imageMetadata, subTagInfo);
-			if (subSec != null && !subSec.isEmpty()) {
-				try {
-					date = new Date(date.getTime() + (Integer.parseInt(subSec) * 10));
-				} catch (NumberFormatException e) {
-					// Ignore invalid EXIF subseconds.
-				}
+			int millis = parseSubSecToMillis(subSec);
+			if (millis > 0) {
+				date = new Date(date.getTime() + millis);
 			}
 		}
 		return date;
+	}
+
+	static int parseSubSecToMillis(String subSec) {
+		if (subSec == null || subSec.isEmpty()) {
+			return 0;
+		}
+		String digits = subSec.trim();
+		if (!digits.matches("\\d+")) {
+			return 0;
+		}
+		if (digits.length() >= 3) {
+			return Integer.parseInt(digits.substring(0, 3));
+		} else if (digits.length() == 2) {
+			return Integer.parseInt(digits) * 10;
+		} else if (digits.length() == 1) {
+			return Integer.parseInt(digits) * 100;
+		}
+		return 0;
 	}
 
 	private static GpsInfo gpsInfo(ImageMetadata imageMetadata) {

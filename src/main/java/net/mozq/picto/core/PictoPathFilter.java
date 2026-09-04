@@ -25,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Date;
 
 public class PictoPathFilter implements Filter<Path> {
@@ -33,9 +35,9 @@ public class PictoPathFilter implements Filter<Path> {
 	private Path rootPath = null;
 	private boolean filenameMatch = false;
 	private boolean containsHiddens = false;
-	private Range<Date> creationTimeRange = null;
-	private Range<Date> modifiedTimeRange = null;
-	private Range<Date> accessTimeRange = null;
+	private Range<FileTime> creationTimeRange = null;
+	private Range<FileTime> modifiedTimeRange = null;
+	private Range<FileTime> accessTimeRange = null;
 	private Range<Long> sizeRange = null;
 
 
@@ -59,19 +61,43 @@ public class PictoPathFilter implements Filter<Path> {
 		return this;
 	}
 
-	public PictoPathFilter setCreationTimeRange(Date from, Date to) {
+	public PictoPathFilter setCreationTimeRange(FileTime from, FileTime to) {
 		this.creationTimeRange = Range.of(from, to);
 		return this;
 	}
 
-	public PictoPathFilter setModifiedTimeRange(Date from, Date to) {
+	public PictoPathFilter setCreationTimeRange(Instant from, Instant to) {
+		return setCreationTimeRange(toFileTime(from), toFileTime(to));
+	}
+
+	public PictoPathFilter setCreationTimeRange(Date from, Date to) {
+		return setCreationTimeRange(toFileTime(from), toFileTime(to));
+	}
+
+	public PictoPathFilter setModifiedTimeRange(FileTime from, FileTime to) {
 		this.modifiedTimeRange = Range.of(from, to);
 		return this;
 	}
 
-	public PictoPathFilter setAccessTimeRange(Date from, Date to) {
+	public PictoPathFilter setModifiedTimeRange(Instant from, Instant to) {
+		return setModifiedTimeRange(toFileTime(from), toFileTime(to));
+	}
+
+	public PictoPathFilter setModifiedTimeRange(Date from, Date to) {
+		return setModifiedTimeRange(toFileTime(from), toFileTime(to));
+	}
+
+	public PictoPathFilter setAccessTimeRange(FileTime from, FileTime to) {
 		this.accessTimeRange = Range.of(from, to);
 		return this;
+	}
+
+	public PictoPathFilter setAccessTimeRange(Instant from, Instant to) {
+		return setAccessTimeRange(toFileTime(from), toFileTime(to));
+	}
+
+	public PictoPathFilter setAccessTimeRange(Date from, Date to) {
+		return setAccessTimeRange(toFileTime(from), toFileTime(to));
 	}
 
 	public PictoPathFilter setSizeRange(Long from, Long to) {
@@ -87,20 +113,28 @@ public class PictoPathFilter implements Filter<Path> {
 		return containsHiddens;
 	}
 
-	public Range<Date> getCreationTimeRange() {
+	public Range<FileTime> getCreationTimeRange() {
 		return creationTimeRange;
 	}
 
-	public Range<Date> getModifiedTimeRange() {
+	public Range<FileTime> getModifiedTimeRange() {
 		return modifiedTimeRange;
 	}
 
-	public Range<Date> getAccessTimeRange() {
+	public Range<FileTime> getAccessTimeRange() {
 		return accessTimeRange;
 	}
 
 	public Range<Long> getSizeRange() {
 		return sizeRange;
+	}
+
+	private static FileTime toFileTime(Instant instant) {
+		return instant != null ? FileTime.from(instant) : null;
+	}
+
+	private static FileTime toFileTime(Date date) {
+		return date != null ? FileTime.fromMillis(date.getTime()) : null;
 	}
 
 	@Override
@@ -141,20 +175,27 @@ public class PictoPathFilter implements Filter<Path> {
 			}
 		}
 
+		if (fileAttrs == null && (this.creationTimeRange != null
+				|| this.modifiedTimeRange != null
+				|| this.accessTimeRange != null
+				|| this.sizeRange != null)) {
+			fileAttrs = Files.readAttributes(path, BasicFileAttributes.class);
+		}
+
 		if (this.creationTimeRange != null) {
-			if (!this.creationTimeRange.contains(new Date(fileAttrs.creationTime().toMillis()))) {
+			if (!this.creationTimeRange.contains(fileAttrs.creationTime())) {
 				return false;
 			}
 		}
 
 		if (this.modifiedTimeRange != null) {
-			if (!this.modifiedTimeRange.contains(new Date(fileAttrs.lastModifiedTime().toMillis()))) {
+			if (!this.modifiedTimeRange.contains(fileAttrs.lastModifiedTime())) {
 				return false;
 			}
 		}
 
 		if (this.accessTimeRange != null) {
-			if (!this.accessTimeRange.contains(new Date(fileAttrs.lastAccessTime().toMillis()))) {
+			if (!this.accessTimeRange.contains(fileAttrs.lastAccessTime())) {
 				return false;
 			}
 		}

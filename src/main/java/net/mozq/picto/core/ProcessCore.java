@@ -174,6 +174,8 @@ public final class ProcessCore {
 						processData.setSrcPath(file);
 						processData.setSrcFileAttributes(attrs);
 						processData.setDestPath(destSubPath);
+						processData.setSrcRelativePath(processCondition.getSrcRootPath().relativize(file).toString());
+						processData.setDestRelativePath(processCondition.getDestRootPath().relativize(destSubPath).toString());
 						processData.setBaseDate(baseDate);
 
 						processDataSetter.accept(processData);
@@ -234,18 +236,12 @@ public final class ProcessCore {
 			Function<ProcessData, ProcessDataStatus> overwriteConfirm
 			) {
 
-		switch (processCondition.getExistingFileMethod()) {
-		case Skip:
-			return ProcessDataStatus.Skipped;
-		case Confirm:
-			return overwriteConfirm.apply(processData);
-		case Terminate:
-			return ProcessDataStatus.Terminated;
-		case Overwrite:
-			return ProcessDataStatus.Processing;
-		default:
-			throw new IllegalStateException(processCondition.getExistingFileMethod().toString());
-		}
+		return switch (processCondition.getExistingFileMethod()) {
+		case Skip -> ProcessDataStatus.Skipped;
+		case Confirm -> overwriteConfirm.apply(processData);
+		case Terminate -> ProcessDataStatus.Terminated;
+		case Overwrite -> ProcessDataStatus.Processing;
+		};
 	}
 
 	private static ProcessDataStatus process(
@@ -312,38 +308,35 @@ public final class ProcessCore {
 				}
 			}
 		} else {
-			switch (processCondition.getOperationType()) {
-			case Copy:
+			status = switch (processCondition.getOperationType()) {
+			case Copy -> {
 				try {
 					Files.copy(processData.getSrcPath(), outputPath, OPTIONS_COPY);
-					status = ProcessDataStatus.Success;
+					yield ProcessDataStatus.Success;
 				} catch (FileAlreadyExistsException e) {
-					status = confirmOverwrite(processCondition, processData, overwriteConfirm);
-					if (status == ProcessDataStatus.Processing) {
+					ProcessDataStatus overwriteStatus = confirmOverwrite(processCondition, processData, overwriteConfirm);
+					if (overwriteStatus == ProcessDataStatus.Processing) {
 						Files.copy(processData.getSrcPath(), outputPath, OPTIONS_COPY_REPLACE);
-						status = ProcessDataStatus.Success;
+						yield ProcessDataStatus.Success;
 					}
+					yield overwriteStatus;
 				}
-				break;
-			case Move:
+			}
+			case Move -> {
 				try {
 					Files.move(processData.getSrcPath(), outputPath, OPTIONS_MOVE);
-					status = ProcessDataStatus.Success;
+					yield ProcessDataStatus.Success;
 				} catch (FileAlreadyExistsException e) {
-					status = confirmOverwrite(processCondition, processData, overwriteConfirm);
-					if (status == ProcessDataStatus.Processing) {
+					ProcessDataStatus overwriteStatus = confirmOverwrite(processCondition, processData, overwriteConfirm);
+					if (overwriteStatus == ProcessDataStatus.Processing) {
 						Files.move(processData.getSrcPath(), outputPath, OPTIONS_MOVE_REPLACE);
-						status = ProcessDataStatus.Success;
+						yield ProcessDataStatus.Success;
 					}
+					yield overwriteStatus;
 				}
-				break;
-			case Overwrite:
-				// NOP
-				status = ProcessDataStatus.Success;
-				break;
-			default:
-				throw new IllegalStateException(processCondition.getOperationType().toString());
 			}
+			case Overwrite -> ProcessDataStatus.Success;
+			};
 		}
 
 		if (status == ProcessDataStatus.Success) {
@@ -394,59 +387,38 @@ public final class ProcessCore {
 			Supplier<ImageMetadata> imageMetadataSupplier
 			) throws IOException {
 
-		Date baseDate = null;
-		switch (processCondition.getBaseDateType()) {
-		case CurrentDate:
-			baseDate = new Date(System.currentTimeMillis());
-			break;
-		case FileCreationDate:
-			baseDate = toDate(attrs.creationTime());
-			break;
-		case FileModifiedDate:
-			baseDate = toDate(attrs.lastModifiedTime());
-			break;
-		case FileAccessDate:
-			baseDate = toDate(attrs.lastAccessTime());
-			break;
-		case ExifDate:
-			baseDate = ExifMetadataSupport.exifDate(imageMetadataSupplier.get());
-			break;
-		case CustomDate:
-			baseDate = processCondition.getCustomBaseDate();
-			break;
-		default:
-			throw new IllegalStateException(processCondition.getBaseDateType().toString());
-		}
+		Date baseDate = switch (processCondition.getBaseDateType()) {
+		case CurrentDate -> new Date(System.currentTimeMillis());
+		case FileCreationDate -> toDate(attrs.creationTime());
+		case FileModifiedDate -> toDate(attrs.lastModifiedTime());
+		case FileAccessDate -> toDate(attrs.lastAccessTime());
+		case ExifDate -> ExifMetadataSupport.exifDate(imageMetadataSupplier.get());
+		case CustomDate -> processCondition.getCustomBaseDate();
+		};
 
 		if (baseDate != null) {
 			if (processCondition.getBaseDateModType() != DateModType.None) {
 				Calendar cal = Calendar.getInstance(processCondition.getTimeZone());
 				cal.setTime(baseDate);
-				int signum = 1;
 				switch (processCondition.getBaseDateModType()) {
-				case None:
-					break;
-				case Minus:
-					signum = -1;
-					// FALLTHRU
-				case Plus:
+				case None -> {}
+				case Minus, Plus -> {
+					int signum = processCondition.getBaseDateModType() == DateModType.Minus ? -1 : 1;
 					addField(cal, Calendar.YEAR, processCondition.getBaseDateModYears(), signum);
 					addField(cal, Calendar.MONTH, processCondition.getBaseDateModMonths(), signum);
 					addField(cal, Calendar.DAY_OF_MONTH, processCondition.getBaseDateModDays(), signum);
 					addField(cal, Calendar.HOUR_OF_DAY, processCondition.getBaseDateModHours(), signum);
 					addField(cal, Calendar.MINUTE, processCondition.getBaseDateModMinutes(), signum);
 					addField(cal, Calendar.SECOND, processCondition.getBaseDateModSeconds(), signum);
-					break;
-				case Overwrite:
+				}
+				case Overwrite -> {
 					setField(cal, Calendar.YEAR, processCondition.getBaseDateModYears());
 					setField(cal, Calendar.MONTH, processCondition.getBaseDateModMonths());
 					setField(cal, Calendar.DAY_OF_MONTH, processCondition.getBaseDateModDays());
 					setField(cal, Calendar.HOUR_OF_DAY, processCondition.getBaseDateModHours());
 					setField(cal, Calendar.MINUTE, processCondition.getBaseDateModMinutes());
 					setField(cal, Calendar.SECOND, processCondition.getBaseDateModSeconds());
-					break;
-				default:
-					throw new IllegalStateException(processCondition.getBaseDateModType().toString());
+				}
 				}
 				baseDate = cal.getTime();
 			}

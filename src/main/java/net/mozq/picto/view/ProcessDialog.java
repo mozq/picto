@@ -30,6 +30,9 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.ImageIcon;
@@ -59,11 +62,14 @@ public class ProcessDialog extends JDialog {
 	private static final int STATUS_ICON_SIZE = 16;
 
 	private static final ImageIcon ICON_IGNORED = loadImageIcon("net/mozq/picto/resources/icons/icon-ignored.png", ProcessDataStatus.Ignored.toString());
-	private static final ImageIcon ICON_PROCESSIG = loadImageIcon("net/mozq/picto/resources/icons/icon-processing.png", ProcessDataStatus.Processing.toString());
+	private static final ImageIcon ICON_PROCESSING = loadImageIcon("net/mozq/picto/resources/icons/icon-processing.png", ProcessDataStatus.Processing.toString());
 	private static final ImageIcon ICON_SKIPPED = loadImageIcon("net/mozq/picto/resources/icons/icon-skipped.png", ProcessDataStatus.Skipped.toString());
 	private static final ImageIcon ICON_TERMINATED = loadImageIcon("net/mozq/picto/resources/icons/icon-terminated.png", ProcessDataStatus.Terminated.toString());
 	private static final ImageIcon ICON_SUCCESS = loadImageIcon("net/mozq/picto/resources/icons/icon-success.png", ProcessDataStatus.Success.toString());
 	private static final ImageIcon ICON_ERROR = loadImageIcon("net/mozq/picto/resources/icons/icon-error.png", ProcessDataStatus.Error.toString());
+
+	private final ConcurrentLinkedQueue<ProcessData> pendingProcessData = new ConcurrentLinkedQueue<>();
+	private final AtomicBoolean batchDispatchScheduled = new AtomicBoolean(false);
 
 	private ProcessCondition processCondition;
 	private ProcessRunner processRunner;
@@ -225,7 +231,29 @@ public class ProcessDialog extends JDialog {
 	}
 
 	public void addProcessData(ProcessData processData) {
-		runOnEventDispatchThreadAndWait(() -> tableModel.addRow(processData));
+		pendingProcessData.add(processData);
+		scheduleBatchDispatch();
+	}
+
+	private void scheduleBatchDispatch() {
+		if (batchDispatchScheduled.compareAndSet(false, true)) {
+			SwingUtilities.invokeLater(this::flushPendingProcessData);
+		}
+	}
+
+	private void flushPendingProcessData() {
+		batchDispatchScheduled.set(false);
+		List<ProcessData> batch = new ArrayList<>();
+		ProcessData data;
+		while ((data = pendingProcessData.poll()) != null) {
+			batch.add(data);
+		}
+		if (!batch.isEmpty()) {
+			tableModel.addRows(batch);
+		}
+		if (!pendingProcessData.isEmpty()) {
+			scheduleBatchDispatch();
+		}
 	}
 
 	public void updateProcessData(int index) {
@@ -305,6 +333,7 @@ public class ProcessDialog extends JDialog {
 
 	private void processCompleted() {
 		runOnEventDispatchThread(() -> {
+			flushPendingProcessData();
 			btnStop.setVisible(false);
 			btnClose.setVisible(true);
 			progressBar.setForeground(Color.LIGHT_GRAY);
@@ -405,8 +434,12 @@ public class ProcessDialog extends JDialog {
 			switch (columnIndex) {
 			case 0: return rowIndex + 1;
 			case 1: return getStatusIcon(data.getStatus());
-			case 2: return processCondition.getSrcRootPath().relativize(data.getSrcPath()).toString();
-			case 3: return processCondition.getDestRootPath().relativize(data.getDestPath()).toString();
+			case 2:
+				String srcRel = data.getSrcRelativePath();
+				return srcRel != null ? srcRel : processCondition.getSrcRootPath().relativize(data.getSrcPath()).toString();
+			case 3:
+				String destRel = data.getDestRelativePath();
+				return destRel != null ? destRel : processCondition.getDestRootPath().relativize(data.getDestPath()).toString();
 			case 4: return data.getMessage();
 			default: throw new IllegalArgumentException(Integer.toString(columnIndex));
 			}
@@ -416,6 +449,15 @@ public class ProcessDialog extends JDialog {
 			int rowIndex = rows.size();
 			rows.add(processData);
 			fireTableRowsInserted(rowIndex, rowIndex);
+		}
+
+		void addRows(List<ProcessData> batch) {
+			if (batch.isEmpty()) {
+				return;
+			}
+			int start = rows.size();
+			rows.addAll(batch);
+			fireTableRowsInserted(start, rows.size() - 1);
 		}
 
 		void updateRow(int rowIndex) {
@@ -428,7 +470,7 @@ public class ProcessDialog extends JDialog {
 			}
 			switch (status) {
 			case Ignored: return ICON_IGNORED;
-			case Processing: return ICON_PROCESSIG;
+			case Processing: return ICON_PROCESSING;
 			case Waiting: return null;
 			case Skipped: return ICON_SKIPPED;
 			case Terminated: return ICON_TERMINATED;

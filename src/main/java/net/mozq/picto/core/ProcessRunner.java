@@ -18,6 +18,7 @@ package net.mozq.picto.core;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -25,12 +26,13 @@ import net.mozq.picto.enums.ProcessDataStatus;
 
 public final class ProcessRunner {
 
+	private static final int QUEUE_CAPACITY = 1000;
 	private static final ProcessData END_OF_QUEUE = new ProcessData();
 
 	private final ProcessCondition processCondition;
 	private final Function<ProcessData, ProcessDataStatus> overwriteConfirm;
 	private final Listener listener;
-	private final BlockingQueue<ProcessData> processQueue = new LinkedBlockingQueue<>();
+	private final BlockingQueue<ProcessData> processQueue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
 	private final AtomicBoolean started = new AtomicBoolean(false);
 	private final AtomicBoolean stopRequested = new AtomicBoolean(false);
 
@@ -47,12 +49,13 @@ public final class ProcessRunner {
 		if (!started.compareAndSet(false, true)) {
 			throw new IllegalStateException("ProcessRunner already started.");
 		}
-		new Thread(this::findFiles, "Picto file finder").start();
-		new Thread(this::processFiles, "Picto file processor").start();
+		Thread.ofVirtual().name("Picto file finder").start(this::findFiles);
+		Thread.ofVirtual().name("Picto file processor").start(this::processFiles);
 	}
 
 	public void stop() {
 		if (stopRequested.compareAndSet(false, true)) {
+			processQueue.clear();
 			processQueue.offer(END_OF_QUEUE);
 		}
 	}
@@ -73,8 +76,15 @@ public final class ProcessRunner {
 	}
 
 	private void finishFinding() {
-		if (!isStopRequested()) {
-			processQueue.offer(END_OF_QUEUE);
+		while (!isStopRequested()) {
+			try {
+				if (processQueue.offer(END_OF_QUEUE, 100, TimeUnit.MILLISECONDS)) {
+					return;
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return;
+			}
 		}
 	}
 
@@ -83,7 +93,15 @@ public final class ProcessRunner {
 			return;
 		}
 		listener.processDataFound(processData);
-		processQueue.offer(processData);
+		try {
+			while (!isStopRequested()) {
+				if (processQueue.offer(processData, 100, TimeUnit.MILLISECONDS)) {
+					return;
+				}
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	private void processFiles() {
