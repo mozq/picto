@@ -1,27 +1,42 @@
+:root {
+	--color-accent: #20d69a;
+	--color-accent-hover: #18b985;
+	--color-background: #ffffff;
+	--color-text: #1c1f22;
+	--color-muted: #666666;
+	--color-ribbon: #aa0000;
+	--color-ribbon-hover: #cc0000;
+	--color-button-border: #1c1f22;
+	--color-button-background: #ffffff;
+	--color-button-text: #1c1f22;
+	--color-overview-background: #20d69a;
+	--color-overview-text: #ffffff;
+	--shadow-screenshot: 0 18px 42px rgba(0, 0, 0, .22);
+	--content-width: 1180px;
+	--page-padding: 32px;
+}
+
+* {
+	box-sizing: border-box;
+}
+
 body {
 	margin: 0;
-	padding: 0;
 	font-family: Arial, sans-serif;
 	font-size: 1rem;
 	line-height: 1.5;
-	background-color: white;
-	color: #1c1f22;
+	background-color: var(--color-background);
+	color: var(--color-text);
 }
 
 h1,
 h2,
-h3,
 p {
 	margin: 0;
-	padding: 0;
 }
 
-h1 {
-	margin-top: 50px;
-	text-align: center;
-	font-size: 6.7rem;
-	color: #20d69a;
-	line-height: 1;
+a {
+	color: inherit;
 }
 
 .content {
@@ -39,9 +54,9 @@ h1 {
 	padding: 8px 0;
 	transform: rotate(45deg);
 	transform-origin: center;
-	background-color: #aa0000;
+	background-color: var(--color-ribbon);
 	box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
-	color: white;
+	color: #ffffff;
 	font-size: 0.8rem;
 	font-weight: bold;
 	line-height: 1.2;
@@ -50,203 +65,179 @@ h1 {
 }
 
 .github-ribbon:hover {
-	background-color: #cc0000;
+	background-color: var(--color-ribbon-hover);
 }
 
-.part {
-	padding: 30px 0;
-}
-
-.part0 {
-	background-color: white;
-}
-
-.part0 .caption {
-	padding: 0 24px;
+.hero {
+	padding: 80px var(--page-padding) 60px;
 	text-align: center;
+	background-color: var(--color-background);
+}
+
+.hero h1 {
+	color: var(--color-accent);
+	font-size: 6.7rem;
+	line-height: 1;
+}
+
+.caption {
+	margin-top: 12px;
 	font-size: 1.5rem;
 }
 
 .download {
-	padding: 60px 0;
-	text-align: center;
+	margin-top: 56px;
 }
 
-.download .download-label {
+.download-label {
 	font-size: 1.1rem;
 }
 
-.download .download-links {
-	margin-top: 5px;
-	padding: 0 20px;
+.download-links {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 10px;
 }
 
-.download .download-links a {
-	display: inline-block;
-	width: 110px;
-	margin: 5px 5px 0;
-	padding: 10px 0;
-	text-align: center;
-	border: 1px solid black;
+.download-links a {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 110px;
+	padding: 10px 16px;
+	border: 1px solid var(--color-button-border);
 	border-radius: 5px;
-	background-color: white;
-	color: black;
+	background-color: var(--color-button-background);
+	color: var(--color-button-text);
+	text-align: center;
 	text-decoration: none;
 }
 
-.download .download-links a:hover {
-	background-color: #20d69a;
-	color: white;
+.download-links a:hover {
+	border-color: var(--color-accent-hover);
+	background-color: var(--color-accent);
+	color: #ffffff;
 }
 
-.part1 {
+.overview {
 	display: grid;
 	grid-template-columns: minmax(320px, 600px) minmax(280px, 1fr);
 	gap: 48px;
 	align-items: center;
-	padding: 56px max(32px, calc((100% - 1180px) / 2));
-	background-color: #20d69a;
-	color: white;
+	padding: 56px max(var(--page-padding), calc((100% - var(--content-width)) / 2));
+	background-color: var(--color-overview-background);
+	color: var(--color-overview-text);
 }
 
-.part1 picture {
+.screenshot-frame {
+	min-width: 0;
+}
+
+.screenshot-frame picture {
 	display: block;
 }
 
-.part1 .screenshot {
+.screenshot {
 	display: block;
 	width: 100%;
 	max-width: 600px;
 	height: auto;
 	border-radius: 8px;
-	box-shadow: 0 18px 42px rgba(0, 0, 0, .22);
+	box-shadow: var(--shadow-screenshot);
 }
 
-.part1 .desc {
+.features {
 	max-width: 520px;
 }
 
-.part1 .desc section {
+.features section + section {
 	margin-top: 2.5rem;
 }
 
-.part1 .desc section:first-child {
-	margin-top: 0;
-}
-
-.part1 .desc h3 {
+.features h2 {
 	font-size: 1.7rem;
 	line-height: 1.25;
 }
 
-.part1 .desc p {
+.features p,
+.features ul {
 	margin-top: .7rem;
 	font-size: 1.3rem;
 }
 
-.part1 .desc ul {
-	margin: .7rem 0 0;
+.features ul {
 	padding-left: 1.5rem;
-	font-size: 1.1rem;
 }
 
-footer {
+.site-footer {
 	margin: 12px 5%;
 	text-align: center;
 	font-size: 0.8rem;
-	color: #666;
+	color: var(--color-muted);
 }
 
-footer a {
-	color: #666;
+.site-footer a {
+	color: inherit;
 }
 
 @media (prefers-color-scheme: dark) {
-	body {
-		background-color: #121416;
-		color: #e8eaed;
-	}
-
-	h1 {
-		color: #30d6a3;
-	}
-
-	.github-ribbon {
-		background-color: #8f1111;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, .45);
-		color: #fff;
-	}
-
-	.github-ribbon:hover {
-		background-color: #b31919;
-	}
-
-	.part0 {
-		background-color: #171a1d;
-	}
-
-	.download .download-links a {
-		border-color: #6b7178;
-		background-color: #202428;
-		color: #e8eaed;
-	}
-
-	.download .download-links a:hover {
-		background-color: #1fa77d;
-		color: #fff;
-	}
-
-	.part1 {
-		background-color: #15936e;
-		color: #fff;
-	}
-
-	.part1 .screenshot {
-		box-shadow: 0 18px 42px rgba(0, 0, 0, .38);
-	}
-
-	footer {
-		color: #aeb4bb;
-	}
-
-	footer a {
-		color: #c8d0d8;
+	:root {
+		--color-accent: #30d6a3;
+		--color-accent-hover: #1fa77d;
+		--color-background: #121416;
+		--color-text: #e8eaed;
+		--color-muted: #aeb4bb;
+		--color-ribbon: #8f1111;
+		--color-ribbon-hover: #b31919;
+		--color-button-border: #6b7178;
+		--color-button-background: #202428;
+		--color-button-text: #e8eaed;
+		--color-overview-background: #15936e;
+		--shadow-screenshot: 0 18px 42px rgba(0, 0, 0, .38);
 	}
 }
 
 @media screen and (max-width: 800px) {
-	h1 {
-		margin-top: 44px;
+	:root {
+		--page-padding: 20px;
+	}
+
+	.hero {
+		padding-top: 72px;
+		padding-bottom: 44px;
+	}
+
+	.hero h1 {
 		font-size: 4.8rem;
 	}
 
-	.part0 .caption {
+	.caption {
 		font-size: 1.2rem;
 	}
 
 	.download {
-		padding: 44px 0;
+		margin-top: 44px;
 	}
 
-	.part1 {
+	.overview {
 		grid-template-columns: 1fr;
 		gap: 32px;
-		padding: 32px 20px;
+		padding-top: 32px;
+		padding-bottom: 32px;
 	}
 
-	.part1 .screenshot {
-		max-width: 100%;
-	}
-
-	.part1 .desc {
+	.features {
 		max-width: none;
 	}
 
-	.part1 .desc h3 {
+	.features h2 {
 		font-size: 1.35rem;
 	}
 
-	.part1 .desc p {
+	.features p,
+	.features ul {
 		font-size: 1.05rem;
 	}
 }

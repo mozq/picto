@@ -1,23 +1,25 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="color-scheme" content="light dark">
 	<title>Picto - Desktop app for organizing photo files</title>
-	<link rel="stylesheet" media="all" type="text/css" href="./static/css/index.css" />
-	<link rel="alternate" href="https://mozq.github.io/picto/ja/" hreflang="ja" />
-	<link rel="alternate" href="https://mozq.github.io/picto/" hreflang="x-default" />
-	<link rel="icon" type="image/png" sizes="192x192" href="./static/img/app-icons/app-icon-192.png" />
-	<link rel="icon" type="image/svg+xml" sizes="any" href="./static/img/app-icons/app-icon.svg" />
+	<link rel="stylesheet" href="./static/css/index.css">
+	<link rel="alternate" href="https://mozq.github.io/picto/ja/" hreflang="ja">
+	<link rel="alternate" href="https://mozq.github.io/picto/" hreflang="x-default">
+	<link rel="icon" type="image/png" sizes="192x192" href="./static/img/app-icons/app-icon-192.png">
+	<link rel="icon" type="image/svg+xml" sizes="any" href="./static/img/app-icons/app-icon.svg">
+	<script src="./static/js/index.js" defer></script>
 </head>
 <body>
 <div class="content">
 	<a class="github-ribbon" href="https://github.com/mozq/picto" target="_blank" rel="noopener">Fork me on GitHub</a>
 
-	<div class="part part0">
+	<header class="hero">
 		<h1>Picto</h1>
 		<p class="caption">Picto is a desktop application for organizing photo files.</p>
-		<div class="download">
+		<section class="download" aria-label="Download Picto">
 			<span class="download-label">Download Picto <span id="version"></span></span>
 			<div class="download-links">
 				<a data-platform="windows-x64" href="https://github.com/mozq/picto/releases">Windows</a>
@@ -25,45 +27,48 @@
 				<a data-platform="linux-x64" href="https://github.com/mozq/picto/releases">Linux</a>
 				<a data-platform="generic" href="https://github.com/mozq/picto/releases">Other OS</a>
 			</div>
-		</div>
-	</div>
+		</section>
+	</header>
 
-	<div class="part part1">
+	<main>
+		<section class="overview" aria-label="Picto overview">
+			<div class="screenshot-frame">
+				<picture>
+					<source media="(prefers-color-scheme: dark)" srcset="./static/img/screenshots/main-macos-en-dark.png">
+					<img class="screenshot" src="./static/img/screenshots/main-macos-en-light.png" alt="Picto main window">
+				</picture>
+			</div>
 
-		<picture>
-			<source media="(prefers-color-scheme: dark)" srcset="./static/img/screenshots/main-macos-en-dark.png" />
-			<img class="screenshot" src="./static/img/screenshots/main-macos-en-light.png" alt="Picto main window" />
-		</picture>
-		<div class="desc">
-			<section>
-				<h3>- Copy or move photos to another folder</h3>
-				<p>You can specify sub folders and file names freely at shooting date etc.</p>
-			</section>
+			<div class="features">
+				<section>
+					<h2>Copy or move photos to another folder</h2>
+					<p>You can specify sub folders and file names freely at shooting date etc.</p>
+				</section>
 
-			<section>
-				<h3>- Change file date</h3>
-				<p>Specified date and difference date can be set. It is effective when you forget to change the time zone of the camera.</p>
-				<ul>
-					<li>File creation date</li>
-					<li>File modified date</li>
-					<li>File access date</li>
-					<li>Exif date</li>
-				</ul>
-			</section>
+				<section>
+					<h2>Change file date</h2>
+					<p>Specified date and difference date can be set. It is effective when you forget to change the time zone of the camera.</p>
+					<ul>
+						<li>File creation date</li>
+						<li>File modified date</li>
+						<li>File access date</li>
+						<li>Exif date</li>
+					</ul>
+				</section>
 
-			<section>
-				<h3>- Remove Exif data</h3>
-				<ul>
-					<li>GPS data</li>
-					<li>All Exif data</li>
-				</ul>
-			</section>
-		</div>
-	</div>
+				<section>
+					<h2>Remove Exif data</h2>
+					<ul>
+						<li>GPS data</li>
+						<li>All Exif data</li>
+					</ul>
+				</section>
+			</div>
+		</section>
+	</main>
 </div>
-<footer>
+<footer class="site-footer">
 	Copyright &copy; 2016 <a href="https://github.com/mozq">Mozq</a>
 </footer>
-<script src="./static/js/index.js"></script>
 </body>
 </html>

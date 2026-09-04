@@ -1,24 +1,26 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ja">
 <head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<base href="../" />
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="color-scheme" content="light dark">
+	<base href="../">
 	<title>Picto - 写真を整理するためのデスクトップアプリ</title>
-	<link rel="stylesheet" media="all" type="text/css" href="./static/css/index.css" />
-	<link rel="alternate" href="https://mozq.github.io/picto/ja/" hreflang="ja" />
-	<link rel="alternate" href="https://mozq.github.io/picto/" hreflang="x-default" />
-	<link rel="icon" type="image/png" sizes="192x192" href="./static/img/app-icons/app-icon-192.png" />
-	<link rel="icon" type="image/svg+xml" sizes="any" href="./static/img/app-icons/app-icon.svg" />
+	<link rel="stylesheet" href="./static/css/index.css">
+	<link rel="alternate" href="https://mozq.github.io/picto/ja/" hreflang="ja">
+	<link rel="alternate" href="https://mozq.github.io/picto/" hreflang="x-default">
+	<link rel="icon" type="image/png" sizes="192x192" href="./static/img/app-icons/app-icon-192.png">
+	<link rel="icon" type="image/svg+xml" sizes="any" href="./static/img/app-icons/app-icon.svg">
+	<script src="./static/js/index.js" defer></script>
 </head>
 <body>
 <div class="content">
 	<a class="github-ribbon" href="https://github.com/mozq/picto" target="_blank" rel="noopener">Fork me on GitHub</a>
 
-	<div class="part part0">
+	<header class="hero">
 		<h1>Picto</h1>
 		<p class="caption">Pictoは、写真を整理するためのデスクトップアプリです。</p>
-		<div class="download">
+		<section class="download" aria-label="Pictoのダウンロード">
 			<span class="download-label">ダウンロード Picto <span id="version"></span></span>
 			<div class="download-links">
 				<a data-platform="windows-x64" href="https://github.com/mozq/picto/releases">Windows</a>
@@ -26,37 +28,40 @@
 				<a data-platform="linux-x64" href="https://github.com/mozq/picto/releases">Linux</a>
 				<a data-platform="generic" href="https://github.com/mozq/picto/releases">その他OS</a>
 			</div>
-		</div>
-	</div>
+		</section>
+	</header>
 
-	<div class="part part1">
+	<main>
+		<section class="overview" aria-label="Pictoの概要">
+			<div class="screenshot-frame">
+				<picture>
+					<source media="(prefers-color-scheme: dark)" srcset="./static/img/screenshots/main-macos-ja-dark.png">
+					<img class="screenshot" src="./static/img/screenshots/main-macos-ja-light.png" alt="Pictoのメイン画面">
+				</picture>
+			</div>
 
-		<picture>
-			<source media="(prefers-color-scheme: dark)" srcset="./static/img/screenshots/main-macos-ja-dark.png" />
-			<img class="screenshot" src="./static/img/screenshots/main-macos-ja-light.png" alt="Pictoのメイン画面" />
-		</picture>
-		<div class="desc">
-			<section>
-				<h3>- 写真のコピー・移動</h3>
-				<p>写真の撮影日などを利用した自由なファイル名やフォルダ名で、写真をコピー・移動できます。</p>
-			</section>
+			<div class="features">
+				<section>
+					<h2>写真のコピー・移動</h2>
+					<p>写真の撮影日などを利用した自由なファイル名やフォルダ名で、写真をコピー・移動できます。</p>
+				</section>
 
-			<section>
-				<h3>- 写真ファイルの日付の変更</h3>
-				<p>写真ファイルの作成日、更新日、アクセス日、Exif撮影日を変更できます。</p>
-				<p>海外旅行などでカメラのタイムゾーンを変更し忘れた際に有効です。</p>
-			</section>
+				<section>
+					<h2>写真ファイルの日付の変更</h2>
+					<p>写真ファイルの作成日、更新日、アクセス日、Exif撮影日を変更できます。</p>
+					<p>海外旅行などでカメラのタイムゾーンを変更し忘れた際に有効です。</p>
+				</section>
 
-			<section>
-				<h3>- Exif情報の削除</h3>
-				<p>GPS情報の削除や、Exif情報の全削除ができます。</p>
-			</section>
-		</div>
-	</div>
+				<section>
+					<h2>Exif情報の削除</h2>
+					<p>GPS情報の削除や、Exif情報の全削除ができます。</p>
+				</section>
+			</div>
+		</section>
+	</main>
 </div>
-<footer>
+<footer class="site-footer">
 	Copyright &copy; 2016 <a href="https://github.com/mozq">Mozq</a>
 </footer>
-<script src="./static/js/index.js"></script>
 </body>
 </html>
