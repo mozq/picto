@@ -274,9 +274,11 @@ class SuggestionPopup {
 		JPanel row = new JPanel(new GridBagLayout());
 		Color defaultBackground = row.getBackground();
 		Color hoverBackground = createHoverBackground(defaultBackground);
+		String tooltip = item.tooltip();
 		row.setOpaque(true);
 		row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		row.setBorder(BorderFactory.createEmptyBorder(4, 14, 4, 10));
+		row.setToolTipText(tooltip);
 		row.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseEntered(MouseEvent e) {
@@ -303,10 +305,12 @@ class SuggestionPopup {
 		labelGbc.insets = new Insets(0, 0, 0, 16);
 		JLabel label = new JLabel(item.label());
 		label.setPreferredSize(new Dimension(labelWidth, label.getPreferredSize().height));
+		label.setToolTipText(tooltip);
 		row.add(label, labelGbc);
 
 		JLabel valueLabel = new JLabel(item.value());
 		valueLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, valueLabel.getFont().getSize()));
+		valueLabel.setToolTipText(tooltip);
 		GridBagConstraints valueGbc = new GridBagConstraints();
 		valueGbc.gridx = 1;
 		valueGbc.gridy = 0;
@@ -344,6 +348,9 @@ class SuggestionPopup {
 	record SuggestionSection(String label, List<SuggestionItem> items) {
 	}
 
-	record SuggestionItem(String label, String value) {
+	record SuggestionItem(String label, String value, String tooltip) {
+		SuggestionItem(String label, String value) {
+			this(label, value, null);
+		}
 	}
 }
