@@ -3,6 +3,9 @@ body {
 	padding: 0;
 	font-family: Arial, sans-serif;
 	font-size: 1rem;
+	line-height: 1.5;
+	background-color: white;
+	color: #1c1f22;
 }
 
 h1,
@@ -18,6 +21,7 @@ h1 {
 	text-align: center;
 	font-size: 6.7rem;
 	color: #20d69a;
+	line-height: 1;
 }
 
 .content {
@@ -58,6 +62,7 @@ h1 {
 }
 
 .part0 .caption {
+	padding: 0 24px;
 	text-align: center;
 	font-size: 1.5rem;
 }
@@ -73,6 +78,7 @@ h1 {
 
 .download .download-links {
 	margin-top: 5px;
+	padding: 0 20px;
 }
 
 .download .download-links a {
@@ -94,37 +100,58 @@ h1 {
 }
 
 .part1 {
-	padding-bottom: 3em;
-	min-height: 520px;
+	display: grid;
+	grid-template-columns: minmax(320px, 600px) minmax(280px, 1fr);
+	gap: 48px;
+	align-items: center;
+	padding: 56px max(32px, calc((100% - 1180px) / 2));
 	background-color: #20d69a;
 	color: white;
 }
 
+.part1 picture {
+	display: block;
+}
+
 .part1 .screenshot {
-	width: 500px;
-	float: left;
+	display: block;
+	width: 100%;
+	max-width: 600px;
+	height: auto;
+	border-radius: 8px;
+	box-shadow: 0 18px 42px rgba(0, 0, 0, .22);
 }
 
 .part1 .desc {
-	margin-left: 500px;
+	max-width: 520px;
 }
 
 .part1 .desc section {
-	margin-top: 3em;
+	margin-top: 2.5rem;
+}
+
+.part1 .desc section:first-child {
+	margin-top: 0;
 }
 
 .part1 .desc h3 {
 	font-size: 1.7rem;
+	line-height: 1.25;
 }
 
 .part1 .desc p {
-	padding: 0 20px;
+	margin-top: .7rem;
 	font-size: 1.3rem;
 }
 
+.part1 .desc ul {
+	margin: .7rem 0 0;
+	padding-left: 1.5rem;
+	font-size: 1.1rem;
+}
+
 footer {
-	clear: both;
-	margin: 5px 5%;
+	margin: 12px 5%;
 	text-align: center;
 	font-size: 0.8rem;
 	color: #666;
@@ -134,19 +161,92 @@ footer a {
 	color: #666;
 }
 
-@media screen and (max-width: 800px) {
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: #121416;
+		color: #e8eaed;
+	}
+
+	h1 {
+		color: #30d6a3;
+	}
+
+	.github-ribbon {
+		background-color: #8f1111;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, .45);
+		color: #fff;
+	}
+
+	.github-ribbon:hover {
+		background-color: #b31919;
+	}
+
+	.part0 {
+		background-color: #171a1d;
+	}
+
+	.download .download-links a {
+		border-color: #6b7178;
+		background-color: #202428;
+		color: #e8eaed;
+	}
+
+	.download .download-links a:hover {
+		background-color: #1fa77d;
+		color: #fff;
+	}
+
 	.part1 {
-		padding-bottom: 30px;
-		min-height: 0;
+		background-color: #15936e;
+		color: #fff;
 	}
 
 	.part1 .screenshot {
-		display: block;
-		width: 95%;
-		margin: 0 auto;
+		box-shadow: 0 18px 42px rgba(0, 0, 0, .38);
+	}
+
+	footer {
+		color: #aeb4bb;
+	}
+
+	footer a {
+		color: #c8d0d8;
+	}
+}
+
+@media screen and (max-width: 800px) {
+	h1 {
+		margin-top: 44px;
+		font-size: 4.8rem;
+	}
+
+	.part0 .caption {
+		font-size: 1.2rem;
+	}
+
+	.download {
+		padding: 44px 0;
+	}
+
+	.part1 {
+		grid-template-columns: 1fr;
+		gap: 32px;
+		padding: 32px 20px;
+	}
+
+	.part1 .screenshot {
+		max-width: 100%;
 	}
 
 	.part1 .desc {
-		margin: 0 3ex;
+		max-width: none;
+	}
+
+	.part1 .desc h3 {
+		font-size: 1.35rem;
+	}
+
+	.part1 .desc p {
+		font-size: 1.05rem;
 	}
 }
