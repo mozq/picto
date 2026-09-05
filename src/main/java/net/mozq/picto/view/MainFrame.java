@@ -36,7 +36,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Year;
@@ -1631,65 +1630,23 @@ public class MainFrame extends JFrame {
 
 	private ProcessCondition createProcessCondition(boolean dryRun) {
 
+		if (!showValidationResult(ProcessConditionValidator.validateSourceFolder(
+				fieldText(txtSrcRootDirPath),
+				Messages.getString("MainFrame.srcRootDirPath")))) {
+			return null;
+		}
+		if (!rdoOpeTypeOverwrite.isSelected()
+				&& !showValidationResult(ProcessConditionValidator.validateDestinationFolder(
+						fieldText(txtDestRootDirPath),
+						Messages.getString("MainFrame.destRootDirPath")))) {
+			return null;
+		}
+
 		ProcessConditionValues values = collectProcessConditionValues();
 
 		// Validations
-		if (!Files.exists(values.srcRootDirPath)) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.warn.srcRootPath.not.exists"),
-					null,
-					JOptionPane.WARNING_MESSAGE
-					);
+		if (!showValidationResult(ProcessConditionValidator.validate(values))) {
 			return null;
-		}
-
-		try {
-			FileSystems.getDefault().getPathMatcher(((values.filePatternRegex) ? "regex:" : "glob:") + values.filePattern);
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.warn.invalid.filePattern", e.getLocalizedMessage()),
-					null,
-					JOptionPane.WARNING_MESSAGE
-					);
-			return null;
-		}
-
-		if (values.sizeRangeFrom != null && values.sizeRangeTo != null) {
-			if (values.sizeRangeFrom.longValue() > values.sizeRangeTo.longValue()) {
-				JOptionPane.showMessageDialog(
-						frame,
-						Messages.getString("message.warn.sizeRange.is.invalid.range"),
-						null,
-						JOptionPane.WARNING_MESSAGE
-						);
-				return null;
-			}
-		}
-
-		if (values.creationTimeRangeFrom != null && values.creationTimeRangeTo != null) {
-			if (values.creationTimeRangeFrom.compareTo(values.creationTimeRangeTo) > 0) {
-				JOptionPane.showMessageDialog(
-						frame,
-						Messages.getString("message.warn.creationTimeRange.is.invalid.range"),
-						null,
-						JOptionPane.WARNING_MESSAGE
-						);
-				return null;
-			}
-		}
-
-		if (values.modifiedTimeRangeFrom != null && values.modifiedTimeRangeTo != null) {
-			if (values.modifiedTimeRangeFrom.compareTo(values.modifiedTimeRangeTo) > 0) {
-				JOptionPane.showMessageDialog(
-						frame,
-						Messages.getString("message.warn.modifiedTimeRange.is.invalid.range"),
-						null,
-						JOptionPane.WARNING_MESSAGE
-						);
-				return null;
-			}
 		}
 
 		// Information
@@ -1749,6 +1706,38 @@ public class MainFrame extends JFrame {
 		processCondition.setDryRun(dryRun);
 
 		return processCondition;
+	}
+
+	private boolean showValidationResult(ProcessConditionValidator.Result result) {
+		if (result == null) {
+			return true;
+		}
+		showValidationWarning(result.message());
+		focusValidationField(result.field());
+		return false;
+	}
+
+	private void showValidationWarning(String message) {
+		JOptionPane.showMessageDialog(
+				frame,
+				message,
+				null,
+				JOptionPane.WARNING_MESSAGE
+				);
+	}
+
+	private void focusValidationField(ProcessConditionValidator.Field field) {
+		JTextField textField = switch (field) {
+		case SOURCE_FOLDER -> txtSrcRootDirPath;
+		case DESTINATION_FOLDER -> txtDestRootDirPath;
+		case FILE_PATTERN -> txtFilePattern;
+		case DESTINATION_SUBFOLDER -> txtDestSubPathPattern;
+		case NONE -> null;
+		};
+		if (textField != null) {
+			textField.requestFocusInWindow();
+			textField.selectAll();
+		}
 	}
 
 	private static Long convertSize(Long size, FileSizeUnit unit) {
