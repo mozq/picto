@@ -46,7 +46,7 @@ class AppSettingsMigrationTest {
 		AppSettingsMigration.migrate(settings, legacySettings);
 
 		assertEquals(List.of("locale", "appearance", "src.root.dir", "dest.sub.path.pattern", "contains.subs"),
-				List.copyOf(settings.asStringMap().keySet()));
+				List.copyOf(settings.keySet()));
 		assertEquals("system", settings.getString("locale", ""));
 		assertEquals("system", settings.getString("appearance", ""));
 		assertEquals("/photos", settings.getString("src.root.dir", ""));
