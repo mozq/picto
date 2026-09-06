@@ -17,36 +17,52 @@
 package net.mozq.picto.view;
 
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableRowSorter;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import net.mozq.picto.App;
@@ -145,6 +161,73 @@ public class ProcessDialog extends JDialog {
 		setColumnWidth(table, 3, 250);
 		setColumnWidth(table, 4, 250);
 		scrollPane.setViewportView(table);
+
+		TableRowSorter<ProcessDataTableModel> sorter = new TableRowSorter<>(tableModel);
+		sorter.setComparator(1, Comparator.comparingInt(ProcessDialog::statusSortRank));
+		table.setRowSorter(sorter);
+
+		JPopupMenu tablePopupMenu = new JPopupMenu();
+		JMenuItem mntmOpenLocation = new JMenuItem(Messages.getString("ProcessDialog.table.menu.openLocation"));
+		mntmOpenLocation.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int viewRow = table.getSelectedRow();
+				if (viewRow >= 0) {
+					revealRow(table.convertRowIndexToModel(viewRow));
+				}
+			}
+		});
+		tablePopupMenu.add(mntmOpenLocation);
+		JMenuItem mntmCopy = new JMenuItem(Messages.getString("ProcessDialog.table.menu.copy"));
+		mntmCopy.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				copySelectedRowsToClipboard();
+			}
+		});
+		tablePopupMenu.add(mntmCopy);
+		table.setComponentPopupMenu(tablePopupMenu);
+
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+					int viewRow = table.rowAtPoint(e.getPoint());
+					if (viewRow >= 0) {
+						revealRow(table.convertRowIndexToModel(viewRow));
+					}
+				}
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				selectRowForPopupIfNeeded(e);
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				selectRowForPopupIfNeeded(e);
+			}
+
+			private void selectRowForPopupIfNeeded(MouseEvent e) {
+				if (!e.isPopupTrigger()) {
+					return;
+				}
+				int viewRow = table.rowAtPoint(e.getPoint());
+				if (viewRow >= 0 && !table.isRowSelected(viewRow)) {
+					table.setRowSelectionInterval(viewRow, viewRow);
+				}
+			}
+		});
+
+		KeyStroke copyKeyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+		table.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(copyKeyStroke, "picto.copySelection");
+		table.getActionMap().put("picto.copySelection", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				copySelectedRowsToClipboard();
+			}
+		});
 
 		progressBar = new JProgressBar();
 		progressBar.setMinimum(0);
@@ -391,6 +474,105 @@ public class ProcessDialog extends JDialog {
 		column.setMaxWidth(maxWidth);
 	}
 
+	private static int statusSortRank(ImageIcon icon) {
+		if (icon == null) {
+			return 0;
+		} else if (icon == ICON_PROCESSING) {
+			return 1;
+		} else if (icon == ICON_SKIPPED) {
+			return 2;
+		} else if (icon == ICON_IGNORED) {
+			return 3;
+		} else if (icon == ICON_TERMINATED) {
+			return 4;
+		} else if (icon == ICON_SUCCESS) {
+			return 5;
+		} else if (icon == ICON_ERROR) {
+			return 6;
+		} else {
+			return -1;
+		}
+	}
+
+	private void revealRow(int modelRow) {
+		ProcessData data = tableModel.getProcessDataAt(modelRow);
+		Path path = resolveExistingPath(data);
+		if (path != null) {
+			openInFileManager(path);
+		}
+	}
+
+	private static Path resolveExistingPath(ProcessData data) {
+		Path destPath = data.getDestPath();
+		if (destPath != null && Files.exists(destPath)) {
+			return destPath;
+		}
+		Path srcPath = data.getSrcPath();
+		if (srcPath != null && Files.exists(srcPath)) {
+			return srcPath;
+		}
+		return null;
+	}
+
+	private static void openInFileManager(Path path) {
+		if (!Desktop.isDesktopSupported()) {
+			return;
+		}
+		Desktop desktop = Desktop.getDesktop();
+		try {
+			if (desktop.isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
+				desktop.browseFileDirectory(path.toFile());
+			} else if (desktop.isSupported(Desktop.Action.OPEN)) {
+				File folder = Files.isDirectory(path) ? path.toFile() : path.getParent().toFile();
+				desktop.open(folder);
+			}
+		} catch (IOException e) {
+			// Best effort only; ignore failures opening the file manager.
+		}
+	}
+
+	private void copySelectedRowsToClipboard() {
+		int[] viewRows = table.getSelectedRows();
+		if (viewRows.length == 0) {
+			return;
+		}
+
+		StringBuilder sb = new StringBuilder();
+		for (int col = 0; col < tableModel.getColumnCount(); col++) {
+			if (col > 0) {
+				sb.append('\t');
+			}
+			sb.append(tableModel.getColumnName(col));
+		}
+		sb.append('\n');
+
+		for (int viewRow : viewRows) {
+			int modelRow = table.convertRowIndexToModel(viewRow);
+			for (int col = 0; col < tableModel.getColumnCount(); col++) {
+				if (col > 0) {
+					sb.append('\t');
+				}
+				sb.append(sanitizeForClipboard(cellText(modelRow, col)));
+			}
+			sb.append('\n');
+		}
+
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(sb.toString()), null);
+	}
+
+	private String cellText(int modelRow, int columnIndex) {
+		if (columnIndex == 1) {
+			ProcessDataStatus status = tableModel.getProcessDataAt(modelRow).getStatus();
+			return status != null ? status.toString() : "";
+		}
+		Object value = tableModel.getValueAt(modelRow, columnIndex);
+		return value != null ? value.toString() : "";
+	}
+
+	private static String sanitizeForClipboard(String text) {
+		return text.replace('\t', ' ').replace('\r', ' ').replace('\n', ' ');
+	}
+
 	private class ProcessDataTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = 1L;
 
@@ -462,6 +644,10 @@ public class ProcessDialog extends JDialog {
 
 		void updateRow(int rowIndex) {
 			runOnEventDispatchThread(() -> fireTableRowsUpdated(rowIndex, rowIndex));
+		}
+
+		ProcessData getProcessDataAt(int rowIndex) {
+			return rows.get(rowIndex);
 		}
 
 		private ImageIcon getStatusIcon(ProcessDataStatus status) {
