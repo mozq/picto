@@ -19,15 +19,23 @@ package net.mozq.picto.view;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.List;
 import java.util.Locale;
 
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.TransferHandler;
 import javax.swing.UIManager;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
@@ -101,6 +109,32 @@ final class InputSupport {
 		}
 	}
 
+	static void installFolderDropTarget(JTextField textField) {
+		textField.setTransferHandler(new TransferHandler() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public boolean canImport(TransferSupport support) {
+				return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)
+						|| support.isDataFlavorSupported(DataFlavor.stringFlavor);
+			}
+
+			@Override
+			public boolean importData(TransferSupport support) {
+				File droppedFile = extractFirstFile(support);
+				if (droppedFile == null) {
+					return false;
+				}
+				File folder = droppedFile.isDirectory() ? droppedFile : droppedFile.getParentFile();
+				if (folder == null) {
+					return false;
+				}
+				textField.setText(folder.getAbsolutePath());
+				return true;
+			}
+		});
+	}
+
 	static void installDateTimeInputPopup(JFormattedTextField field, boolean endOfRange) {
 		new DateTimeInputPopup(field, endOfRange, Locale.getDefault());
 	}
@@ -114,6 +148,40 @@ final class InputSupport {
 		} catch (ParseException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static File extractFirstFile(TransferHandler.TransferSupport support) {
+		try {
+			if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+				List<?> files = (List<?>)support.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
+				return files.isEmpty() ? null : (File)files.get(0);
+			}
+			if (support.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+				String data = (String)support.getTransferable().getTransferData(DataFlavor.stringFlavor);
+				return firstFileFromUriList(data);
+			}
+		} catch (UnsupportedFlavorException | IOException e) {
+			// Ignore a drop whose data can no longer be read.
+		}
+		return null;
+	}
+
+	private static File firstFileFromUriList(String data) {
+		for (String line : data.split("\\r?\\n")) {
+			String trimmed = line.strip();
+			if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+				continue;
+			}
+			try {
+				URI uri = new URI(trimmed);
+				if ("file".equalsIgnoreCase(uri.getScheme())) {
+					return new File(uri);
+				}
+			} catch (URISyntaxException e) {
+				// Ignore a malformed entry and try the next line.
+			}
+		}
+		return null;
 	}
 
 	private static void applyTextFocusBehavior(JTextComponent textComponent, LabelFocusBehavior behavior) {
