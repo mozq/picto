@@ -279,7 +279,7 @@ class SuggestionPopup {
 		row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		row.setBorder(BorderFactory.createEmptyBorder(4, 14, 4, 10));
 		row.setToolTipText(tooltip);
-		row.addMouseListener(new MouseAdapter() {
+		MouseAdapter rowMouseListener = new MouseAdapter() {
 			@Override
 			public void mouseEntered(MouseEvent e) {
 				row.setBackground(hoverBackground);
@@ -296,7 +296,8 @@ class SuggestionPopup {
 				hidePopup();
 				field.requestFocusInWindow();
 			}
-		});
+		};
+		row.addMouseListener(rowMouseListener);
 
 		GridBagConstraints labelGbc = new GridBagConstraints();
 		labelGbc.gridx = 0;
@@ -306,11 +307,13 @@ class SuggestionPopup {
 		JLabel label = new JLabel(item.label());
 		label.setPreferredSize(new Dimension(labelWidth, label.getPreferredSize().height));
 		label.setToolTipText(tooltip);
+		label.addMouseListener(rowMouseListener);
 		row.add(label, labelGbc);
 
 		JLabel valueLabel = new JLabel(item.value());
 		valueLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, valueLabel.getFont().getSize()));
 		valueLabel.setToolTipText(tooltip);
+		valueLabel.addMouseListener(rowMouseListener);
 		GridBagConstraints valueGbc = new GridBagConstraints();
 		valueGbc.gridx = 1;
 		valueGbc.gridy = 0;

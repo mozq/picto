@@ -58,7 +58,8 @@ final class TemplateVariables {
 	Object resolve(String varName) throws IOException {
 		switch (varName) {
 		case "Now": return new Date();
-		case "ParentSubPath": return rootRelativeSubPath.toString();
+		case "SubFilePath": return processCondition.getSrcRootPath().relativize(file).toString();
+		case "SubFolderPath": return rootRelativeSubPath.toString();
 		case "FileName": return file.getFileName().toString();
 		case "BaseName": return FileNameSupport.baseName(file.getFileName().toString());
 		case "Extension": return FileNameSupport.extension(file.getFileName().toString());
@@ -66,7 +67,7 @@ final class TemplateVariables {
 		case "CreationDate": return processCondition.isChangeFileCreationDate() ? baseDate : new Date(attrs.creationTime().toMillis());
 		case "ModifiedDate": return processCondition.isChangeFileModifiedDate() ? baseDate : new Date(attrs.lastModifiedTime().toMillis());
 		case "AccessDate": return processCondition.isChangeFileAccessDate() ? baseDate : new Date(attrs.lastAccessTime().toMillis());
-		case "PhotoTakenDate": return processCondition.isChangeExifDate() ? baseDate : ExifMetadataSupport.photoTakenDate(file, imageMetadata());
+		case "TakenDate": return processCondition.isChangeExifDate() ? baseDate : ExifMetadataSupport.photoTakenDate(file, imageMetadata());
 		case "Width": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);
 		case "Height": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);
 		case "FNumber": return ExifMetadataSupport.doubleValue(imageMetadata(), ExifTagConstants.EXIF_TAG_FNUMBER);
@@ -83,6 +84,7 @@ final class TemplateVariables {
 		case "Brightness": return ExifMetadataSupport.doubleValue(imageMetadata(), ExifTagConstants.EXIF_TAG_BRIGHTNESS_VALUE);
 		case "WhiteBalance": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_WHITE_BALANCE_1);
 		case "LightSource": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_LIGHT_SOURCE);
+		case "Orientation": return ExifMetadataSupport.intValue(imageMetadata(), TiffTagConstants.TIFF_TAG_ORIENTATION);
 		case "Lens": return ExifMetadataSupport.stringValue(imageMetadata(), ExifTagConstants.EXIF_TAG_LENS);
 		case "LensMake": return ExifMetadataSupport.stringValue(imageMetadata(), ExifTagConstants.EXIF_TAG_LENS_MAKE);
 		case "LensModel": return ExifMetadataSupport.stringValue(imageMetadata(), ExifTagConstants.EXIF_TAG_LENS_MODEL);

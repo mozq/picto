@@ -162,7 +162,25 @@ public final class ProcessCore {
 									);
 						}
 
-						Path destSubPath = processCondition.getDestRootPath().resolve(destSubPathname).normalize();
+						// A blank leading path segment (e.g. an empty ${SubFolderPath} joined with "/")
+						// would otherwise resolve to an OS-absolute path and escape the destination folder.
+						String normalizedDestSubPathname = destSubPathname.replaceFirst("^[/\\\\]+", "");
+
+						if (normalizedDestSubPathname.isBlank()) {
+							ProcessData processData = new ProcessData();
+							processData.setSrcPath(file);
+							processData.setSrcFileAttributes(attrs);
+							processData.setSrcRelativePath(processCondition.getSrcRootPath().relativize(file).toString());
+							processData.setDestRelativePath("");
+							processData.setStatus(ProcessDataStatus.Error);
+							processData.setMessage(Messages.getString("message.warn.destSubPath.empty"));
+
+							processDataSetter.accept(processData);
+
+							return FileVisitResult.CONTINUE;
+						}
+
+						Path destSubPath = processCondition.getDestRootPath().resolve(normalizedDestSubPathname).normalize();
 
 						if (!destSubPath.startsWith(processCondition.getDestRootPath())) {
 							throw new PictoInvalidDestinationPathException(
@@ -202,22 +220,24 @@ public final class ProcessCore {
 				break;
 			}
 
-			processData.setStatus(ProcessDataStatus.Processing);
-			processDataUpdater.accept(index, processData);
+			if (processData.getStatus() != ProcessDataStatus.Error) {
+				processData.setStatus(ProcessDataStatus.Processing);
+				processDataUpdater.accept(index, processData);
 
-			ProcessDataStatus status;
-			try {
-				if (processCondition.isDryRun()) {
-					// NOP
-					status = ProcessDataStatus.Success;
-				} else {
-					status = process(processCondition, processData, overwriteConfirm);
+				ProcessDataStatus status;
+				try {
+					if (processCondition.isDryRun()) {
+						// NOP
+						status = ProcessDataStatus.Success;
+					} else {
+						status = process(processCondition, processData, overwriteConfirm);
+					}
+					processData.setStatus(status);
+				} catch (Exception e) {
+					processData.setStatus(ProcessDataStatus.Error);
+					processData.setMessage(e.getLocalizedMessage());
+					App.handleWarn(e.getMessage(), e);
 				}
-				processData.setStatus(status);
-			} catch (Exception e) {
-				processData.setStatus(ProcessDataStatus.Error);
-				processData.setMessage(e.getLocalizedMessage());
-				App.handleWarn(e.getMessage(), e);
 			}
 
 			processDataUpdater.accept(index, processData);

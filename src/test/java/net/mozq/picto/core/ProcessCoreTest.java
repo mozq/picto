@@ -356,13 +356,55 @@ class ProcessCoreTest {
 		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
 		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
 		Path source = Files.writeString(Files.createDirectories(srcRoot.resolve("sub")).resolve("IMG_0001.jpg"), "source");
-		ProcessCondition condition = findCondition(srcRoot, destRoot, "${ParentSubPath}/${BaseName}.${Extension}");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${SubFolderPath}/${BaseName}.${Extension}");
 
 		List<ProcessData> files = findFiles(condition);
 
 		assertEquals(1, files.size());
 		assertEquals(source, files.get(0).getSrcPath());
 		assertEquals(destRoot.resolve("sub/IMG_0001.jpg"), files.get(0).getDestPath());
+	}
+
+	@Test
+	void findFilesResolvesSubFilePathForRootLevelAndNestedFiles() throws IOException {
+		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
+		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
+		Path rootLevel = Files.writeString(srcRoot.resolve("root_level.jpg"), "source");
+		Path nested = Files.writeString(Files.createDirectories(srcRoot.resolve("2024")).resolve("nested.jpg"), "source");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${SubFilePath}");
+
+		List<ProcessData> files = findFiles(condition);
+
+		ProcessData rootLevelData = files.stream().filter(d -> d.getSrcPath().equals(rootLevel)).findFirst().orElseThrow();
+		ProcessData nestedData = files.stream().filter(d -> d.getSrcPath().equals(nested)).findFirst().orElseThrow();
+		assertEquals(destRoot.resolve("root_level.jpg"), rootLevelData.getDestPath());
+		assertEquals(destRoot.resolve("2024/nested.jpg"), nestedData.getDestPath());
+	}
+
+	@Test
+	void findFilesResolvesSubFolderPathFallbackForRootLevelFileWithoutEscapingDestRoot() throws IOException {
+		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
+		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
+		Path source = Files.writeString(srcRoot.resolve("root_level.jpg"), "source");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${SubFolderPath}/${FileName}");
+
+		ProcessData data = findFiles(condition).get(0);
+
+		assertEquals(source, data.getSrcPath());
+		assertEquals(destRoot.resolve("root_level.jpg"), data.getDestPath());
+	}
+
+	@Test
+	void findFilesReportsErrorInsteadOfThrowingWhenComputedDestinationPathIsEmpty() throws IOException {
+		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
+		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
+		Files.writeString(srcRoot.resolve("source.txt"), "source");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "");
+
+		ProcessData data = findFiles(condition).get(0);
+
+		assertEquals(ProcessDataStatus.Error, data.getStatus());
+		assertNull(data.getDestPath());
 	}
 
 	@Test
@@ -386,6 +428,34 @@ class ProcessCoreTest {
 		ProcessCore.findFiles(condition, files::add, () -> true);
 
 		assertTrue(files.isEmpty());
+	}
+
+	@Test
+	void processFilesDoesNotOverwriteStatusOfDataThatAlreadyFailedDuringFinding() throws IOException {
+		ProcessData data = new ProcessData();
+		data.setSrcPath(tempDir.resolve("source.txt"));
+		data.setStatus(ProcessDataStatus.Error);
+		data.setMessage("destination path is empty");
+		ProcessCondition condition = condition(OperationType.Copy);
+		AtomicBoolean supplied = new AtomicBoolean(false);
+		AtomicBoolean stopped = new AtomicBoolean(false);
+
+		ProcessCore.processFiles(
+				condition,
+				() -> {
+					if (supplied.compareAndSet(false, true)) {
+						return data;
+					}
+					stopped.set(true);
+					return null;
+				},
+				(index, processData) -> {},
+				ignored -> ProcessDataStatus.Processing,
+				stopped::get
+				);
+
+		assertEquals(ProcessDataStatus.Error, data.getStatus());
+		assertEquals("destination path is empty", data.getMessage());
 	}
 
 	@Test
@@ -436,12 +506,12 @@ class ProcessCoreTest {
 	}
 
 	@Test
-	void findFilesUsesFileModifiedTimeForPhotoTakenDateWhenExifIsMissing() throws Exception {
+	void findFilesUsesFileModifiedTimeForTakenDateWhenExifIsMissing() throws Exception {
 		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
 		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
 		Path source = plainJpeg(srcRoot.resolve("source.jpg"));
 		Files.setLastModifiedTime(source, FileTime.fromMillis(parseUtc("2026-08-20 12:34:56").getTime()));
-		ProcessCondition condition = findCondition(srcRoot, destRoot, "${PhotoTakenDate:uuuu-MM-dd}.txt");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${TakenDate:uuuu-MM-dd}.txt");
 		condition.getDestSubPathTemplate().timeZone(UTC);
 
 		ProcessData data = findFiles(condition).get(0);
@@ -459,6 +529,18 @@ class ProcessCoreTest {
 		ProcessData data = findFiles(condition).get(0);
 
 		assertEquals(destRoot.resolve("text/source.txt"), data.getDestPath());
+	}
+
+	@Test
+	void findFilesResolvesOrientationFromTiffMetadata() throws Exception {
+		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
+		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
+		jpegWithOrientation(srcRoot.resolve("source.jpg"), 6);
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${Orientation}/${FileName}");
+
+		ProcessData data = findFiles(condition).get(0);
+
+		assertEquals(destRoot.resolve("6/source.jpg"), data.getDestPath());
 	}
 
 	@Test
@@ -585,6 +667,19 @@ class ProcessCoreTest {
 
 	private Path jpegWithExifDates(Path path, String originalDate, String digitizedDate, String rootDate, boolean withGps) throws IOException, ImagingException {
 		return jpegWithExifDates(path, originalDate, digitizedDate, rootDate, withGps, 35.0, 139.0);
+	}
+
+	private Path jpegWithOrientation(Path path, int orientation) throws IOException, ImagingException {
+		Path baseJpeg = plainJpeg(tempDir.resolve(path.getFileName().toString() + ".base.jpg"));
+		TiffOutputSet outputSet = new TiffOutputSet();
+		TiffOutputDirectory rootDirectory = outputSet.getOrCreateRootDirectory();
+		rootDirectory.add(TiffTagConstants.TIFF_TAG_ORIENTATION, (short)orientation);
+
+		try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(path))) {
+			new ExifRewriter().updateExifMetadataLossless(baseJpeg.toFile(), os, outputSet);
+		}
+		Files.deleteIfExists(baseJpeg);
+		return path;
 	}
 
 	private Path jpegWithExifDates(

@@ -26,6 +26,9 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
+
+import com.formdev.flatlaf.FlatClientProperties;
 
 import net.mozq.picto.enums.ExistingFileMethod;
 
@@ -56,6 +59,10 @@ class DestinationOptionsPanel extends JPanel {
 		add(destSubPathPatternLabel, destSubPathPatternLabelConstraints);
 
 		destSubPathPatternTextField = new JTextField();
+		destSubPathPatternTextField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
+		destSubPathPatternTextField.putClientProperty(
+				FlatClientProperties.TEXT_FIELD_LEADING_ICON,
+				UIManager.getIcon("FileView.fileIcon"));
 		destSubPathPatternLabel.setLabelFor(destSubPathPatternTextField);
 		InputSupport.installLabelFocusAction(destSubPathPatternLabel, destSubPathPatternTextField, LabelFocusBehavior.CARET_END);
 		destSubPathPatternTextField.setColumns(10);

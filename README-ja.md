@@ -83,18 +83,19 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 #### 保存先フォルダー
 コピーまたは移動先のフォルダーを指定します。
 
-#### サブフォルダー
+#### サブファイルパス
 保存先フォルダー内のファイルのサブパスを指定します。
 下記の変数を'${}'付きで指定可能です。
 
     例)
-    "${ParentSubPath}/${PhotoTakenDate:uuuu/MM}/${FileName}"
+    "${SubFolderPath}/${TakenDate:uuuu/MM}/${FileName}"
     -> "subpath/to/2012/01/IMG_0001.JPG"
 
 |変数                      |型       |意味                                   |例                      |
 |-------------------------|--------|-----------------------------------------|------------------------|
 |Now                      |日時    |現在の日時                               |2012-01-23 12:34:56.780 |
-|ParentSubPath            |文字列  |ファイルの親フォルダーのパス             |subpath/to              |
+|SubFilePath              |文字列  |ファイルの親フォルダーのパスとファイル名 |subpath/to/IMG_0001.JPG |
+|SubFolderPath            |文字列  |ファイルの親フォルダーのパス             |subpath/to              |
 |FileName                 |文字列  |ファイルの名前                           |IMG_0001.JPG            |
 |BaseName                 |文字列  |ファイルのベース名                       |IMG_0001                |
 |Extension                |文字列  |ファイルの拡張子                         |JPG                     |
@@ -102,7 +103,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 |CreationDate             |日時    |ファイルの作成日時                       |2012-01-23 12:34:56.780 |
 |ModifiedDate             |日時    |ファイルの更新日時                       |2012-01-23 12:34:56.780 |
 |AccessDate               |日時    |ファイルのアクセス日時                   |2012-01-23 12:34:56.780 |
-|PhotoTakenDate           |日時    |EXIFの撮影日時、またはファイルの更新日時 |2012-01-23 12:34:56.780 |
+|TakenDate                |日時    |EXIFの撮影日時、またはファイルの更新日時 |2012-01-23 12:34:56.780 |
 |Width                    |整数    |EXIF 画像の幅                            |6000                    |
 |Height                   |整数    |EXIF 画像の高さ                          |4000                    |
 |FNumber                  |小数    |EXIF F値                                 |8.0                     |
@@ -112,6 +113,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 |FocalLength              |小数    |EXIF 焦点距離                            |26.0                    |
 |FocalLength35mm          |小数    |EXIF 35mm換算での焦点距離                |39.0                    |
 |ShutterSpeed             |小数    |EXIF シャッタースピード                  |7.0                     |
+|Exposure                 |文字列  |EXIF 露出                                |                        |
 |ExposureTime             |小数    |EXIF 露出時間（秒）                      |0.008                   |
 |ExposureMode             |整数    |EXIF 露出モード                          |0: 自動<br>1: マニュアル<br>2: オートブラケット |
 |ExposureProgram          |整数    |EXIF 露出プログラム                      |0: 未定義<br>1: マニュアル<br>2: ノーマル・プログラム<br>3: 絞り優先<br>4: シャッター優先<br>5: 深度優先<br>6: スポーツ<br>7: 人物<br>8: 風景 |
@@ -125,6 +127,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 |LensSerialNumber         |文字列  |EXIF レンズのシリアルナンバー            |                        |
 |Make                     |文字列  |Tiff メーカー                            |NIKON CORPORATION       |
 |Model                    |文字列  |Tiff モデル                              |NIKON D1                |
+|SerialNumber             |文字列  |EXIF カメラのシリアルナンバー            |                        |
 |Software                 |文字列  |EXIF ソフトウェア                        |Capture NX-D 1.2.0 M    |
 |ProcessingSoftware       |文字列  |EXIF 処理ソフトウェア                    |                        |
 |OwnerName                |文字列  |EXIF オーナー名                          |                        |
@@ -201,7 +204,7 @@ Pictoは写真を整理するためのデスクトップ・アプリです。
 詳細はこちら: [DateTimeFormatter](https://docs.oracle.com/javase/jp/25/docs/api/java.base/java/time/format/DateTimeFormatter.html)
 
     例)
-    "${PhotoTakenDate:uuuu/MMdd}"
+    "${TakenDate:uuuu/MMdd}"
     -> "2012/0123"
 
 ##### 変数値のマッチ

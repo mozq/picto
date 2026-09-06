@@ -32,6 +32,10 @@ final class AppSettingsMigration {
 	private static final String LEGACY_APP_NAME = "Picto";
 	private static final String LEGACY_CONFIG_FILE_NAME = "settings.properties";
 	private static final String SUBFOLDER_PATTERN_KEY = "dest.sub.path.pattern";
+	private static final Map<String, String> RENAMED_VAR_NAMES = Map.of(
+			"ParentSubPath", "SubFolderPath",
+			"PhotoTakenDate", "TakenDate"
+			);
 
 	private AppSettingsMigration() {
 		// NOP
@@ -200,12 +204,16 @@ final class AppSettingsMigration {
 		int formatIndex = expression.indexOf('%');
 		int matchIndex = expression.indexOf('/');
 		if (formatIndex >= 0 && (matchIndex < 0 || formatIndex < matchIndex)) {
-			return "${" + expression.substring(0, formatIndex) + ':' + expression.substring(formatIndex + 1) + '}';
+			return "${" + migrateVarName(expression.substring(0, formatIndex)) + ':' + expression.substring(formatIndex + 1) + '}';
 		}
 		if (matchIndex >= 0) {
-			return "${" + expression.substring(0, matchIndex) + "?{" + migrateMatchCases(expression.substring(matchIndex + 1)) + "}}";
+			return "${" + migrateVarName(expression.substring(0, matchIndex)) + "?{" + migrateMatchCases(expression.substring(matchIndex + 1)) + "}}";
 		}
-		return "${" + expression + '}';
+		return "${" + migrateVarName(expression) + '}';
+	}
+
+	private static String migrateVarName(String varName) {
+		return RENAMED_VAR_NAMES.getOrDefault(varName, varName);
 	}
 
 	private static String migrateMatchCases(String cases) {

@@ -82,18 +82,19 @@ Filter files by modified time.
 #### Destination folder
 Copy or move destination folder.
 
-#### Subfolder
+#### Sub file path
 File's sub path in Destination folder.
 You can use following variables with '${}'.
 
     e.g.)
-    "${ParentSubPath}/${PhotoTakenDate:uuuu/MM}/${FileName}"
+    "${SubFolderPath}/${TakenDate:uuuu/MM}/${FileName}"
     -> "subpath/to/2012/01/IMG_0001.JPG"
 
 |Variable                 |Type    |Meaning                          |Examples                |
 |-------------------------|--------|---------------------------------|------------------------|
 |Now                      |Date    |Current date                     |2012-01-23 12:34:56.780 |
-|ParentSubPath            |String  |Parent folder path of file       |subpath/to              |
+|SubFilePath              |String  |Parent folder path and file name of file |subpath/to/IMG_0001.JPG |
+|SubFolderPath            |String  |Parent folder path of file       |subpath/to              |
 |FileName                 |String  |File name                        |IMG_0001.JPG            |
 |BaseName                 |String  |File base name                   |IMG_0001                |
 |Extension                |String  |File extension                   |JPG                     |
@@ -101,7 +102,7 @@ You can use following variables with '${}'.
 |CreationDate             |Date    |File creation date               |2012-01-23 12:34:56.780 |
 |ModifiedDate             |Date    |File modified date               |2012-01-23 12:34:56.780 |
 |AccessDate               |Date    |File access date                 |2012-01-23 12:34:56.780 |
-|PhotoTakenDate           |Date    |EXIF date or file modified date  |2012-01-23 12:34:56.780 |
+|TakenDate                |Date    |EXIF date or file modified date  |2012-01-23 12:34:56.780 |
 |Width                    |Integer |EXIF image width                 |6000                    |
 |Height                   |Integer |EXIF image height                |4000                    |
 |FNumber                  |Decimal |EXIF FNumber                     |8.0                     |
@@ -111,6 +112,7 @@ You can use following variables with '${}'.
 |FocalLength              |Decimal |EXIF focal length                |26.0                    |
 |FocalLength35mm          |Decimal |EXIF focal length in 35mm format |39.0                    |
 |ShutterSpeed             |Decimal |EXIF shutter speed value         |7.0                     |
+|Exposure                 |String  |EXIF exposure                    |                        |
 |ExposureTime             |Decimal |EXIF exposure time (Seconds)     |0.008                   |
 |ExposureMode             |Integer |EXIF exposure mode               |0: Auto exposure<br>1: Manual exposure<br>2: Auto bracket |
 |ExposureProgram          |Integer |EXIF exposure program            |0: Not defined<br>1: Manual<br>2: Normal program<br>3: Aperture priority<br>4: Shutter priority<br>5: Creative program<br>6: Action program<br>7: Portrait mode<br>8: Landscape mode |
@@ -124,6 +126,7 @@ You can use following variables with '${}'.
 |LensSerialNumber         |String  |EXIF lens serial number          |                        |
 |Make                     |String  |Tiff make                        |NIKON CORPORATION       |
 |Model                    |String  |Tiff model                       |NIKON D1                |
+|SerialNumber             |String  |EXIF camera serial number        |                        |
 |Software                 |String  |EXIF software                    |Capture NX-D 1.2.0 M    |
 |ProcessingSoftware       |String  |EXIF processing software         |                        |
 |OwnerName                |String  |EXIF owner name                  |                        |
@@ -200,7 +203,7 @@ See more information: [DecimalFormat](https://docs.oracle.com/en/java/javase/25/
 See more information: [DateTimeFormatter](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/time/format/DateTimeFormatter.html)
 
     e.g.)
-    "${PhotoTakenDate:uuuu/MMdd}"
+    "${TakenDate:uuuu/MMdd}"
     -> "2012/0123"
 
 ##### Match variable values

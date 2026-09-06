@@ -96,6 +96,7 @@ public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 
 	private static final String DEFAULT_DEST_SUB_PATH_PATTERN = "${FileName}";
+	private static final String EMPTY_DEST_SUB_PATH_PATTERN = "${SubFilePath}";
 	private static final int WINDOW_PADDING = 10;
 	private static final int MAIN_LABEL_WIDTH = 52;
 	private static final int SECTION_PADDING = 8;
@@ -1677,7 +1678,10 @@ public class MainFrame extends JFrame {
 //		pathFilter.setAccessTimeRange(from, to);
 
 
-		NanoTemplate destSubPathTemplate = new NanoTemplate(values.destSubPathPattern).timeZone(timeZone);
+		String destSubPathPattern = values.destSubPathPattern.isBlank()
+				? EMPTY_DEST_SUB_PATH_PATTERN
+				: values.destSubPathPattern;
+		NanoTemplate destSubPathTemplate = new NanoTemplate(destSubPathPattern).timeZone(timeZone);
 
 		ProcessCondition processCondition = new ProcessCondition();
 		processCondition.setTimeZone(timeZone);

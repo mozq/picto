@@ -56,6 +56,45 @@ class AppSettingsMigrationTest {
 	}
 
 	@Test
+	void migratesParentSubPathVariableNameToSubFolderPath() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"dest.sub.path.pattern=${ParentSubPath}/${BaseName}.${Extension}"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("${SubFolderPath}/${BaseName}.${Extension}",
+				settings.getString("dest.sub.path.pattern", ""));
+	}
+
+	@Test
+	void migratesParentSubPathVariableNameInsideMatchExpression() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"dest.sub.path.pattern=${ParentSubPath/:Unsorted/default:Other}/${FileName}"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("${SubFolderPath?{:'Unsorted',default:'Other'}}/${FileName}",
+				settings.getString("dest.sub.path.pattern", ""));
+	}
+
+	@Test
+	void migratesPhotoTakenDateVariableNameToTakenDate() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"dest.sub.path.pattern=${ParentSubPath}/${PhotoTakenDate%uuuu/MM}/${FileName}"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("${SubFolderPath}/${TakenDate:uuuu/MM}/${FileName}",
+				settings.getString("dest.sub.path.pattern", ""));
+	}
+
+	@Test
 	void deletesLegacySettingsLogsAndEmptyDirectories() throws IOException {
 		Path legacyDirectory = tempDir.resolve("Mozq").resolve("Picto");
 		Files.createDirectories(legacyDirectory);
