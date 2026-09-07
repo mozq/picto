@@ -16,6 +16,8 @@
  */
 package net.mozq.picto.core;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +53,33 @@ public final class ProcessRunner {
 		}
 		Thread.ofVirtual().name("Picto file finder").start(this::findFiles);
 		Thread.ofVirtual().name("Picto file processor").start(this::processFiles);
+	}
+
+	public void reprocess(List<ProcessData> items) {
+		if (!started.compareAndSet(false, true)) {
+			throw new IllegalStateException("ProcessRunner already started.");
+		}
+		for (ProcessData item : items) {
+			item.setStatus(ProcessDataStatus.Waiting);
+		}
+		Iterator<ProcessData> iterator = items.iterator();
+		Thread.ofVirtual().name("Picto reprocess processor").start(() -> {
+			try {
+				ProcessCore.processFiles(
+						processCondition,
+						() -> iterator.hasNext() ? iterator.next() : null,
+						this::processDataUpdated,
+						overwriteConfirm,
+						this::isStopRequested
+						);
+			} catch (Exception e) {
+				listener.processingFailed(e);
+				stop();
+			} finally {
+				stopRequested.set(true);
+				listener.completed();
+			}
+		});
 	}
 
 	public void stop() {

@@ -39,7 +39,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -59,6 +61,8 @@ import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
@@ -81,6 +85,9 @@ public class ProcessDialog extends JDialog {
 	private static final ImageIcon ICON_TERMINATED = loadImageIcon("net/mozq/picto/resources/icons/icon-terminated.png", ProcessDataStatus.Terminated.toString());
 	private static final ImageIcon ICON_SUCCESS = loadImageIcon("net/mozq/picto/resources/icons/icon-success.png", ProcessDataStatus.Success.toString());
 	private static final ImageIcon ICON_ERROR = loadImageIcon("net/mozq/picto/resources/icons/icon-error.png", ProcessDataStatus.Error.toString());
+
+	private static final Set<ProcessDataStatus> REPROCESSABLE_STATUSES =
+			EnumSet.of(ProcessDataStatus.Waiting, ProcessDataStatus.Skipped, ProcessDataStatus.Error);
 
 	private final ConcurrentLinkedQueue<ProcessData> pendingProcessData = new ConcurrentLinkedQueue<>();
 	private final AtomicBoolean batchDispatchScheduled = new AtomicBoolean(false);
@@ -165,6 +172,14 @@ public class ProcessDialog extends JDialog {
 		table.setRowSorter(sorter);
 
 		JPopupMenu tablePopupMenu = new JPopupMenu();
+		JMenuItem mntmReprocess = new JMenuItem(Messages.getString("ProcessDialog.table.menu.reprocess"));
+		mntmReprocess.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				reprocessSelected();
+			}
+		});
+		tablePopupMenu.add(mntmReprocess);
+		tablePopupMenu.addSeparator();
 		JMenuItem mntmOpenLocation = new JMenuItem(Messages.getString("ProcessDialog.table.menu.openLocation"));
 		mntmOpenLocation.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -182,6 +197,19 @@ public class ProcessDialog extends JDialog {
 			}
 		});
 		tablePopupMenu.add(mntmCopy);
+		tablePopupMenu.addPopupMenuListener(new PopupMenuListener() {
+			public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+				mntmReprocess.setEnabled(canReprocessSelection());
+			}
+
+			public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+				// NOP
+			}
+
+			public void popupMenuCanceled(PopupMenuEvent e) {
+				// NOP
+			}
+		});
 		table.setComponentPopupMenu(tablePopupMenu);
 
 		table.addMouseListener(new MouseAdapter() {
@@ -285,13 +313,7 @@ public class ProcessDialog extends JDialog {
 			}
 		});
 
-		tableModel.addTableModelListener(_ -> {
-			int currentCount = currentProcessDataIndex + 1;
-			int totalCount = tableModel.getRowCount();
-			progressBar.setString(String.format("%d / %d (%d%%)", currentCount, totalCount, (currentCount * 100 / totalCount)));
-			progressBar.setValue(currentCount);
-			progressBar.setMaximum(totalCount);
-		});
+		tableModel.addTableModelListener(_ -> updateOverallProgress());
 
 		dialog = this;
 	}
@@ -434,7 +456,88 @@ public class ProcessDialog extends JDialog {
 			flushPendingProcessData();
 			btnStop.setVisible(false);
 			btnClose.setVisible(true);
+			updateOverallProgress();
 		});
+	}
+
+	private void updateOverallProgress() {
+		int currentCount = currentProcessDataIndex + 1;
+		int totalCount = tableModel.getRowCount();
+		if (totalCount <= 0) {
+			return;
+		}
+		progressBar.setString(String.format("%d / %d (%d%%)", currentCount, totalCount, (currentCount * 100 / totalCount)));
+		progressBar.setValue(currentCount);
+		progressBar.setMaximum(totalCount);
+	}
+
+	private void updateReprocessProgress(int completed, int total) {
+		runOnEventDispatchThread(() -> progressBar.setString(Messages.getString("ProcessDialog.reprocess.progress", completed, total)));
+	}
+
+	private boolean canReprocessSelection() {
+		int[] viewRows = table.getSelectedRows();
+		if (viewRows.length == 0 || btnStop.isVisible()) {
+			return false;
+		}
+		for (int viewRow : viewRows) {
+			int modelRow = table.convertRowIndexToModel(viewRow);
+			ProcessDataStatus status = tableModel.getProcessDataAt(modelRow).getStatus();
+			// A never-attempted row's status is null (same as an explicit Waiting).
+			if (status != null && !REPROCESSABLE_STATUSES.contains(status)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void reprocessSelected() {
+		int[] viewRows = table.getSelectedRows();
+		List<ProcessData> items = new ArrayList<>();
+		for (int viewRow : viewRows) {
+			items.add(tableModel.getProcessDataAt(table.convertRowIndexToModel(viewRow)));
+		}
+		if (items.isEmpty()) {
+			return;
+		}
+
+		overwriteConfirmResult = null;
+		btnStop.setVisible(true);
+		btnStop.setEnabled(true);
+		btnClose.setVisible(false);
+
+		processRunner = new ProcessRunner(processCondition, this::confirmOverwrite, new ProcessRunner.Listener() {
+			@Override
+			public void processDataFound(ProcessData processData) {
+				// Re-processing does not discover new files.
+			}
+
+			@Override
+			public void processDataUpdated(int index) {
+				ProcessData processData = items.get(index);
+				int modelRow = tableModel.indexOf(processData);
+				if (modelRow >= 0) {
+					tableModel.updateRow(modelRow);
+				}
+				updateReprocessProgress(index + 1, items.size());
+			}
+
+			@Override
+			public void findingFailed(Exception e) {
+				// Re-processing does not discover new files.
+			}
+
+			@Override
+			public void processingFailed(Exception e) {
+				handleError(e, "message.error.process.files");
+			}
+
+			@Override
+			public void completed() {
+				processCompleted();
+			}
+		});
+		processRunner.reprocess(items);
 	}
 
 	private static void runOnEventDispatchThread(Runnable runnable) {
@@ -640,6 +743,10 @@ public class ProcessDialog extends JDialog {
 
 		ProcessData getProcessDataAt(int rowIndex) {
 			return rows.get(rowIndex);
+		}
+
+		int indexOf(ProcessData processData) {
+			return rows.indexOf(processData);
 		}
 
 		private ImageIcon getStatusIcon(ProcessDataStatus status) {
