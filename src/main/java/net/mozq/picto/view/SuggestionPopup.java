@@ -28,17 +28,10 @@ import java.awt.IllegalComponentStateException;
 import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
-import java.awt.Window;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -67,14 +60,6 @@ class SuggestionPopup {
 	private Popup popup;
 	private boolean windowFocusListenerInstalled;
 	private boolean refreshScheduled;
-	private final PropertyChangeListener focusOwnerListener = new PropertyChangeListener() {
-		@Override
-		public void propertyChange(PropertyChangeEvent evt) {
-			if (popup != null) {
-				SwingUtilities.invokeLater(SuggestionPopup.this::hidePopupIfFocusMovedAway);
-			}
-		}
-	};
 
 	SuggestionPopup(
 			JTextComponent field,
@@ -98,10 +83,7 @@ class SuggestionPopup {
 	}
 
 	private void installListeners() {
-		KeyboardFocusManager.getCurrentKeyboardFocusManager()
-				.addPropertyChangeListener("permanentFocusOwner", focusOwnerListener);
-		KeyboardFocusManager.getCurrentKeyboardFocusManager()
-				.addPropertyChangeListener("focusOwner", focusOwnerListener);
+		PopupSupport.installFocusOwnerChangeListener(() -> popup != null, this::hidePopupIfFocusMovedAway);
 		SwingUtilities.invokeLater(this::installWindowFocusListener);
 		field.addFocusListener(new FocusAdapter() {
 			@Override
@@ -126,28 +108,7 @@ class SuggestionPopup {
 		if (windowFocusListenerInstalled) {
 			return;
 		}
-		Window window = SwingUtilities.getWindowAncestor(field);
-		if (window == null) {
-			return;
-		}
-		window.addWindowFocusListener(new WindowAdapter() {
-			@Override
-			public void windowLostFocus(WindowEvent e) {
-				hidePopup();
-			}
-		});
-		window.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				refreshPopup();
-			}
-
-			@Override
-			public void componentResized(ComponentEvent e) {
-				refreshPopup();
-			}
-		});
-		windowFocusListenerInstalled = true;
+		windowFocusListenerInstalled = PopupSupport.installWindowFocusListener(field, this::hidePopup, this::refreshPopup);
 	}
 
 	private void showPopup() {
@@ -175,17 +136,9 @@ class SuggestionPopup {
 	}
 
 	private void hidePopupIfFocusMovedAway() {
-		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-		if (focusOwner == null) {
-			if (!field.isFocusOwner()) {
-				hidePopup();
-			}
-			return;
+		if (PopupSupport.shouldHidePopup(field, popupPanel, this::isRelatedFocusOwner)) {
+			hidePopup();
 		}
-		if (focusOwner == field || SwingUtilities.isDescendingFrom(focusOwner, popupPanel) || isRelatedFocusOwner(focusOwner)) {
-			return;
-		}
-		hidePopup();
 	}
 
 	private void hidePopup() {

@@ -30,6 +30,9 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
+
+import com.formdev.flatlaf.FlatClientProperties;
 
 import net.mozq.picto.enums.FileSizeUnit;
 
@@ -72,6 +75,7 @@ class SourceOptionsPanel extends JPanel {
 		add(filePatternLabel, filePatternLabelConstraints);
 
 		JPanel filePatternPanel = new JPanel();
+		filePatternPanel.setOpaque(false);
 		GridBagConstraints filePatternPanelConstraints = new GridBagConstraints();
 		filePatternPanelConstraints.fill = GridBagConstraints.BOTH;
 		filePatternPanelConstraints.insets = new Insets(0, 0, 5, 0);
@@ -86,6 +90,7 @@ class SourceOptionsPanel extends JPanel {
 		filePatternPanel.setLayout(filePatternLayout);
 
 		filePatternTextField = new JTextField();
+		filePatternTextField.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, UIManager.getIcon("FileView.fileIcon"));
 		filePatternLabel.setLabelFor(filePatternTextField);
 		InputSupport.installLabelFocusAction(filePatternLabel, filePatternTextField, LabelFocusBehavior.CARET_END);
 		GridBagConstraints filePatternTextFieldConstraints = new GridBagConstraints();
@@ -135,6 +140,7 @@ class SourceOptionsPanel extends JPanel {
 		add(fileSizeRangeLabel, fileSizeRangeLabelConstraints);
 
 		JPanel fileSizeRangePanel = new JPanel();
+		fileSizeRangePanel.setOpaque(false);
 		GridBagConstraints fileSizeRangePanelConstraints = new GridBagConstraints();
 		fileSizeRangePanelConstraints.fill = GridBagConstraints.BOTH;
 		fileSizeRangePanelConstraints.insets = new Insets(0, 0, 5, 0);
@@ -148,6 +154,7 @@ class SourceOptionsPanel extends JPanel {
 		fileSizeRangeLabel.setLabelFor(fileSizeRangeFromTextField);
 		InputSupport.installLabelFocusAction(fileSizeRangeLabel, fileSizeRangeFromTextField, LabelFocusBehavior.SELECT_ALL);
 		fileSizeRangeFromTextField.setColumns(5);
+		fileSizeRangeFromTextField.setHorizontalAlignment(JTextField.RIGHT);
 		fileSizeRangePanel.add(fileSizeRangeFromTextField);
 
 		fileSizeRangeToLabel = new JLabel(Messages.getString("MainFrame.fileSizeRangeTo"));
@@ -156,6 +163,7 @@ class SourceOptionsPanel extends JPanel {
 		fileSizeRangeToTextField = new JTextField();
 		InputSupport.allowDigitsOnly(fileSizeRangeToTextField);
 		fileSizeRangeToTextField.setColumns(5);
+		fileSizeRangeToTextField.setHorizontalAlignment(JTextField.RIGHT);
 		fileSizeRangePanel.add(fileSizeRangeToTextField);
 
 		fileSizeUnitComboBox = new JComboBox<>();
@@ -171,6 +179,7 @@ class SourceOptionsPanel extends JPanel {
 		add(creationTimeRangeLabel, creationTimeLabelConstraints);
 
 		JPanel creationTimeRangePanel = new JPanel();
+		creationTimeRangePanel.setOpaque(false);
 		GridBagConstraints creationTimePanelConstraints = new GridBagConstraints();
 		creationTimePanelConstraints.fill = GridBagConstraints.BOTH;
 		creationTimePanelConstraints.insets = new Insets(0, 0, 5, 0);
@@ -199,6 +208,7 @@ class SourceOptionsPanel extends JPanel {
 		add(modifiedTimeRangeLabel, modifiedTimeLabelConstraints);
 
 		JPanel modifiedTimeRangePanel = new JPanel();
+		modifiedTimeRangePanel.setOpaque(false);
 		GridBagConstraints modifiedTimePanelConstraints = new GridBagConstraints();
 		modifiedTimePanelConstraints.fill = GridBagConstraints.BOTH;
 		modifiedTimePanelConstraints.gridx = 1;
@@ -227,6 +237,7 @@ class SourceOptionsPanel extends JPanel {
 		JFormattedTextField textField = new JFormattedTextField(InputSupport.newMaskFormatter(DateTimeText.MASK_PATTERN));
 		textField.setColumns(20);
 		textField.setFont(new Font("Monospaced", Font.PLAIN, 13));
+		textField.setHorizontalAlignment(JTextField.CENTER);
 		textField.setToolTipText(tooltip);
 		InputSupport.installDateTimeInputPopup(textField, endOfRange);
 		textField.setFocusLostBehavior(JFormattedTextField.COMMIT);

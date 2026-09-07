@@ -16,9 +16,12 @@
  */
 package net.mozq.picto.view;
 
+import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.KeyboardFocusManager;
+import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
@@ -34,6 +37,7 @@ import java.util.Locale;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.MenuSelectionManager;
 import javax.swing.SwingUtilities;
 import javax.swing.TransferHandler;
 import javax.swing.UIManager;
@@ -49,7 +53,42 @@ final class InputSupport {
 	private static final String CLIENT_PROPERTY_ENABLED_BACKGROUND = "picto.enabledBackground";
 	private static final String CLIENT_PROPERTY_DISABLED_BACKGROUND = "picto.disabledBackground";
 
+	private static boolean clickAwayFocusClearInstalled;
+
 	private InputSupport() {
+	}
+
+	static synchronized void installClickAwayFocusClear() {
+		if (clickAwayFocusClearInstalled) {
+			return;
+		}
+		clickAwayFocusClearInstalled = true;
+
+		Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
+			if (isClickAwayFromFocusedComponent(event)) {
+				KeyboardFocusManager.getCurrentKeyboardFocusManager().clearGlobalFocusOwner();
+			}
+		}, AWTEvent.MOUSE_EVENT_MASK);
+	}
+
+	private static boolean isClickAwayFromFocusedComponent(AWTEvent event) {
+		if (event.getID() != MouseEvent.MOUSE_PRESSED) {
+			return false;
+		}
+		if (MenuSelectionManager.defaultManager().getSelectedPath().length > 0) {
+			// A JPopupMenu-based UI (e.g. a JComboBox dropdown) is currently open/being
+			// interacted with; let it finish committing the selection undisturbed.
+			return false;
+		}
+		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		if (focusOwner == null) {
+			return false;
+		}
+		if (!(event.getSource() instanceof Component)) {
+			return false;
+		}
+		Component clicked = (Component)event.getSource();
+		return clicked != focusOwner && !SwingUtilities.isDescendingFrom(clicked, focusOwner);
 	}
 
 	static void installLabelFocusAction(JLabel label, Component target, LabelFocusBehavior behavior) {

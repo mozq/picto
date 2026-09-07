@@ -23,16 +23,11 @@ import java.awt.GridLayout;
 import java.awt.IllegalComponentStateException;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
@@ -89,6 +84,7 @@ class DateTimeInputPopup {
 	}
 
 	private void installListeners() {
+		PopupSupport.installFocusOwnerChangeListener(() -> popup != null, this::hidePopupIfFocusMovedAway);
 		SwingUtilities.invokeLater(this::installWindowFocusListener);
 		field.addFocusListener(new FocusAdapter() {
 			@Override
@@ -133,28 +129,7 @@ class DateTimeInputPopup {
 		if (windowFocusListenerInstalled) {
 			return;
 		}
-		Window window = SwingUtilities.getWindowAncestor(field);
-		if (window == null) {
-			return;
-		}
-		window.addWindowFocusListener(new WindowAdapter() {
-			@Override
-			public void windowLostFocus(WindowEvent e) {
-				hidePopup();
-			}
-		});
-		window.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentMoved(ComponentEvent e) {
-				refreshPopupLocation();
-			}
-
-			@Override
-			public void componentResized(ComponentEvent e) {
-				refreshPopupLocation();
-			}
-		});
-		windowFocusListenerInstalled = true;
+		windowFocusListenerInstalled = PopupSupport.installWindowFocusListener(field, this::hidePopup, this::refreshPopupLocation);
 	}
 
 	private void showPopupForCaret() {
@@ -240,11 +215,9 @@ class DateTimeInputPopup {
 		if (cmbYear.isPopupVisible() || cmbMonth.isPopupVisible()) {
 			return;
 		}
-		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-		if (focusOwner == null || focusOwner == field || SwingUtilities.isDescendingFrom(focusOwner, popupPanel)) {
-			return;
+		if (PopupSupport.shouldHidePopup(field, popupPanel, ignoredFocusOwner -> false)) {
+			hidePopup();
 		}
-		hidePopup();
 	}
 
 	private void hidePopupInstance() {

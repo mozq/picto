@@ -147,6 +147,7 @@ class ChangesPanel extends JTabbedPane {
 		customBaseDateTextField = new JFormattedTextField(InputSupport.newMaskFormatter(DateTimeText.MASK_PATTERN));
 		InputSupport.configureDisabledBackground(customBaseDateTextField);
 		customBaseDateTextField.setFont(new Font("Monospaced", Font.PLAIN, 13));
+		customBaseDateTextField.setHorizontalAlignment(JTextField.CENTER);
 		customBaseDateTextField.setColumns(20);
 		customBaseDateTextField.setVisible(false);
 		InputSupport.installDateTimeInputPopup(customBaseDateTextField, false);
