@@ -30,14 +30,14 @@ import net.mozq.appsettings.AppSettings;
 public class App {
 	public static final String GROUP_NAME = "mozq";
 	public static final String APP_NAME = "picto";
-	public static final String CONFIG_FILE_NAME = "settings.conf";
+	public static final String SETTINGS_FILE_NAME = "settings.conf";
 	public static final String WARNS_FILE_NAME = "warns.log";
 	public static final String ERRORS_FILE_NAME = "errors.log";
 
 	private static final DateTimeFormatter LOG_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 			.withZone(ZoneId.systemDefault());
 
-	private static AppSettings config = null;
+	private static AppSettings settings = null;
 	private static AppSettingsMigration.Result settingsMigrationResult = AppSettingsMigration.Result.none();
 	private static Path warnsFilePath = null;
 	private static Path errorsFilePath = null;
@@ -47,14 +47,14 @@ public class App {
 	}
 
 	public static void init() throws IOException {
-		// Load config
-		config = AppSettings.of(GROUP_NAME, APP_NAME, CONFIG_FILE_NAME);
-		settingsMigrationResult = AppSettingsMigration.migrateIfNeeded(config);
+		// Load settings
+		settings = AppSettings.of(GROUP_NAME, APP_NAME, SETTINGS_FILE_NAME);
+		settingsMigrationResult = AppSettingsMigration.migrateIfNeeded(settings);
 		if (!settingsMigrationResult.migrated()) {
-			config.load();
+			settings.load();
 		}
 
-		Path appDirectory = config.path().getParent();
+		Path appDirectory = settings.path().getParent();
 		warnsFilePath = appDirectory.resolve(WARNS_FILE_NAME);
 		errorsFilePath = appDirectory.resolve(ERRORS_FILE_NAME);
 
@@ -63,8 +63,8 @@ public class App {
 		Files.deleteIfExists(errorsFilePath);
 	}
 
-	public static AppSettings config() {
-		return config;
+	public static AppSettings settings() {
+		return settings;
 	}
 
 	public static void deleteMigratedLegacySettingsIfNeeded() {

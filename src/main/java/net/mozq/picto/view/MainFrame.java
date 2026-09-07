@@ -219,7 +219,7 @@ public class MainFrame extends JFrame {
 	private JLabel lblRunSummary;
 	private boolean showingRunSummary;
 	private JMenuBar menuBar;
-	private JMenu mnPreferences;
+	private JMenu mnSettings;
 	private JMenu mnLanguage;
 	private JMenu mnAppearance;
 	private JMenu mnPresets;
@@ -337,67 +337,67 @@ public class MainFrame extends JFrame {
 		});
 		menuBar.add(mnPresets);
 
-		mnPreferences = new JMenu(Messages.getString("MainFrame.menu.preferences"));
-		mnPreferences.setMnemonic(KeyEvent.VK_S);
-		menuBar.add(mnPreferences);
+		mnSettings = new JMenu(Messages.getString("MainFrame.menu.settings"));
+		mnSettings.setMnemonic(KeyEvent.VK_S);
+		menuBar.add(mnSettings);
 
-		mnLanguage = new JMenu(Messages.getString("MainFrame.menu.preferences.language"));
+		mnLanguage = new JMenu(Messages.getString("MainFrame.menu.settings.language"));
 		mnLanguage.setMnemonic(KeyEvent.VK_L);
-		mnPreferences.add(mnLanguage);
+		mnSettings.add(mnLanguage);
 		ButtonGroup languageGroup = new ButtonGroup();
-		addPreferenceMenuItem(
+		addSettingsMenuItem(
 				mnLanguage,
 				languageGroup,
-				Messages.getString("MainFrame.menu.preferences.language.system"),
+				Messages.getString("MainFrame.menu.settings.language.system"),
 				AppMain.PREF_LOCALE_KEY,
 				AppMain.PREF_SYSTEM,
 				KeyEvent.VK_S);
-		addPreferenceMenuItem(
+		addSettingsMenuItem(
 				mnLanguage,
 				languageGroup,
-				Messages.getString("MainFrame.menu.preferences.language.en"),
+				Messages.getString("MainFrame.menu.settings.language.en"),
 				AppMain.PREF_LOCALE_KEY,
 				AppMain.PREF_LOCALE_EN,
 				0);
-		addPreferenceMenuItem(
+		addSettingsMenuItem(
 				mnLanguage,
 				languageGroup,
-				Messages.getString("MainFrame.menu.preferences.language.ja"),
+				Messages.getString("MainFrame.menu.settings.language.ja"),
 				AppMain.PREF_LOCALE_KEY,
 				AppMain.PREF_LOCALE_JA,
 				0);
 
-		mnAppearance = new JMenu(Messages.getString("MainFrame.menu.preferences.appearance"));
+		mnAppearance = new JMenu(Messages.getString("MainFrame.menu.settings.appearance"));
 		mnAppearance.setMnemonic(KeyEvent.VK_A);
-		mnPreferences.add(mnAppearance);
+		mnSettings.add(mnAppearance);
 		ButtonGroup appearanceGroup = new ButtonGroup();
-		addPreferenceMenuItem(
+		addSettingsMenuItem(
 				mnAppearance,
 				appearanceGroup,
-				Messages.getString("MainFrame.menu.preferences.appearance.system"),
+				Messages.getString("MainFrame.menu.settings.appearance.system"),
 				AppMain.PREF_APPEARANCE_KEY,
 				AppMain.PREF_SYSTEM,
 				KeyEvent.VK_S);
-		addPreferenceMenuItem(
+		addSettingsMenuItem(
 				mnAppearance,
 				appearanceGroup,
-				Messages.getString("MainFrame.menu.preferences.appearance.light"),
+				Messages.getString("MainFrame.menu.settings.appearance.light"),
 				AppMain.PREF_APPEARANCE_KEY,
 				AppMain.PREF_APPEARANCE_LIGHT,
 				KeyEvent.VK_L);
-		addPreferenceMenuItem(
+		addSettingsMenuItem(
 				mnAppearance,
 				appearanceGroup,
-				Messages.getString("MainFrame.menu.preferences.appearance.dark"),
+				Messages.getString("MainFrame.menu.settings.appearance.dark"),
 				AppMain.PREF_APPEARANCE_KEY,
 				AppMain.PREF_APPEARANCE_DARK,
 				KeyEvent.VK_D);
 
-		mnPreferences.addSeparator();
+		mnSettings.addSeparator();
 
 		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
-		mntmImportSettings = new JMenuItem(Messages.getString("MainFrame.menu.preferences.importSettings"));
+		mntmImportSettings = new JMenuItem(Messages.getString("MainFrame.menu.settings.importSettings"));
 		mntmImportSettings.setMnemonic(KeyEvent.VK_I);
 		mntmImportSettings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
 		mntmImportSettings.addActionListener(new ActionListener() {
@@ -410,7 +410,7 @@ public class MainFrame extends JFrame {
 				if (selected == JFileChooser.APPROVE_OPTION) {
 					File file = filechooser.getSelectedFile();
 					try {
-						App.config().loadFrom(file.toPath());
+						App.settings().loadFrom(file.toPath());
 						loadSettings();
 
 						JOptionPane.showMessageDialog(
@@ -432,9 +432,9 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		mnPreferences.add(mntmImportSettings);
+		mnSettings.add(mntmImportSettings);
 
-		mntmExportSettings = new JMenuItem(Messages.getString("MainFrame.menu.preferences.exportSettings"));
+		mntmExportSettings = new JMenuItem(Messages.getString("MainFrame.menu.settings.exportSettings"));
 		mntmExportSettings.setMnemonic(KeyEvent.VK_E);
 		mntmExportSettings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
 		mntmExportSettings.addActionListener(new ActionListener() {
@@ -452,7 +452,7 @@ public class MainFrame extends JFrame {
 					}
 
 					try {
-						App.config().storeTo(file.toPath());
+						App.settings().storeTo(file.toPath());
 
 						JOptionPane.showMessageDialog(
 								null,
@@ -473,7 +473,7 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		mnPreferences.add(mntmExportSettings);
+		mnSettings.add(mntmExportSettings);
 
 		mnHelp = new JMenu(Messages.getString("MainFrame.menu.help"));
 		mnHelp.setMnemonic(KeyEvent.VK_H);
@@ -937,7 +937,7 @@ public class MainFrame extends JFrame {
 	}
 
 	protected void loadSettings() {
-		applySettingsFrom(App.config());
+		applySettingsFrom(App.settings());
 	}
 
 	private void applySettingsFrom(AppSettings conf) {
@@ -983,7 +983,7 @@ public class MainFrame extends JFrame {
 	}
 
 	protected void storeSettings() throws IOException {
-		AppSettings conf = App.config();
+		AppSettings conf = App.settings();
 
 		conf.set(AppMain.PREF_LOCALE_KEY, conf.getString(AppMain.PREF_LOCALE_KEY, AppMain.PREF_SYSTEM));
 		conf.set(AppMain.PREF_APPEARANCE_KEY, conf.getString(AppMain.PREF_APPEARANCE_KEY, AppMain.PREF_SYSTEM));
@@ -1211,7 +1211,7 @@ public class MainFrame extends JFrame {
 		AppSettings presetSettings = AppSettings.of(presetsDirectory(), fileName);
 		presetSettings.load();
 
-		AppSettings conf = App.config();
+		AppSettings conf = App.settings();
 		for (String key : presetSettings.keySet()) {
 			conf.set(key, presetSettings.get(key));
 		}
@@ -1272,25 +1272,25 @@ public class MainFrame extends JFrame {
 		}
 	}
 
-	private void addPreferenceMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value, int mnemonic) {
+	private void addSettingsMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value, int mnemonic) {
 		JRadioButtonMenuItem item = new JRadioButtonMenuItem(label);
 		if (mnemonic != 0) {
 			item.setMnemonic(mnemonic);
 		}
 		item.setActionCommand(value);
-		item.setSelected(value.equals(App.config().getString(key, AppMain.PREF_SYSTEM)));
+		item.setSelected(value.equals(App.settings().getString(key, AppMain.PREF_SYSTEM)));
 		item.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (processing) {
-					selectCurrentPreferenceMenuItem(group, key);
-					showPreferencesProcessingMessage();
+					selectCurrentSettingsMenuItem(group, key);
+					showSettingsProcessingMessage();
 					return;
 				}
-				if (!value.equals(App.config().getString(key, AppMain.PREF_SYSTEM))) {
-					App.config().set(key, value);
+				if (!value.equals(App.settings().getString(key, AppMain.PREF_SYSTEM))) {
+					App.settings().set(key, value);
 					try {
 						storeSettings();
-						applyPreferencesImmediately();
+						applySettingsImmediately();
 					} catch (IOException e1) {
 						JOptionPane.showMessageDialog(
 								frame,
@@ -1307,8 +1307,8 @@ public class MainFrame extends JFrame {
 		menu.add(item);
 	}
 
-	private static void selectCurrentPreferenceMenuItem(ButtonGroup group, String key) {
-		String currentValue = App.config().getString(key, AppMain.PREF_SYSTEM);
+	private static void selectCurrentSettingsMenuItem(ButtonGroup group, String key) {
+		String currentValue = App.settings().getString(key, AppMain.PREF_SYSTEM);
 		for (java.util.Enumeration<AbstractButton> e = group.getElements(); e.hasMoreElements();) {
 			AbstractButton button = e.nextElement();
 			if (currentValue.equals(button.getActionCommand())) {
@@ -1318,16 +1318,16 @@ public class MainFrame extends JFrame {
 		}
 	}
 
-	private void showPreferencesProcessingMessage() {
+	private void showSettingsProcessingMessage() {
 		JOptionPane.showMessageDialog(
 				frame,
-				Messages.getString("message.warn.preferences.processing"),
+				Messages.getString("message.warn.settings.processing"),
 				null,
 				JOptionPane.WARNING_MESSAGE
 				);
 	}
 
-	private void applyPreferencesImmediately() {
+	private void applySettingsImmediately() {
 		MainFrameState state = captureFrameState();
 		AppMain.applyConfiguredUiSettings();
 		MainFrame nextFrame = new MainFrame(state);
@@ -1891,13 +1891,13 @@ public class MainFrame extends JFrame {
 		processDialog.setModalityType(ModalityType.DOCUMENT_MODAL);
 		processDialog.setLocationRelativeTo(frame);
 		processing = true;
-		mnPreferences.setEnabled(false);
+		mnSettings.setEnabled(false);
 		try {
 			processDialog.doProcess(processCondition);
 			processDialog.setVisible(true);
 		} finally {
 			processing = false;
-			mnPreferences.setEnabled(true);
+			mnSettings.setEnabled(true);
 		}
 	}
 
