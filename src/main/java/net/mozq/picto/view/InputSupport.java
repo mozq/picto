@@ -199,7 +199,7 @@ final class InputSupport {
 				String data = (String)support.getTransferable().getTransferData(DataFlavor.stringFlavor);
 				return firstFileFromUriList(data);
 			}
-		} catch (UnsupportedFlavorException | IOException e) {
+		} catch (UnsupportedFlavorException | IOException _) {
 			// Ignore a drop whose data can no longer be read.
 		}
 		return null;
@@ -216,7 +216,7 @@ final class InputSupport {
 				if ("file".equalsIgnoreCase(uri.getScheme())) {
 					return new File(uri);
 				}
-			} catch (URISyntaxException e) {
+			} catch (URISyntaxException _) {
 				// Ignore a malformed entry and try the next line.
 			}
 		}

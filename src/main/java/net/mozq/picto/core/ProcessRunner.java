@@ -81,7 +81,7 @@ public final class ProcessRunner {
 				if (processQueue.offer(END_OF_QUEUE, 100, TimeUnit.MILLISECONDS)) {
 					return;
 				}
-			} catch (InterruptedException e) {
+			} catch (InterruptedException _) {
 				Thread.currentThread().interrupt();
 				return;
 			}
@@ -99,7 +99,7 @@ public final class ProcessRunner {
 					return;
 				}
 			}
-		} catch (InterruptedException e) {
+		} catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 		}
 	}
@@ -126,7 +126,7 @@ public final class ProcessRunner {
 		try {
 			ProcessData processData = processQueue.take();
 			return processData == END_OF_QUEUE ? null : processData;
-		} catch (InterruptedException e) {
+		} catch (InterruptedException _) {
 			Thread.currentThread().interrupt();
 			return null;
 		}

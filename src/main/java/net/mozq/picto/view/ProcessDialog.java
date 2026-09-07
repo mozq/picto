@@ -270,7 +270,7 @@ public class ProcessDialog extends JDialog {
 		btnClose.setVisible(false);
 		pnlControls.add(btnClose);
 
-		tableModel.addTableModelListener(e -> {
+		tableModel.addTableModelListener(_ -> {
 			int currentCount = currentProcessDataIndex + 1;
 			int totalCount = tableModel.getRowCount();
 			progressBar.setString(String.format("%d / %d (%d%%)", currentCount, totalCount, (currentCount * 100 / totalCount)));
@@ -349,7 +349,7 @@ public class ProcessDialog extends JDialog {
 			AtomicReference<ProcessDataStatus> result = new AtomicReference<>();
 			try {
 				SwingUtilities.invokeAndWait(() -> result.set(confirmOverwrite(processData)));
-			} catch (InterruptedException e) {
+			} catch (InterruptedException _) {
 				Thread.currentThread().interrupt();
 				return ProcessDataStatus.Terminated;
 			} catch (InvocationTargetException e) {
@@ -432,21 +432,6 @@ public class ProcessDialog extends JDialog {
 		}
 	}
 
-	private static void runOnEventDispatchThreadAndWait(Runnable runnable) {
-		if (SwingUtilities.isEventDispatchThread()) {
-			runnable.run();
-			return;
-		}
-		try {
-			SwingUtilities.invokeAndWait(runnable);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new IllegalStateException(e);
-		} catch (InvocationTargetException e) {
-			throw new IllegalStateException(e.getCause());
-		}
-	}
-
 	private static ImageIcon loadImageIcon(String filename, String description) {
 		URL imageUrl = ProcessDialog.class.getClassLoader().getResource(filename);
 
@@ -526,7 +511,7 @@ public class ProcessDialog extends JDialog {
 				File folder = Files.isDirectory(path) ? path.toFile() : path.getParent().toFile();
 				desktop.open(folder);
 			}
-		} catch (IOException e) {
+		} catch (IOException _) {
 			// Best effort only; ignore failures opening the file manager.
 		}
 	}
@@ -625,12 +610,6 @@ public class ProcessDialog extends JDialog {
 			case 4: return data.getMessage();
 			default: throw new IllegalArgumentException(Integer.toString(columnIndex));
 			}
-		}
-
-		void addRow(ProcessData processData) {
-			int rowIndex = rows.size();
-			rows.add(processData);
-			fireTableRowsInserted(rowIndex, rowIndex);
 		}
 
 		void addRows(List<ProcessData> batch) {

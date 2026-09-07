@@ -242,7 +242,7 @@ final class AppSettingsMigration {
 	private static void deleteIfExists(Path path) {
 		try {
 			Files.deleteIfExists(path);
-		} catch (IOException e) {
+		} catch (IOException _) {
 			// Best effort cleanup only.
 		}
 	}
@@ -253,9 +253,9 @@ final class AppSettingsMigration {
 		}
 		try {
 			Files.delete(directory);
-		} catch (DirectoryNotEmptyException e) {
+		} catch (DirectoryNotEmptyException _) {
 			// Keep directories that still contain user files.
-		} catch (IOException e) {
+		} catch (IOException _) {
 			// Best effort cleanup only.
 		}
 	}

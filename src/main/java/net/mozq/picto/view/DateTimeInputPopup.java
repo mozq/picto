@@ -23,7 +23,6 @@ import java.awt.GridLayout;
 import java.awt.IllegalComponentStateException;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -170,7 +169,7 @@ class DateTimeInputPopup {
 
 	private void addTimeButton(JPanel panel, String label, LocalTime time) {
 		JButton button = new JButton(label);
-		button.addActionListener((ActionEvent e) -> {
+		button.addActionListener(_ -> {
 			setTime(time);
 			hidePopup();
 		});
@@ -189,7 +188,7 @@ class DateTimeInputPopup {
 			Point location = field.getLocationOnScreen();
 			popup = PopupFactory.getSharedInstance().getPopup(field, popupPanel, location.x, location.y + field.getHeight());
 			popup.show();
-		} catch (IllegalComponentStateException e) {
+		} catch (IllegalComponentStateException _) {
 			hidePopup();
 		}
 	}
@@ -215,7 +214,7 @@ class DateTimeInputPopup {
 		if (cmbYear.isPopupVisible() || cmbMonth.isPopupVisible()) {
 			return;
 		}
-		if (PopupSupport.shouldHidePopup(field, popupPanel, ignoredFocusOwner -> false)) {
+		if (PopupSupport.shouldHidePopup(field, popupPanel, _ -> false)) {
 			hidePopup();
 		}
 	}
@@ -254,22 +253,22 @@ class DateTimeInputPopup {
 		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
 		JButton btnPrev = new JButton("<");
 		JButton btnNext = new JButton(">");
-		btnPrev.addActionListener((ActionEvent e) -> moveMonth(-1));
-		btnNext.addActionListener((ActionEvent e) -> moveMonth(1));
+		btnPrev.addActionListener(_ -> moveMonth(-1));
+		btnNext.addActionListener(_ -> moveMonth(1));
 		for (int year = FIRST_YEAR; year <= LocalDate.now().getYear() + FUTURE_YEARS; year++) {
 			cmbYear.addItem(Integer.valueOf(year));
 		}
 		for (int month = 1; month <= 12; month++) {
 			cmbMonth.addItem(new MonthItem(month, locale));
 		}
-		cmbYear.addActionListener((ActionEvent e) -> {
+		cmbYear.addActionListener(_ -> {
 			if (!updating && cmbYear.getSelectedItem() instanceof Integer) {
 				int year = ((Integer)cmbYear.getSelectedItem()).intValue();
 				visibleMonth = YearMonth.of(year, visibleMonth.getMonthValue());
 				updateDateFromHeader(year, null);
 			}
 		});
-		cmbMonth.addActionListener((ActionEvent e) -> {
+		cmbMonth.addActionListener(_ -> {
 			if (!updating && cmbMonth.getSelectedItem() instanceof MonthItem) {
 				MonthItem month = (MonthItem)cmbMonth.getSelectedItem();
 				visibleMonth = YearMonth.of(visibleMonth.getYear(), month.value);
@@ -277,7 +276,7 @@ class DateTimeInputPopup {
 			}
 		});
 		JButton btnToday = new JButton(Messages.getString("DateTimeInputPopup.today"));
-		btnToday.addActionListener((ActionEvent e) -> {
+		btnToday.addActionListener(_ -> {
 			LocalDate today = LocalDate.now();
 			visibleMonth = YearMonth.from(today);
 			setDateAndShowTimePopup(today.getYear(), today.getMonthValue(), today.getDayOfMonth());
@@ -360,7 +359,7 @@ class DateTimeInputPopup {
 		for (int i = 0; i < dayButtons.length; i++) {
 			JButton button = new JButton();
 			button.setMargin(new java.awt.Insets(2, 4, 2, 4));
-			button.addActionListener((ActionEvent e) -> {
+			button.addActionListener(_ -> {
 				Object day = button.getClientProperty(DAY_PROPERTY);
 				if (day instanceof Integer) {
 					setDateAndShowTimePopup(visibleMonth.getYear(), visibleMonth.getMonthValue(), ((Integer)day).intValue());

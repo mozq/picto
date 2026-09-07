@@ -183,7 +183,7 @@ class ChangesPanel extends JTabbedPane {
 		editBaseDateLabel.setLabelFor(dateModTypeComboBox);
 		InputSupport.installLabelFocusAction(editBaseDateLabel, dateModTypeComboBox, LabelFocusBehavior.FOCUS_ONLY);
 		dateModTypeComboBox.setModel(new DefaultComboBoxModel<>(DateModType.values()));
-		dateModTypeComboBox.addItemListener(e -> enableChanged.run());
+		dateModTypeComboBox.addItemListener(_ -> enableChanged.run());
 		dateModTypePanel.add(dateModTypeComboBox);
 
 		dateModYearsTextField = newAdjustmentField(4);

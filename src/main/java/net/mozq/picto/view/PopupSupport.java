@@ -89,7 +89,7 @@ final class PopupSupport {
 	 * do not fire a {@code FocusEvent} on the field that is losing focus.
 	 */
 	static void installFocusOwnerChangeListener(BooleanSupplier isPopupShowing, Runnable hideIfFocusMovedAway) {
-		PropertyChangeListener listener = evt -> {
+		PropertyChangeListener listener = _ -> {
 			if (isPopupShowing.getAsBoolean()) {
 				SwingUtilities.invokeLater(hideIfFocusMovedAway);
 			}

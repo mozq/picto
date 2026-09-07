@@ -99,7 +99,7 @@ class SubfolderTemplatePopup {
 			return new NanoTemplate(template)
 					.timeZone(TimeZone.getTimeZone("UTC"))
 					.render(SAMPLE_VALUES);
-		} catch (RuntimeException e) {
+		} catch (RuntimeException _) {
 			return null;
 		}
 	}

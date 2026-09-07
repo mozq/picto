@@ -311,7 +311,7 @@ public final class ProcessCore {
 						Files.deleteIfExists(processData.getSrcPath());
 					}
 					status = ProcessDataStatus.Success;
-				} catch (FileAlreadyExistsException e) {
+				} catch (FileAlreadyExistsException _) {
 					status = confirmOverwrite(processCondition, processData, overwriteConfirm);
 					if (status == ProcessDataStatus.Processing) {
 						// Overwrite
@@ -333,7 +333,7 @@ public final class ProcessCore {
 				try {
 					Files.copy(processData.getSrcPath(), outputPath, OPTIONS_COPY);
 					yield ProcessDataStatus.Success;
-				} catch (FileAlreadyExistsException e) {
+				} catch (FileAlreadyExistsException _) {
 					ProcessDataStatus overwriteStatus = confirmOverwrite(processCondition, processData, overwriteConfirm);
 					if (overwriteStatus == ProcessDataStatus.Processing) {
 						Files.copy(processData.getSrcPath(), outputPath, OPTIONS_COPY_REPLACE);
@@ -346,7 +346,7 @@ public final class ProcessCore {
 				try {
 					Files.move(processData.getSrcPath(), outputPath, OPTIONS_MOVE);
 					yield ProcessDataStatus.Success;
-				} catch (FileAlreadyExistsException e) {
+				} catch (FileAlreadyExistsException _) {
 					ProcessDataStatus overwriteStatus = confirmOverwrite(processCondition, processData, overwriteConfirm);
 					if (overwriteStatus == ProcessDataStatus.Processing) {
 						Files.move(processData.getSrcPath(), outputPath, OPTIONS_MOVE_REPLACE);

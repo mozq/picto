@@ -109,7 +109,7 @@ final class ProcessConditionValidator {
 		try {
 			new NanoTemplate(values.destSubPathPattern).render(Map.of());
 			return null;
-		} catch (NanoTemplateException e) {
+		} catch (NanoTemplateException _) {
 			return new Result(Messages.getString("message.warn.invalid.destSubPath.pattern"), Field.DESTINATION_SUBFOLDER);
 		}
 	}
@@ -142,7 +142,7 @@ final class ProcessConditionValidator {
 	private static Path realPath(Path path) {
 		try {
 			return path.toRealPath();
-		} catch (IOException e) {
+		} catch (IOException _) {
 			return path.toAbsolutePath().normalize();
 		}
 	}

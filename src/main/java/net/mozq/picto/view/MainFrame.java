@@ -1218,7 +1218,7 @@ public class MainFrame extends JFrame {
 				optionsSummaryChanged();
 			}
 		};
-		ChangeListener changeListener = e -> optionsSummaryChanged();
+		ChangeListener changeListener = _ -> optionsSummaryChanged();
 		ItemListener itemListener = e -> {
 			if (e.getStateChange() == ItemEvent.SELECTED) {
 				optionsSummaryChanged();
@@ -1405,14 +1405,6 @@ public class MainFrame extends JFrame {
 			items.add(checkedItem(Messages.getString("MainFrame.removeExifTagsAll")));
 		}
 		return joinOptionsSummary(items);
-	}
-
-	private static boolean hasText(JTextField field) {
-		return !fieldText(field).isBlank();
-	}
-
-	private static boolean hasDateText(JTextField field) {
-		return DateTimeText.hasDateTimeText(field.getText());
 	}
 
 	private static String fieldText(JTextField field) {
@@ -1750,7 +1742,7 @@ public class MainFrame extends JFrame {
 		}
 		try {
 			return Integer.valueOf(numberText);
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException _) {
 			return null;
 		}
 	}
@@ -1761,7 +1753,7 @@ public class MainFrame extends JFrame {
 		}
 		try {
 			return Long.valueOf(numberText);
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException _) {
 			return null;
 		}
 	}

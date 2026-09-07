@@ -61,7 +61,7 @@ final class ExifMetadataSupport {
 	static ImageMetadata loadMetadata(Path imagePath) {
 		try {
 			return Imaging.getMetadata(imagePath.toFile());
-		} catch (IOException | IllegalArgumentException e) {
+		} catch (IOException | IllegalArgumentException _) {
 			return null;
 		}
 	}
@@ -128,7 +128,7 @@ final class ExifMetadataSupport {
 				}
 			}
 			return value;
-		} catch (ImagingException e) {
+		} catch (ImagingException _) {
 			return null;
 		}
 	}
@@ -140,7 +140,7 @@ final class ExifMetadataSupport {
 		}
 		try {
 			return Integer.valueOf(field.getIntValue());
-		} catch (ImagingException e) {
+		} catch (ImagingException _) {
 			return null;
 		}
 	}
@@ -152,7 +152,7 @@ final class ExifMetadataSupport {
 		}
 		try {
 			return Double.valueOf(field.getDoubleValue());
-		} catch (ImagingException e) {
+		} catch (ImagingException _) {
 			return null;
 		}
 	}
@@ -165,7 +165,7 @@ final class ExifMetadataSupport {
 		try {
 			double[] values = field.getDoubleArrayValue();
 			return values == null ? null : Double.valueOf(values[index]);
-		} catch (ArrayIndexOutOfBoundsException | ImagingException e) {
+		} catch (ArrayIndexOutOfBoundsException | ImagingException _) {
 			return null;
 		}
 	}
@@ -177,7 +177,7 @@ final class ExifMetadataSupport {
 		}
 		try {
 			return Double.valueOf(gpsInfo.getLatitudeAsDegreesNorth());
-		} catch (ImagingException e) {
+		} catch (ImagingException _) {
 			return null;
 		}
 	}
@@ -189,7 +189,7 @@ final class ExifMetadataSupport {
 		}
 		try {
 			return Double.valueOf(gpsInfo.getLongitudeAsDegreesEast());
-		} catch (ImagingException e) {
+		} catch (ImagingException _) {
 			return null;
 		}
 	}
@@ -243,7 +243,7 @@ final class ExifMetadataSupport {
 				return ((TiffImageMetadata)imageMetadata).getOutputSet();
 			}
 			return null;
-		} catch (ImagingException e) {
+		} catch (ImagingException _) {
 			return null;
 		}
 	}
@@ -258,7 +258,7 @@ final class ExifMetadataSupport {
 		if (imageMetadata instanceof TiffImageMetadata) {
 			try {
 				return ((TiffImageMetadata)imageMetadata).findField(tagInfo, true);
-			} catch (ImagingException e) {
+			} catch (ImagingException _) {
 				return null;
 			}
 		}
@@ -278,7 +278,7 @@ final class ExifMetadataSupport {
 		try {
 			LocalDateTime ldt = LocalDateTime.parse(exifDateStr, EXIF_DATE_FORMATTER);
 			date = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
-		} catch (DateTimeParseException e) {
+		} catch (DateTimeParseException _) {
 			return null;
 		}
 		if (subTagInfo != null) {
@@ -325,7 +325,7 @@ final class ExifMetadataSupport {
 		}
 		try {
 			return tiffImageMetadata.getGpsInfo();
-		} catch (ImagingException e) {
+		} catch (ImagingException _) {
 			return null;
 		}
 	}

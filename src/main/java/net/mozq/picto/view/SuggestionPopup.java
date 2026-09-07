@@ -130,7 +130,7 @@ class SuggestionPopup {
 			Point location = field.getLocationOnScreen();
 			popup = PopupFactory.getSharedInstance().getPopup(field, popupPanel, location.x, location.y + field.getHeight());
 			popup.show();
-		} catch (IllegalComponentStateException e) {
+		} catch (IllegalComponentStateException _) {
 			hidePopup();
 		}
 	}

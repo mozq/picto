@@ -143,7 +143,7 @@ final class DateTimeText {
 		}
 		try {
 			return Integer.parseInt(value);
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException _) {
 			return defaultValue;
 		}
 	}
@@ -162,7 +162,7 @@ final class DateTimeText {
 		}
 		try {
 			return Integer.valueOf(value);
-		} catch (NumberFormatException e) {
+		} catch (NumberFormatException _) {
 			return null;
 		}
 	}

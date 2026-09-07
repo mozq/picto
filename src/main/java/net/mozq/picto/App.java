@@ -86,7 +86,7 @@ public class App {
 		}
 		try {
 			Files.createDirectories(filePath.getParent());
-		} catch (IOException e) {
+		} catch (IOException _) {
 			return;
 		}
 		try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(
@@ -106,7 +106,7 @@ public class App {
 			if (throwable != null) {
 				throwable.printStackTrace(writer);
 			}
-		} catch (IOException e) {
+		} catch (IOException _) {
 			// NOP
 		}
 	}
