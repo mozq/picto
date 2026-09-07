@@ -291,6 +291,16 @@ Difference of set date.
 Run from the menu next to the Run button to simulate processing without copying or changing files.
 
 
+## Presets
+You can save the current settings under a name and load them again later from the **Presets** menu.
+
+- **Save Current...**: Save the current settings as a preset. Choosing an existing name asks for confirmation before overwriting it.
+- Click a saved preset's name in the menu to load it.
+- **Manage Presets...**: Rename or delete saved presets.
+
+A preset includes everything under Settings above, including the Source and Destination folder paths, but not the language or appearance preference.
+
+
 ## License
 Picto is open-sourced software licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 

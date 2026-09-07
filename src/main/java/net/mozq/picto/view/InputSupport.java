@@ -34,6 +34,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Locale;
 
+import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -88,7 +89,17 @@ final class InputSupport {
 			return false;
 		}
 		Component clicked = (Component)event.getSource();
-		return clicked != focusOwner && !SwingUtilities.isDescendingFrom(clicked, focusOwner);
+		if (clicked == focusOwner || SwingUtilities.isDescendingFrom(clicked, focusOwner)) {
+			return false;
+		}
+		Component focusOwnerComboBox = SwingUtilities.getAncestorOfClass(JComboBox.class, focusOwner);
+		if (focusOwnerComboBox != null && SwingUtilities.isDescendingFrom(clicked, focusOwnerComboBox)) {
+			// The focus owner is an editable combo box's editor field; a click on another
+			// part of that same combo box (e.g. its arrow button) must not steal focus away
+			// from it, or the dropdown never gets a chance to open.
+			return false;
+		}
+		return true;
 	}
 
 	static void installLabelFocusAction(JLabel label, Component target, LabelFocusBehavior behavior) {

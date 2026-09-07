@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-  implementation 'com.github.mozq:app-settings4j:v1.2.0'
+  implementation 'com.github.mozq:app-settings4j:v1.3.0'
   implementation 'com.github.mozq:nano-template4j:v1.0.0'
   implementation 'com.formdev:flatlaf:3.7.2'
   implementation 'org.apache.commons:commons-imaging:1.0.0-alpha6'

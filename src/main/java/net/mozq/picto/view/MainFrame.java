@@ -39,9 +39,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -74,11 +78,14 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
 import net.mozq.appsettings.AppSettings;
+import net.mozq.appsettings.AppSettingsDirectory;
 import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
 import net.mozq.picto.AppMain;
@@ -118,6 +125,9 @@ public class MainFrame extends JFrame {
 	private static final int OPTIONS_BODY_SHADE_DARK = -8;
 	private static final int MID_BRIGHTNESS = 128;
 	private static final String CHECKED_ITEM_PREFIX = "✓ ";
+	private static final String PRESETS_DIR_NAME = "presets";
+	private static final String PRESET_FILE_NAME_EXT = "conf";
+	private static final int PRESET_SHORTCUT_COUNT = 9;
 
 	private TimeZone timeZone = TimeZone.getDefault();
 
@@ -212,6 +222,7 @@ public class MainFrame extends JFrame {
 	private JMenu mnPreferences;
 	private JMenu mnLanguage;
 	private JMenu mnAppearance;
+	private JMenu mnPresets;
 	private JMenu mnHelp;
 	private JMenuItem mntmHelp;
 	private JMenuItem mntmImportSettings;
@@ -309,8 +320,25 @@ public class MainFrame extends JFrame {
 		menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
+		mnPresets = new JMenu(Messages.getString("MainFrame.menu.presets"));
+		mnPresets.setMnemonic(KeyEvent.VK_P);
+		mnPresets.addMenuListener(new MenuListener() {
+			public void menuSelected(MenuEvent e) {
+				rebuildPresetsMenu();
+			}
+
+			public void menuDeselected(MenuEvent e) {
+				// NOP
+			}
+
+			public void menuCanceled(MenuEvent e) {
+				// NOP
+			}
+		});
+		menuBar.add(mnPresets);
+
 		mnPreferences = new JMenu(Messages.getString("MainFrame.menu.preferences"));
-		mnPreferences.setMnemonic(KeyEvent.VK_P);
+		mnPreferences.setMnemonic(KeyEvent.VK_S);
 		menuBar.add(mnPreferences);
 
 		mnLanguage = new JMenu(Messages.getString("MainFrame.menu.preferences.language"));
@@ -424,7 +452,7 @@ public class MainFrame extends JFrame {
 					}
 
 					try {
-						App.config().storeTo(file.toPath(), "");
+						App.config().storeTo(file.toPath());
 
 						JOptionPane.showMessageDialog(
 								null,
@@ -876,6 +904,17 @@ public class MainFrame extends JFrame {
 				runProcess(true);
 			}
 		});
+
+		for (int digit = 1; digit <= PRESET_SHORTCUT_COUNT; digit++) {
+			int index = digit - 1;
+			String actionKey = "picto.loadPreset" + digit;
+			rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(presetShortcutKeyStroke(digit), actionKey);
+			rootPane.getActionMap().put(actionKey, new AbstractAction() {
+				public void actionPerformed(ActionEvent e) {
+					loadPresetByIndex(index);
+				}
+			});
+		}
 	}
 
 	private void installOperationListeners() {
@@ -898,8 +937,10 @@ public class MainFrame extends JFrame {
 	}
 
 	protected void loadSettings() {
-		AppSettings conf = App.config();
+		applySettingsFrom(App.config());
+	}
 
+	private void applySettingsFrom(AppSettings conf) {
 		txtSrcRootDirPath.setText(conf.getString("src.root.dir", ""));
 		txtFilePattern.setText(conf.getString("file.pattern", ""));
 		cmbFilePatternSyntax.setSelectedItem(FilePatternSyntax.of(conf.getBoolean("file.pattern.regex", false)));
@@ -947,6 +988,13 @@ public class MainFrame extends JFrame {
 		conf.set(AppMain.PREF_LOCALE_KEY, conf.getString(AppMain.PREF_LOCALE_KEY, AppMain.PREF_SYSTEM));
 		conf.set(AppMain.PREF_APPEARANCE_KEY, conf.getString(AppMain.PREF_APPEARANCE_KEY, AppMain.PREF_SYSTEM));
 
+		captureSettingsInto(conf);
+
+		conf.store();
+		App.deleteMigratedLegacySettingsIfNeeded();
+	}
+
+	private void captureSettingsInto(AppSettings conf) {
 		conf.set("src.root.dir", txtSrcRootDirPath.getText());
 		conf.set("file.pattern", txtFilePattern.getText());
 		conf.set("file.pattern.regex", getSelectedFilePatternSyntax().isRegex());
@@ -985,9 +1033,243 @@ public class MainFrame extends JFrame {
 		conf.set("date.mod.second", txtDateModSeconds.getText());
 		conf.set("remove.exif.tags.gps", chkRemoveExifTagsGps.isSelected());
 		conf.set("remove.exif.tags.all", chkRemoveExifTagsAll.isSelected());
+	}
 
-		conf.store(null);
-		App.deleteMigratedLegacySettingsIfNeeded();
+	private void rebuildPresetsMenu() {
+		mnPresets.removeAll();
+
+		List<PresetEntry> presets = listPresets();
+		if (presets.isEmpty()) {
+			JMenuItem emptyItem = new JMenuItem(Messages.getString("MainFrame.menu.presets.empty"));
+			emptyItem.setEnabled(false);
+			mnPresets.add(emptyItem);
+		} else {
+			int digit = 1;
+			for (PresetEntry preset : presets) {
+				JMenuItem presetItem = new JMenuItem(preset.name());
+				if (digit <= PRESET_SHORTCUT_COUNT) {
+					presetItem.setAccelerator(presetShortcutKeyStroke(digit));
+				}
+				presetItem.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						confirmAndLoadPreset(preset);
+					}
+				});
+				mnPresets.add(presetItem);
+				digit++;
+			}
+		}
+
+		mnPresets.addSeparator();
+
+		JMenuItem mntmSavePreset = new JMenuItem(Messages.getString("MainFrame.menu.presets.save"));
+		mntmSavePreset.setMnemonic(KeyEvent.VK_S);
+		mntmSavePreset.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				promptSaveCurrentAsPreset();
+			}
+		});
+		mnPresets.add(mntmSavePreset);
+
+		JMenuItem mntmManagePresets = new JMenuItem(Messages.getString("MainFrame.menu.presets.manage"));
+		mntmManagePresets.setMnemonic(KeyEvent.VK_M);
+		mntmManagePresets.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				PresetsManageDialog manageDialog = new PresetsManageDialog(MainFrame.this);
+				manageDialog.setModalityType(ModalityType.DOCUMENT_MODAL);
+				manageDialog.setLocationRelativeTo(frame);
+				manageDialog.setVisible(true);
+			}
+		});
+		mnPresets.add(mntmManagePresets);
+	}
+
+	private void promptSaveCurrentAsPreset() {
+		JComboBox<String> nameComboBox = new JComboBox<>();
+		nameComboBox.setEditable(true);
+		for (PresetEntry preset : listPresets()) {
+			nameComboBox.addItem(preset.name());
+		}
+		nameComboBox.setSelectedItem("");
+
+		JPanel panel = new JPanel(new BorderLayout(0, INLINE_VGAP));
+		panel.add(new JLabel(Messages.getString("message.prompt.preset.name")), BorderLayout.NORTH);
+		panel.add(nameComboBox, BorderLayout.CENTER);
+
+		int result = JOptionPane.showConfirmDialog(
+				frame,
+				panel,
+				Messages.getString("MainFrame.menu.presets.save"),
+				JOptionPane.OK_CANCEL_OPTION,
+				JOptionPane.PLAIN_MESSAGE
+				);
+		if (result != JOptionPane.OK_OPTION) {
+			return;
+		}
+
+		Object editorItem = nameComboBox.getEditor().getItem();
+		String name = editorItem == null ? "" : editorItem.toString().trim();
+		if (name.isEmpty()) {
+			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.preset.name.empty"), null, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		boolean alreadyExists = false;
+		for (PresetEntry preset : listPresets()) {
+			if (preset.name().equals(name)) {
+				alreadyExists = true;
+				break;
+			}
+		}
+		if (alreadyExists) {
+			int overwrite = JOptionPane.showConfirmDialog(
+					frame,
+					Messages.getString("message.confirm.preset.overwrite", name),
+					null,
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.WARNING_MESSAGE
+					);
+			if (overwrite != JOptionPane.YES_OPTION) {
+				return;
+			}
+		}
+
+		try {
+			saveCurrentSettingsAsPreset(name);
+		} catch (IOException e1) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.error.preset.save", e1.getLocalizedMessage()),
+					null,
+					JOptionPane.ERROR_MESSAGE
+					);
+			App.handleError(e1.getMessage(), e1);
+		}
+	}
+
+	private void saveCurrentSettingsAsPreset(String name) throws IOException {
+		AppSettingsDirectory dir = presetsDirectory();
+		dir.ensureExists();
+
+		String fileName = null;
+		for (PresetEntry preset : listPresets()) {
+			if (preset.name().equals(name)) {
+				fileName = preset.fileName();
+				break;
+			}
+		}
+		if (fileName == null) {
+			long timestamp = System.currentTimeMillis();
+			fileName = dir.uniqueFileName(i -> "preset-" + timestamp + "-" + i + "." + PRESET_FILE_NAME_EXT);
+		}
+
+		AppSettings presetSettings = AppSettings.of(dir, fileName);
+		captureSettingsInto(presetSettings);
+		presetSettings.addComment(name);
+		presetSettings.store();
+	}
+
+	private static KeyStroke presetShortcutKeyStroke(int digit) {
+		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+		return KeyStroke.getKeyStroke(KeyEvent.VK_0 + digit, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK);
+	}
+
+	private void loadPresetByIndex(int index) {
+		List<PresetEntry> presets = listPresets();
+		if (index >= presets.size()) {
+			return;
+		}
+		confirmAndLoadPreset(presets.get(index));
+	}
+
+	private void confirmAndLoadPreset(PresetEntry preset) {
+		int result = JOptionPane.showConfirmDialog(
+				frame,
+				Messages.getString("message.confirm.preset.load", preset.name()),
+				null,
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE
+				);
+		if (result != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		try {
+			loadPreset(preset.fileName());
+		} catch (IOException e1) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.error.preset.load", e1.getLocalizedMessage()),
+					null,
+					JOptionPane.ERROR_MESSAGE
+					);
+			App.handleError(e1.getMessage(), e1);
+		}
+	}
+
+	private void loadPreset(String fileName) throws IOException {
+		AppSettings presetSettings = AppSettings.of(presetsDirectory(), fileName);
+		presetSettings.load();
+
+		AppSettings conf = App.config();
+		for (String key : presetSettings.keySet()) {
+			conf.set(key, presetSettings.get(key));
+		}
+
+		loadSettings();
+	}
+
+	void renamePreset(String fileName, String newName) throws IOException {
+		AppSettings presetSettings = AppSettings.of(presetsDirectory(), fileName);
+		presetSettings.load();
+		presetSettings.clearComments();
+		presetSettings.addComment(newName);
+		presetSettings.store();
+	}
+
+	void deletePreset(String fileName) throws IOException {
+		Files.delete(AppSettings.of(presetsDirectory(), fileName).path());
+	}
+
+	private AppSettingsDirectory presetsDirectory() {
+		return AppSettings.directory(App.GROUP_NAME, App.APP_NAME, PRESETS_DIR_NAME);
+	}
+
+	List<PresetEntry> listPresets() {
+		AppSettingsDirectory dir = presetsDirectory();
+		try {
+			dir.ensureExists();
+		} catch (IOException _) {
+			return List.of();
+		}
+
+		List<PresetEntry> result = new ArrayList<>();
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir.path(), "*." + PRESET_FILE_NAME_EXT)) {
+			for (Path file : stream) {
+				String fileName = file.getFileName().toString();
+				AppSettings presetSettings = AppSettings.of(dir, fileName);
+				try {
+					presetSettings.load();
+				} catch (IOException _) {
+					continue;
+				}
+				List<String> comments = presetSettings.comments();
+				String name = comments.isEmpty() ? fileName : comments.get(0);
+				result.add(new PresetEntry(name, fileName));
+			}
+		} catch (IOException _) {
+			return List.of();
+		}
+
+		result.sort(Comparator.comparing(PresetEntry::name));
+		return result;
+	}
+
+	record PresetEntry(String name, String fileName) {
+		@Override
+		public String toString() {
+			return name;
+		}
 	}
 
 	private void addPreferenceMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value, int mnemonic) {
