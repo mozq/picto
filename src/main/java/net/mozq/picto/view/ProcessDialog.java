@@ -16,7 +16,6 @@
  */
 package net.mozq.picto.view;
 
-import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -63,7 +62,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableRowSorter;
-import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import net.mozq.picto.App;
 import net.mozq.picto.core.ProcessCondition;
@@ -419,8 +417,6 @@ public class ProcessDialog extends JDialog {
 			flushPendingProcessData();
 			btnStop.setVisible(false);
 			btnClose.setVisible(true);
-			progressBar.setForeground(Color.LIGHT_GRAY);
-			progressBar.setUI(new BasicProgressBarUI());
 		});
 	}
 
