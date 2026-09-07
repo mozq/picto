@@ -1635,6 +1635,10 @@ public class MainFrame extends JFrame {
 			return null;
 		}
 
+		if (!confirmDestructiveOperation(values, dryRun)) {
+			return null;
+		}
+
 		// Information
 		if (values.checkDigest && (values.changeExifDate || values.removeExifTagsGps || values.removeExifTagsAll)) {
 			int ret = JOptionPane.showConfirmDialog(
@@ -1695,6 +1699,25 @@ public class MainFrame extends JFrame {
 		processCondition.setDryRun(dryRun);
 
 		return processCondition;
+	}
+
+	private boolean confirmDestructiveOperation(ProcessConditionValues values, boolean dryRun) {
+		if (dryRun || values.operationType == OperationType.Copy) {
+			return true;
+		}
+		String messageKey = switch (values.operationType) {
+		case Move -> "message.confirm.destructive.move";
+		case Overwrite -> "message.confirm.destructive.overwrite";
+		case Copy -> throw new IllegalStateException(values.operationType.toString());
+		};
+		int ret = JOptionPane.showConfirmDialog(
+				frame,
+				Messages.getString(messageKey),
+				null,
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE
+				);
+		return ret == JOptionPane.YES_OPTION;
 	}
 
 	private boolean showValidationResult(ProcessConditionValidator.Result result) {
