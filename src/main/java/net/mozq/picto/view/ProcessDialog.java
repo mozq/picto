@@ -249,6 +249,7 @@ public class ProcessDialog extends JDialog {
 		pnlControls.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
 		btnStop = new JButton(Messages.getString("ProcessDialog.stop"));
+		btnStop.setMnemonic(KeyEvent.VK_S);
 		btnStop.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				btnStop.setEnabled(false);
@@ -260,6 +261,7 @@ public class ProcessDialog extends JDialog {
 		pnlControls.add(btnStop);
 
 		btnClose = new JButton(Messages.getString("ProcessDialog.close"));
+		btnClose.setMnemonic(KeyEvent.VK_C);
 		btnClose.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				dialog.dispose();
@@ -267,6 +269,21 @@ public class ProcessDialog extends JDialog {
 		});
 		btnClose.setVisible(false);
 		pnlControls.add(btnClose);
+
+		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "picto.stopOrClose");
+		getRootPane().getActionMap().put("picto.stopOrClose", new AbstractAction() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (btnStop.isVisible()) {
+					btnStop.doClick();
+				} else {
+					btnClose.doClick();
+				}
+			}
+		});
 
 		tableModel.addTableModelListener(_ -> {
 			int currentCount = currentProcessDataIndex + 1;

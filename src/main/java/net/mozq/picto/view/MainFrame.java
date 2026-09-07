@@ -28,10 +28,13 @@ import java.awt.Insets;
 import java.awt.Dimension;
 import java.awt.Cursor;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -42,6 +45,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -58,10 +62,12 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JRootPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -281,6 +287,8 @@ public class MainFrame extends JFrame {
 
 		buildControlsPanel();
 
+		installKeyboardShortcuts();
+
 		InputSupport.installClickAwayFocusClear();
 
 		installOperationListeners();
@@ -302,9 +310,11 @@ public class MainFrame extends JFrame {
 		setJMenuBar(menuBar);
 
 		mnPreferences = new JMenu(Messages.getString("MainFrame.menu.preferences"));
+		mnPreferences.setMnemonic(KeyEvent.VK_P);
 		menuBar.add(mnPreferences);
 
 		mnLanguage = new JMenu(Messages.getString("MainFrame.menu.preferences.language"));
+		mnLanguage.setMnemonic(KeyEvent.VK_L);
 		mnPreferences.add(mnLanguage);
 		ButtonGroup languageGroup = new ButtonGroup();
 		addPreferenceMenuItem(
@@ -312,21 +322,25 @@ public class MainFrame extends JFrame {
 				languageGroup,
 				Messages.getString("MainFrame.menu.preferences.language.system"),
 				AppMain.PREF_LOCALE_KEY,
-				AppMain.PREF_SYSTEM);
+				AppMain.PREF_SYSTEM,
+				KeyEvent.VK_S);
 		addPreferenceMenuItem(
 				mnLanguage,
 				languageGroup,
 				Messages.getString("MainFrame.menu.preferences.language.en"),
 				AppMain.PREF_LOCALE_KEY,
-				AppMain.PREF_LOCALE_EN);
+				AppMain.PREF_LOCALE_EN,
+				0);
 		addPreferenceMenuItem(
 				mnLanguage,
 				languageGroup,
 				Messages.getString("MainFrame.menu.preferences.language.ja"),
 				AppMain.PREF_LOCALE_KEY,
-				AppMain.PREF_LOCALE_JA);
+				AppMain.PREF_LOCALE_JA,
+				0);
 
 		mnAppearance = new JMenu(Messages.getString("MainFrame.menu.preferences.appearance"));
+		mnAppearance.setMnemonic(KeyEvent.VK_A);
 		mnPreferences.add(mnAppearance);
 		ButtonGroup appearanceGroup = new ButtonGroup();
 		addPreferenceMenuItem(
@@ -334,23 +348,30 @@ public class MainFrame extends JFrame {
 				appearanceGroup,
 				Messages.getString("MainFrame.menu.preferences.appearance.system"),
 				AppMain.PREF_APPEARANCE_KEY,
-				AppMain.PREF_SYSTEM);
+				AppMain.PREF_SYSTEM,
+				KeyEvent.VK_S);
 		addPreferenceMenuItem(
 				mnAppearance,
 				appearanceGroup,
 				Messages.getString("MainFrame.menu.preferences.appearance.light"),
 				AppMain.PREF_APPEARANCE_KEY,
-				AppMain.PREF_APPEARANCE_LIGHT);
+				AppMain.PREF_APPEARANCE_LIGHT,
+				KeyEvent.VK_L);
 		addPreferenceMenuItem(
 				mnAppearance,
 				appearanceGroup,
 				Messages.getString("MainFrame.menu.preferences.appearance.dark"),
 				AppMain.PREF_APPEARANCE_KEY,
-				AppMain.PREF_APPEARANCE_DARK);
+				AppMain.PREF_APPEARANCE_DARK,
+				KeyEvent.VK_D);
 
 		mnPreferences.addSeparator();
 
+		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+
 		mntmImportSettings = new JMenuItem(Messages.getString("MainFrame.menu.preferences.importSettings"));
+		mntmImportSettings.setMnemonic(KeyEvent.VK_I);
+		mntmImportSettings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
 		mntmImportSettings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -386,6 +407,8 @@ public class MainFrame extends JFrame {
 		mnPreferences.add(mntmImportSettings);
 
 		mntmExportSettings = new JMenuItem(Messages.getString("MainFrame.menu.preferences.exportSettings"));
+		mntmExportSettings.setMnemonic(KeyEvent.VK_E);
+		mntmExportSettings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
 		mntmExportSettings.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -425,9 +448,12 @@ public class MainFrame extends JFrame {
 		mnPreferences.add(mntmExportSettings);
 
 		mnHelp = new JMenu(Messages.getString("MainFrame.menu.help"));
+		mnHelp.setMnemonic(KeyEvent.VK_H);
 		menuBar.add(mnHelp);
 
 		mntmHelp = new JMenuItem(Messages.getString("MainFrame.menu.help.help"));
+		mntmHelp.setMnemonic(KeyEvent.VK_H);
+		mntmHelp.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
 		mntmHelp.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				HelpDialog helpDialog = new HelpDialog();
@@ -470,6 +496,7 @@ public class MainFrame extends JFrame {
 		pnlSrcConditions.setLayout(gbl_pnlSrcConditions);
 
 		JLabel lblSrcConditionsTitle = newMainLabel(Messages.getString("MainFrame.srcConditionsTitle"));
+		lblSrcConditionsTitle.setDisplayedMnemonic(KeyEvent.VK_F);
 		GridBagConstraints gbc_lblSrcConditionsTitle = new GridBagConstraints();
 		gbc_lblSrcConditionsTitle.anchor = GridBagConstraints.WEST;
 		gbc_lblSrcConditionsTitle.insets = new Insets(0, 0, 5, 8);
@@ -593,14 +620,17 @@ public class MainFrame extends JFrame {
 		pnlOpeType.setLayout(new FlowLayout(FlowLayout.LEFT, INLINE_HGAP, 0));
 
 		rdoOpeTypeCopy = new JRadioButton(Messages.getString("MainFrame.opeTypeCopy"));
+		rdoOpeTypeCopy.setMnemonic(KeyEvent.VK_C);
 		btngrpOpeType.add(rdoOpeTypeCopy);
 		pnlOpeType.add(rdoOpeTypeCopy);
 
 		rdoOpeTypeMove = new JRadioButton(Messages.getString("MainFrame.opeTypeMove"));
+		rdoOpeTypeMove.setMnemonic(KeyEvent.VK_M);
 		btngrpOpeType.add(rdoOpeTypeMove);
 		pnlOpeType.add(rdoOpeTypeMove);
 
 		rdoOpeTypeOverwrite = new JRadioButton(Messages.getString("MainFrame.opeTypeOverwrite"));
+		rdoOpeTypeOverwrite.setMnemonic(KeyEvent.VK_O);
 		btngrpOpeType.add(rdoOpeTypeOverwrite);
 		pnlOpeType.add(rdoOpeTypeOverwrite);
 
@@ -623,6 +653,7 @@ public class MainFrame extends JFrame {
 		pnlDestConditions.setLayout(gbl_pnlDestConditions);
 
 		lblDestConditionsTitle = newMainLabel(Messages.getString("MainFrame.destConditionsTitle"));
+		lblDestConditionsTitle.setDisplayedMnemonic(KeyEvent.VK_T);
 		GridBagConstraints gbc_lblDestConditionsTitle = new GridBagConstraints();
 		gbc_lblDestConditionsTitle.anchor = GridBagConstraints.WEST;
 		gbc_lblDestConditionsTitle.insets = new Insets(0, 0, 5, 8);
@@ -709,6 +740,7 @@ public class MainFrame extends JFrame {
 
 	private void buildChangesPanel() {
 		btnChanges = newOptionsToggleButton(Messages.getString("MainFrame.changesTitle"));
+		btnChanges.setMnemonic(KeyEvent.VK_G);
 		btnChanges.setFont(btnChanges.getFont().deriveFont(Font.BOLD, btnChanges.getFont().getSize2D() + 1.0f));
 		GridBagConstraints gbc_btnChanges = new GridBagConstraints();
 		gbc_btnChanges.anchor = GridBagConstraints.WEST;
@@ -783,6 +815,7 @@ public class MainFrame extends JFrame {
 		pnlControls.setLayout(new BorderLayout(0, INLINE_VGAP));
 
 		btnStart = new JButton(Messages.getString("MainFrame.start"));
+		btnStart.setMnemonic(KeyEvent.VK_R);
 		btnStart.putClientProperty("JButton.buttonType", "default");
 		btnStart.setMargin(new Insets(7, 28, 7, 28));
 		btnStart.addActionListener(new ActionListener() {
@@ -822,6 +855,27 @@ public class MainFrame extends JFrame {
 		installRunSummaryHover(btnStartMenu);
 		pnlControls.add(lblRunSummary, BorderLayout.SOUTH);
 
+	}
+
+	private void installKeyboardShortcuts() {
+		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+		JRootPane rootPane = getRootPane();
+
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, shortcutKeyMask), "picto.run");
+		rootPane.getActionMap().put("picto.run", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				runProcess(false);
+			}
+		});
+
+		rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK), "picto.dryRun");
+		rootPane.getActionMap().put("picto.dryRun", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) {
+				runProcess(true);
+			}
+		});
 	}
 
 	private void installOperationListeners() {
@@ -936,8 +990,11 @@ public class MainFrame extends JFrame {
 		App.deleteMigratedLegacySettingsIfNeeded();
 	}
 
-	private void addPreferenceMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value) {
+	private void addPreferenceMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value, int mnemonic) {
 		JRadioButtonMenuItem item = new JRadioButtonMenuItem(label);
+		if (mnemonic != 0) {
+			item.setMnemonic(mnemonic);
+		}
 		item.setActionCommand(value);
 		item.setSelected(value.equals(App.config().getString(key, AppMain.PREF_SYSTEM)));
 		item.addActionListener(new ActionListener() {
