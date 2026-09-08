@@ -106,6 +106,9 @@ final class PopupSupport {
 	static boolean shouldHidePopup(JTextComponent field, Component popupPanel, Predicate<Component> isAlsoAllowed) {
 		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
 		if (focusOwner == null) {
+			// KeyboardFocusManager.clearGlobalFocusOwner() (the click-away-clears-focus handling in
+			// InputSupport) reports a null focus owner rather than transferring focus elsewhere; treat
+			// that as the field itself no longer holding focus, unless it still (rarely) reports otherwise.
 			return !field.isFocusOwner();
 		}
 		if (focusOwner == field || SwingUtilities.isDescendingFrom(focusOwner, popupPanel)) {

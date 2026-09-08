@@ -320,17 +320,34 @@ class DateTimeInputPopup {
 			}
 			LocalDate firstDay = visibleMonth.atDay(1);
 			int leadingDays = firstDay.getDayOfWeek().getValue() % 7;
-			for (JButton button : dayButtons) {
-				setEmptyDayButton(button);
-			}
-			for (int day = 1; day <= visibleMonth.lengthOfMonth(); day++) {
-				JButton button = dayButtons[leadingDays + day - 1];
-				button.setText(Integer.toString(day));
-				button.putClientProperty(DAY_PROPERTY, Integer.valueOf(day));
-				button.setEnabled(true);
-				button.setBorderPainted(true);
-				button.setContentAreaFilled(true);
-				button.setSelected(parts.matches(visibleMonth.getYear(), visibleMonth.getMonthValue(), day));
+			int lastActiveIndex = leadingDays + visibleMonth.lengthOfMonth() - 1;
+			for (int i = 0; i < dayButtons.length; i++) {
+				JButton button = dayButtons[i];
+				if (i < leadingDays || i > lastActiveIndex) {
+					if (button.getClientProperty(DAY_PROPERTY) != null) {
+						setEmptyDayButton(button);
+					}
+					continue;
+				}
+				int day = i - leadingDays + 1;
+				// Only touch a cell whose displayed state actually needs to change: refreshDatePopup() can run
+				// re-entrantly (e.g. a focus event re-showing the popup) while a day button's mouse press is
+				// still in progress, and JButton.setEnabled(false) unconditionally clears the button's
+				// armed/pressed state as a side effect - disarming a button the user is mid-click on and
+				// silently swallowing that click.
+				if (!Integer.valueOf(day).equals(button.getClientProperty(DAY_PROPERTY))) {
+					button.setText(Integer.toString(day));
+					button.putClientProperty(DAY_PROPERTY, Integer.valueOf(day));
+				}
+				if (!button.isEnabled()) {
+					button.setEnabled(true);
+					button.setBorderPainted(true);
+					button.setContentAreaFilled(true);
+				}
+				boolean selected = parts.matches(visibleMonth.getYear(), visibleMonth.getMonthValue(), day);
+				if (button.isSelected() != selected) {
+					button.setSelected(selected);
+				}
 			}
 			pnlDays.revalidate();
 			pnlDays.repaint();

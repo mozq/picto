@@ -20,8 +20,11 @@ import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dialog;
+import java.awt.Frame;
 import java.awt.KeyboardFocusManager;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
@@ -97,6 +100,15 @@ final class InputSupport {
 			// The focus owner is an editable combo box's editor field; a click on another
 			// part of that same combo box (e.g. its arrow button) must not steal focus away
 			// from it, or the dropdown never gets a chance to open.
+			return false;
+		}
+		Window clickedWindow = SwingUtilities.getWindowAncestor(clicked);
+		if (clickedWindow != null && !(clickedWindow instanceof Frame) && !(clickedWindow instanceof Dialog)) {
+			// A PopupFactory-based popup (a calendar, a suggestion list, a combo box dropdown) renders in
+			// its own plain Window, not as a descendant of the field it belongs to, so the isDescendingFrom
+			// check above can't recognize it. Treating a click inside one as "away" would clear focus off
+			// the field mid-click, closing the popup (via the focus-owner-lost handling below) before the
+			// click it's currently handling can complete.
 			return false;
 		}
 		return true;
