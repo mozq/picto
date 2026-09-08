@@ -73,6 +73,9 @@ public final class ProcessCore {
 	private ProcessCore() {
 	}
 
+	public record CachedFile(Path path, BasicFileAttributes attrs) {
+	}
+
 	public static void findFiles(
 			ProcessCondition processCondition,
 			Consumer<ProcessData> processDataSetter,

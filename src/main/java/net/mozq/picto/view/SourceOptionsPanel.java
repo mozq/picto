@@ -16,20 +16,28 @@
  */
 package net.mozq.picto.view;
 
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatClientProperties;
@@ -39,6 +47,16 @@ import net.mozq.picto.enums.FileSizeUnit;
 class SourceOptionsPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 
+	private static final String[] MATCH_COUNT_SPINNER_FRAMES = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
+	private static final int MATCH_COUNT_SPINNER_INTERVAL_MS = 80;
+	private static final String MATCH_COUNT_STOP_GLYPH = "■";
+
+	final JLabel matchCountLabel;
+	final JButton matchCountStopButton;
+	private final Timer matchCountSpinnerTimer;
+	private int matchCountSpinnerFrame;
+	private boolean matchCountHovered;
+	private boolean matchCountScanning;
 	final JLabel filePatternLabel;
 	final JTextField filePatternTextField;
 	final JComboBox<FilePatternSyntax> filePatternSyntaxComboBox;
@@ -61,17 +79,82 @@ class SourceOptionsPanel extends JPanel {
 	SourceOptionsPanel(int inlineHgap, int inlineVgap) {
 		GridBagLayout layout = new GridBagLayout();
 		layout.columnWidths = new int[]{0, 0, 0};
-		layout.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
+		layout.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
 		layout.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		layout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		layout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(layout);
+
+		// No horizontal gap: a gap here is dead space that belongs to neither the label nor the stop
+		// button, so hovering into it drops out of both of their mouseEntered/mouseExited pairs and
+		// flips the stop control back to the spinner while the pointer is still over this area.
+		JPanel matchCountPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		matchCountPanel.setOpaque(false);
+		GridBagConstraints matchCountPanelConstraints = new GridBagConstraints();
+		matchCountPanelConstraints.fill = GridBagConstraints.HORIZONTAL;
+		matchCountPanelConstraints.gridwidth = 2;
+		matchCountPanelConstraints.insets = new Insets(0, 0, 5, 0);
+		matchCountPanelConstraints.gridx = 0;
+		matchCountPanelConstraints.gridy = 0;
+		add(matchCountPanel, matchCountPanelConstraints);
+
+		matchCountLabel = new JLabel(Messages.getString("MainFrame.matchCount.prompt"));
+		matchCountLabel.setFont(matchCountLabel.getFont().deriveFont(matchCountLabel.getFont().getSize2D() - 2f));
+		matchCountLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		matchCountPanel.add(matchCountLabel);
+
+		// A single button plays both roles instead of swapping between two components: swapping components
+		// (even ones sized identically via a CardLayout) hides one and shows the other, and hiding a
+		// component that the mouse is currently over makes AWT immediately re-target the mouse, which fires
+		// mouseExited/mouseEntered right back on this same pair of listeners - flipping the display straight
+		// back before the user can see or click it. Cycling this one button's own text has no such feedback
+		// loop, since neither its identity nor its visibility ever changes while the pointer is over it.
+		matchCountStopButton = new JButton(MATCH_COUNT_SPINNER_FRAMES[0]);
+		matchCountStopButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+		matchCountStopButton.setFont(matchCountStopButton.getFont().deriveFont(matchCountStopButton.getFont().getSize2D() + 2f));
+		matchCountStopButton.setMargin(new Insets(0, 2, 0, 2));
+		matchCountStopButton.setPreferredSize(new Dimension(20, 20));
+		matchCountStopButton.setToolTipText(Messages.getString("MainFrame.matchCount.stop"));
+		matchCountStopButton.setVisible(false);
+		matchCountPanel.add(matchCountStopButton);
+
+		matchCountSpinnerTimer = new Timer(MATCH_COUNT_SPINNER_INTERVAL_MS, _ -> {
+			matchCountSpinnerFrame = (matchCountSpinnerFrame + 1) % MATCH_COUNT_SPINNER_FRAMES.length;
+			if (!matchCountHovered) {
+				matchCountStopButton.setText(MATCH_COUNT_SPINNER_FRAMES[matchCountSpinnerFrame]);
+			}
+		});
+
+		MouseAdapter matchCountHoverListener = new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				setMatchCountHovered(true);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				setMatchCountHovered(false);
+			}
+		};
+		matchCountLabel.addMouseListener(matchCountHoverListener);
+		matchCountStopButton.addMouseListener(matchCountHoverListener);
+		matchCountStopButton.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				setMatchCountHovered(true);
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				setMatchCountHovered(false);
+			}
+		});
 
 		filePatternLabel = new JLabel(Messages.getString("MainFrame.filePattern"));
 		GridBagConstraints filePatternLabelConstraints = new GridBagConstraints();
 		filePatternLabelConstraints.anchor = GridBagConstraints.WEST;
 		filePatternLabelConstraints.insets = new Insets(0, 0, 5, 5);
 		filePatternLabelConstraints.gridx = 0;
-		filePatternLabelConstraints.gridy = 0;
+		filePatternLabelConstraints.gridy = 1;
 		add(filePatternLabel, filePatternLabelConstraints);
 
 		JPanel filePatternPanel = new JPanel();
@@ -80,7 +163,7 @@ class SourceOptionsPanel extends JPanel {
 		filePatternPanelConstraints.fill = GridBagConstraints.BOTH;
 		filePatternPanelConstraints.insets = new Insets(0, 0, 5, 0);
 		filePatternPanelConstraints.gridx = 1;
-		filePatternPanelConstraints.gridy = 0;
+		filePatternPanelConstraints.gridy = 1;
 		add(filePatternPanel, filePatternPanelConstraints);
 		GridBagLayout filePatternLayout = new GridBagLayout();
 		filePatternLayout.columnWidths = new int[]{0, 0, 0};
@@ -120,7 +203,7 @@ class SourceOptionsPanel extends JPanel {
 		containsSubsConstraints.anchor = GridBagConstraints.WEST;
 		containsSubsConstraints.insets = new Insets(0, 0, 5, 0);
 		containsSubsConstraints.gridx = 1;
-		containsSubsConstraints.gridy = 1;
+		containsSubsConstraints.gridy = 2;
 		add(containsSubsCheckBox, containsSubsConstraints);
 
 		containsHiddensCheckBox = new JCheckBox(Messages.getString("MainFrame.containsHiddens"));
@@ -128,7 +211,7 @@ class SourceOptionsPanel extends JPanel {
 		containsHiddensConstraints.fill = GridBagConstraints.BOTH;
 		containsHiddensConstraints.insets = new Insets(0, 0, 5, 0);
 		containsHiddensConstraints.gridx = 1;
-		containsHiddensConstraints.gridy = 2;
+		containsHiddensConstraints.gridy = 3;
 		add(containsHiddensCheckBox, containsHiddensConstraints);
 
 		fileSizeRangeLabel = new JLabel(Messages.getString("MainFrame.fileSizeRange"));
@@ -136,7 +219,7 @@ class SourceOptionsPanel extends JPanel {
 		fileSizeRangeLabelConstraints.anchor = GridBagConstraints.WEST;
 		fileSizeRangeLabelConstraints.insets = new Insets(0, 0, 5, 5);
 		fileSizeRangeLabelConstraints.gridx = 0;
-		fileSizeRangeLabelConstraints.gridy = 3;
+		fileSizeRangeLabelConstraints.gridy = 4;
 		add(fileSizeRangeLabel, fileSizeRangeLabelConstraints);
 
 		JPanel fileSizeRangePanel = new JPanel();
@@ -145,7 +228,7 @@ class SourceOptionsPanel extends JPanel {
 		fileSizeRangePanelConstraints.fill = GridBagConstraints.BOTH;
 		fileSizeRangePanelConstraints.insets = new Insets(0, 0, 5, 0);
 		fileSizeRangePanelConstraints.gridx = 1;
-		fileSizeRangePanelConstraints.gridy = 3;
+		fileSizeRangePanelConstraints.gridy = 4;
 		add(fileSizeRangePanel, fileSizeRangePanelConstraints);
 		fileSizeRangePanel.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
@@ -175,7 +258,7 @@ class SourceOptionsPanel extends JPanel {
 		creationTimeLabelConstraints.anchor = GridBagConstraints.WEST;
 		creationTimeLabelConstraints.insets = new Insets(0, 0, 5, 5);
 		creationTimeLabelConstraints.gridx = 0;
-		creationTimeLabelConstraints.gridy = 4;
+		creationTimeLabelConstraints.gridy = 5;
 		add(creationTimeRangeLabel, creationTimeLabelConstraints);
 
 		JPanel creationTimeRangePanel = new JPanel();
@@ -184,7 +267,7 @@ class SourceOptionsPanel extends JPanel {
 		creationTimePanelConstraints.fill = GridBagConstraints.BOTH;
 		creationTimePanelConstraints.insets = new Insets(0, 0, 5, 0);
 		creationTimePanelConstraints.gridx = 1;
-		creationTimePanelConstraints.gridy = 4;
+		creationTimePanelConstraints.gridy = 5;
 		add(creationTimeRangePanel, creationTimePanelConstraints);
 		creationTimeRangePanel.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
@@ -204,7 +287,7 @@ class SourceOptionsPanel extends JPanel {
 		modifiedTimeLabelConstraints.anchor = GridBagConstraints.WEST;
 		modifiedTimeLabelConstraints.insets = new Insets(0, 0, 0, 5);
 		modifiedTimeLabelConstraints.gridx = 0;
-		modifiedTimeLabelConstraints.gridy = 5;
+		modifiedTimeLabelConstraints.gridy = 6;
 		add(modifiedTimeRangeLabel, modifiedTimeLabelConstraints);
 
 		JPanel modifiedTimeRangePanel = new JPanel();
@@ -212,7 +295,7 @@ class SourceOptionsPanel extends JPanel {
 		GridBagConstraints modifiedTimePanelConstraints = new GridBagConstraints();
 		modifiedTimePanelConstraints.fill = GridBagConstraints.BOTH;
 		modifiedTimePanelConstraints.gridx = 1;
-		modifiedTimePanelConstraints.gridy = 5;
+		modifiedTimePanelConstraints.gridy = 6;
 		add(modifiedTimeRangePanel, modifiedTimePanelConstraints);
 		modifiedTimeRangePanel.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
@@ -231,6 +314,28 @@ class SourceOptionsPanel extends JPanel {
 	FilePatternSyntax selectedFilePatternSyntax() {
 		Object selectedItem = filePatternSyntaxComboBox.getSelectedItem();
 		return selectedItem instanceof FilePatternSyntax ? (FilePatternSyntax)selectedItem : FilePatternSyntax.GLOB;
+	}
+
+	/** Shows the spinning indicator/stop control while a background match count is running; hides it otherwise. */
+	void setMatchCountScanning(boolean scanning) {
+		matchCountScanning = scanning;
+		matchCountLabel.setToolTipText(scanning ? matchCountStopButton.getToolTipText() : null);
+		matchCountStopButton.setVisible(scanning);
+		if (scanning) {
+			matchCountSpinnerTimer.start();
+		} else {
+			matchCountSpinnerTimer.stop();
+			matchCountHovered = false;
+		}
+	}
+
+	/** Swaps the spinning-indicator glyph for the stop glyph while the pointer or focus is over the control. */
+	private void setMatchCountHovered(boolean hovered) {
+		if (!matchCountScanning) {
+			return;
+		}
+		matchCountHovered = hovered;
+		matchCountStopButton.setText(hovered ? MATCH_COUNT_STOP_GLYPH : MATCH_COUNT_SPINNER_FRAMES[matchCountSpinnerFrame]);
 	}
 
 	private static JFormattedTextField newDateTimeField(String tooltip, boolean endOfRange) {

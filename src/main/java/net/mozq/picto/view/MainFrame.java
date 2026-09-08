@@ -62,6 +62,7 @@ import javax.swing.JFrame;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -72,6 +73,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -120,6 +123,7 @@ public class MainFrame extends JFrame {
 	private static final int RUN_SPLIT_BUTTON_OVERLAP = 4;
 	private static final int RUN_MENU_BUTTON_WIDTH = 28;
 	private static final int OPTIONS_BODY_PADDING = 12;
+	private static final int OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT = 4;
 	private static final int OPTIONS_BODY_ARC = 12;
 	private static final int OPTIONS_BODY_SHADE_LIGHT = -11;
 	private static final int OPTIONS_BODY_SHADE_DARK = -8;
@@ -128,6 +132,7 @@ public class MainFrame extends JFrame {
 	private static final String PRESETS_DIR_NAME = "presets";
 	private static final String PRESET_FILE_NAME_EXT = "conf";
 	private static final int PRESET_SHORTCUT_COUNT = 9;
+	private static final int MATCH_COUNT_DEBOUNCE_MS = 400;
 
 	private TimeZone timeZone = TimeZone.getDefault();
 
@@ -218,6 +223,10 @@ public class MainFrame extends JFrame {
 	private JTextArea txtChangesSummary;
 	private JLabel lblRunSummary;
 	private boolean showingRunSummary;
+	private boolean matchCountEnabled;
+	private SourceFileScanner sourceFileScanner;
+	private SourceFileScanner.MatchCountStatus lastMatchCountStatus;
+	private Timer matchCountTimer;
 	private JMenuBar menuBar;
 	private JMenu mnSettings;
 	private JMenu mnLanguage;
@@ -303,6 +312,9 @@ public class MainFrame extends JFrame {
 		InputSupport.installClickAwayFocusClear();
 
 		installOperationListeners();
+
+		matchCountTimer = new Timer(MATCH_COUNT_DEBOUNCE_MS, _ -> updateMatchCountTarget());
+		matchCountTimer.setRepeats(false);
 
 		installOptionsSummaryListeners();
 		loadSettings();
@@ -576,7 +588,15 @@ public class MainFrame extends JFrame {
 		});
 
 		sourceOptionsPanel = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
-		stylizeOptionsBody(sourceOptionsPanel);
+		stylizeOptionsBody(sourceOptionsPanel, OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT);
+		sourceOptionsPanel.matchCountLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				matchCountLabelClicked();
+			}
+		});
+		sourceOptionsPanel.matchCountStopButton.addActionListener(_ -> matchCountStopButtonClicked());
+
 		GridBagConstraints gbc_sourceOptionsPanel = new GridBagConstraints();
 		gbc_sourceOptionsPanel.fill = GridBagConstraints.BOTH;
 		gbc_sourceOptionsPanel.gridwidth = 2;
@@ -618,7 +638,6 @@ public class MainFrame extends JFrame {
 		txtModifiedTimeRangeFrom = sourceOptionsPanel.modifiedTimeRangeFromTextField;
 		lblModifiedTimeRangeTo = sourceOptionsPanel.modifiedTimeRangeToLabel;
 		txtModifiedTimeRangeTo = sourceOptionsPanel.modifiedTimeRangeToTextField;
-
 	}
 
 	private void buildOperationPanel() {
@@ -1329,6 +1348,12 @@ public class MainFrame extends JFrame {
 
 	private void applySettingsImmediately() {
 		MainFrameState state = captureFrameState();
+		if (sourceFileScanner != null) {
+			// This frame is about to be discarded for a replacement with the new language/theme; without
+			// this, the scan's background thread would keep walking the folder tree indefinitely (nothing
+			// else ever stops it) purely to update a disposed, invisible frame's label.
+			sourceFileScanner.cancel();
+		}
 		AppMain.applyConfiguredUiSettings();
 		MainFrame nextFrame = new MainFrame(state);
 		nextFrame.setVisible(true);
@@ -1442,11 +1467,15 @@ public class MainFrame extends JFrame {
 	}
 
 	private static void stylizeOptionsBody(JPanel optionsBody) {
+		stylizeOptionsBody(optionsBody, OPTIONS_BODY_PADDING);
+	}
+
+	private static void stylizeOptionsBody(JPanel optionsBody, int topPadding) {
 		Color panelBackground = color("Panel.background", new Color(0xf2f2f2));
 		optionsBody.setOpaque(true);
 		optionsBody.setBackground(shade(panelBackground));
 		optionsBody.setBorder(BorderFactory.createEmptyBorder(
-				OPTIONS_BODY_PADDING, OPTIONS_BODY_PADDING, OPTIONS_BODY_PADDING, OPTIONS_BODY_PADDING));
+				topPadding, OPTIONS_BODY_PADDING, OPTIONS_BODY_PADDING, OPTIONS_BODY_PADDING));
 		optionsBody.putClientProperty(FlatClientProperties.STYLE, "arc: " + OPTIONS_BODY_ARC);
 	}
 
@@ -1617,6 +1646,9 @@ public class MainFrame extends JFrame {
 	private void optionsSummaryChanged() {
 		updateOptionsSummaries();
 		fitWindowToContent();
+		if (matchCountEnabled) {
+			matchCountTimer.restart();
+		}
 	}
 
 	private void updateOptionsSummaries() {
@@ -1995,13 +2027,7 @@ public class MainFrame extends JFrame {
 		}
 
 		// Set values
-		PictoPathFilter pathFilter = new PictoPathFilter();
-		pathFilter.setPathPattern(values.filePattern, values.srcRootDirPath, values.filePatternRegex);
-		pathFilter.setContainsHiddens(values.containsHiddens);
-		pathFilter.setSizeRange(values.sizeRangeFrom, values.sizeRangeTo);
-		pathFilter.setCreationTimeRange(values.creationTimeRangeFrom, values.creationTimeRangeTo);
-		pathFilter.setModifiedTimeRange(values.modifiedTimeRangeFrom, values.modifiedTimeRangeTo);
-//		pathFilter.setAccessTimeRange(from, to);
+		PictoPathFilter pathFilter = buildPathFilter(values);
 
 
 		String destSubPathPattern = values.destSubPathPattern.isBlank()
@@ -2038,6 +2064,123 @@ public class MainFrame extends JFrame {
 		processCondition.setDryRun(dryRun);
 
 		return processCondition;
+	}
+
+	private static PictoPathFilter buildPathFilter(ProcessConditionValues values) {
+		PictoPathFilter pathFilter = new PictoPathFilter();
+		pathFilter.setPathPattern(values.filePattern, values.srcRootDirPath, values.filePatternRegex);
+		pathFilter.setContainsHiddens(values.containsHiddens);
+		pathFilter.setSizeRange(values.sizeRangeFrom, values.sizeRangeTo);
+		pathFilter.setCreationTimeRange(values.creationTimeRangeFrom, values.creationTimeRangeTo);
+		pathFilter.setModifiedTimeRange(values.modifiedTimeRangeFrom, values.modifiedTimeRangeTo);
+//		pathFilter.setAccessTimeRange(from, to);
+		return pathFilter;
+	}
+
+	private void matchCountLabelClicked() {
+		if (sourceFileScanner == null) {
+			matchCountEnabled = true;
+			updateMatchCountTarget();
+			return;
+		}
+
+		SourceFileScanner.MatchCountStatus status = lastMatchCountStatus;
+		if (status == null) {
+			return;
+		}
+		switch (status.state()) {
+		case SCANNING -> sourceFileScanner.stop();
+		case PAUSED -> sourceFileScanner.resume();
+		case EXACT -> { }
+		}
+	}
+
+	private void matchCountStopButtonClicked() {
+		if (sourceFileScanner != null) {
+			sourceFileScanner.stop();
+		}
+	}
+
+	private void updateMatchCountTarget() {
+		if (!matchCountEnabled) {
+			return;
+		}
+		ProcessConditionValues values = collectProcessConditionValues();
+
+		if (!Files.isDirectory(values.srcRootDirPath)) {
+			if (sourceFileScanner != null) {
+				sourceFileScanner.cancel();
+				sourceFileScanner = null;
+			}
+			matchCountEnabled = false;
+			lastMatchCountStatus = null;
+			sourceOptionsPanel.matchCountLabel.setText(Messages.getString("MainFrame.matchCount.prompt"));
+			sourceOptionsPanel.setMatchCountScanning(false);
+			return;
+		}
+
+		PictoPathFilter pathFilter;
+		boolean includeSubfolders = values.depth != 1;
+		try {
+			pathFilter = buildPathFilter(values);
+		} catch (Exception e) {
+			sourceOptionsPanel.matchCountLabel.setText("");
+			sourceOptionsPanel.setMatchCountScanning(false);
+			return;
+		}
+
+		if (sourceFileScanner != null && !sourceFileScanner.srcRootPath().equals(values.srcRootDirPath)) {
+			// The source folder changed while a count was enabled for the previous one; that opt-in doesn't
+			// carry over to a different folder (it could be much larger), so require an explicit re-click.
+			sourceFileScanner.cancel();
+			sourceFileScanner = null;
+			matchCountEnabled = false;
+			lastMatchCountStatus = null;
+			sourceOptionsPanel.matchCountLabel.setText(Messages.getString("MainFrame.matchCount.prompt"));
+			sourceOptionsPanel.setMatchCountScanning(false);
+			return;
+		}
+
+		if (sourceFileScanner == null) {
+			lastMatchCountStatus = null;
+			// A status callback already in flight when this scanner is later cancelled and replaced
+			// (e.g. the source folder changes again) would otherwise still reach renderMatchCount() and
+			// overwrite the reset UI with stale SCANNING/PAUSED/EXACT text. The holder lets the callback
+			// check, at delivery time, whether it's still the current scanner before touching the UI.
+			SourceFileScanner[] holder = new SourceFileScanner[1];
+			try {
+				sourceFileScanner = new SourceFileScanner(
+						values.srcRootDirPath, pathFilter, includeSubfolders,
+						status -> SwingUtilities.invokeLater(() -> {
+							if (sourceFileScanner == holder[0]) {
+								renderMatchCount(status);
+							}
+						}));
+			} catch (IOException e) {
+				sourceFileScanner = null;
+				sourceOptionsPanel.matchCountLabel.setText("");
+				sourceOptionsPanel.setMatchCountScanning(false);
+				return;
+			}
+			holder[0] = sourceFileScanner;
+			sourceFileScanner.start();
+		} else {
+			sourceFileScanner.updateTarget(pathFilter, includeSubfolders);
+		}
+	}
+
+	private void renderMatchCount(SourceFileScanner.MatchCountStatus status) {
+		lastMatchCountStatus = status;
+		String text = switch (status.state()) {
+		case SCANNING -> Messages.getString("MainFrame.matchCount.scanning", status.count());
+		case PAUSED -> Messages.getString("MainFrame.matchCount.paused", status.count());
+		case EXACT -> Messages.getString("MainFrame.matchCount", status.count());
+		};
+		sourceOptionsPanel.matchCountLabel.setText(text);
+		sourceOptionsPanel.setMatchCountScanning(status.state() == SourceFileScanner.MatchCountStatus.State.SCANNING);
+		if (status.state() == SourceFileScanner.MatchCountStatus.State.PAUSED) {
+			sourceOptionsPanel.matchCountLabel.setToolTipText(Messages.getString("MainFrame.matchCount.resume"));
+		}
 	}
 
 	private boolean confirmDestructiveOperation(ProcessConditionValues values, boolean dryRun) {
