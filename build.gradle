@@ -53,6 +53,9 @@ java {
 
 application {
   mainClass = appMainClass
+  // FlatLaf loads a native library for OS-integration features; without this, the JVM prints a
+  // restricted-native-access warning to stdout on every launch (and a future JDK will refuse the load).
+  applicationDefaultJvmArgs = ['--enable-native-access=ALL-UNNAMED']
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -80,7 +83,8 @@ jar {
     attributes(
         'Main-Class': appMainClass,
         'Implementation-Title': appDisplayName,
-        'Implementation-Version': project.version
+        'Implementation-Version': project.version,
+        'Enable-Native-Access': 'ALL-UNNAMED'
     )
   }
 }
@@ -186,7 +190,8 @@ def jpackageCommonArgs = {
       '--input', jpackageInputDir.get().asFile.absolutePath,
       '--main-jar', tasks.named('jar').get().archiveFileName.get(),
       '--main-class', appMainClass,
-      '--java-options', '-Dfile.encoding=UTF-8'
+      '--java-options', '-Dfile.encoding=UTF-8',
+      '--java-options', '--enable-native-access=ALL-UNNAMED'
   ]
 }
 
