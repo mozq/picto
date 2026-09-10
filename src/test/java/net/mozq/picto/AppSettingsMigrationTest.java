@@ -39,17 +39,22 @@ class AppSettingsMigrationTest {
 		Files.writeString(legacySettings, String.join(System.lineSeparator(),
 				"# Legacy settings",
 				"src.root.dir=/photos",
+				"file.pattern.regex=true",
 				"dest.sub.path.pattern=${FNumber%0.0}/${WhiteBalance/0:Auto/1:Manual/default:Others}",
 				"contains.subs=true"));
 		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		assertEquals(List.of("locale", "appearance", "src.root.dir", "dest.sub.path.pattern", "contains.subs"),
+		// file.pattern.syntax must land where file.pattern.regex was defined, not get appended at the end,
+		// even though migrating it also renames the key (unlike dest.sub.path.pattern, migrated in place).
+		assertEquals(
+				List.of("locale", "appearance", "src.root.dir", "file.pattern.syntax", "dest.sub.path.pattern", "contains.subs"),
 				List.copyOf(settings.keySet()));
 		assertEquals("system", settings.getString("locale", ""));
 		assertEquals("system", settings.getString("appearance", ""));
 		assertEquals("/photos", settings.getString("src.root.dir", ""));
+		assertEquals("REGEX", settings.getString("file.pattern.syntax", ""));
 		assertEquals("${FNumber:0.0}/${WhiteBalance?{0:'Auto',1:'Manual',default:'Others'}}",
 				settings.getString("dest.sub.path.pattern", ""));
 		assertEquals("true", settings.getString("contains.subs", ""));
@@ -92,6 +97,31 @@ class AppSettingsMigrationTest {
 
 		assertEquals("${SubFolderPath}/${TakenDate:uuuu/MM}/${FileName}",
 				settings.getString("dest.sub.path.pattern", ""));
+	}
+
+	@Test
+	void migratesFilePatternRegexTrueToTheSyntaxEnumsRegexConstant() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"file.pattern.regex=true"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("REGEX", settings.getString("file.pattern.syntax", ""));
+		assertFalse(settings.keySet().contains("file.pattern.regex"));
+	}
+
+	@Test
+	void migratesFilePatternRegexFalseToTheSyntaxEnumsGlobConstant() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"file.pattern.regex=false"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("GLOB", settings.getString("file.pattern.syntax", ""));
 	}
 
 	@Test

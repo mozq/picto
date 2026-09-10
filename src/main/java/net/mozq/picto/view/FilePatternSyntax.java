@@ -32,10 +32,6 @@ enum FilePatternSyntax {
 		return regex;
 	}
 
-	static FilePatternSyntax of(boolean regex) {
-		return regex ? REGEX : GLOB;
-	}
-
 	@Override
 	public String toString() {
 		return Messages.getString(labelKey);

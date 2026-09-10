@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.function.Consumer;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -77,6 +78,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.JTextComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -961,46 +963,77 @@ public class MainFrame extends JFrame {
 		applySettingsFrom(App.settings());
 	}
 
+	/**
+	 * One persisted setting's key paired with how to load it into its Swing field and how to read it back
+	 * out, declared once so {@link #applySettingsFrom} and {@link #captureSettingsInto} can't drift apart on
+	 * the key, default, or field a future change touches only one side of.
+	 */
+	private record SettingBinding(Consumer<AppSettings> applyFrom, Consumer<AppSettings> captureInto) {
+		static SettingBinding text(JTextComponent field, String key, String defaultValue) {
+			return new SettingBinding(
+					conf -> field.setText(conf.getString(key, defaultValue)),
+					conf -> conf.set(key, field.getText()));
+		}
+
+		static SettingBinding flag(AbstractButton button, String key, boolean defaultValue) {
+			return new SettingBinding(
+					conf -> button.setSelected(conf.getBoolean(key, defaultValue)),
+					conf -> conf.set(key, button.isSelected()));
+		}
+
+		static <E extends Enum<E>> SettingBinding choice(JComboBox<E> combo, String key, Class<E> type, E defaultValue) {
+			return new SettingBinding(
+					conf -> combo.setSelectedItem(conf.getEnum(key, type, defaultValue)),
+					conf -> conf.set(key, combo.getSelectedItem()));
+		}
+	}
+
+	private List<SettingBinding> settingBindings() {
+		return List.of(
+				SettingBinding.text(txtSrcRootDirPath, "src.root.dir", ""),
+				SettingBinding.text(txtFilePattern, "file.pattern", ""),
+				SettingBinding.choice(cmbFilePatternSyntax, "file.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.GLOB),
+				SettingBinding.flag(chkContainsSubs, "contains.subs", true),
+				SettingBinding.flag(chkContainsHiddens, "contains.hiddens", false),
+
+				SettingBinding.text(txtFileSizeRangeFrom, "file.size.range.from", ""),
+				SettingBinding.text(txtFileSizeRangeTo, "file.size.range.to", ""),
+				SettingBinding.choice(cmbFileSizeUnit, "file.size.unit", FileSizeUnit.class, FileSizeUnit.MB),
+				SettingBinding.text(txtCreationTimeRangeFrom, "creation.time.range.from", ""),
+				SettingBinding.text(txtCreationTimeRangeTo, "creation.time.range.to", ""),
+				SettingBinding.text(txtModifiedTimeRangeFrom, "modified.time.range.from", ""),
+				SettingBinding.text(txtModifiedTimeRangeTo, "modified.time.range.to", ""),
+
+				SettingBinding.flag(rdoOpeTypeCopy, "ope.type.copy", true),
+				SettingBinding.flag(rdoOpeTypeMove, "ope.type.move", false),
+				SettingBinding.flag(rdoOpeTypeOverwrite, "ope.type.overwrite", false),
+
+				SettingBinding.text(txtDestRootDirPath, "dest.root.dir", ""),
+				SettingBinding.text(txtDestSubPathPattern, "dest.sub.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN),
+				SettingBinding.choice(cmbExistingFileMethod, "existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm),
+				SettingBinding.flag(chkCheckFileDigest, "check.file.digest", false),
+
+				SettingBinding.flag(chkChangeFileCreationDate, "change.file.creation.date", false),
+				SettingBinding.flag(chkChangeFileModifiedDate, "change.file.modified.date", false),
+				SettingBinding.flag(chkChangeFileAccessDate, "change.file.access.date", false),
+				SettingBinding.flag(chkChangeExifDate, "change.file.exif.date", false),
+				SettingBinding.choice(cmbBaseDateType, "base.date.type", DateType.class, DateType.FileModifiedDate),
+				SettingBinding.text(txtCustomBaseDate, "custom.base.date", ""),
+				SettingBinding.choice(cmbDateModType, "date.mod.type", DateModType.class, DateModType.None),
+				SettingBinding.text(txtDateModYears, "date.mod.year", ""),
+				SettingBinding.text(txtDateModMonths, "date.mod.month", ""),
+				SettingBinding.text(txtDateModDays, "date.mod.day", ""),
+				SettingBinding.text(txtDateModHours, "date.mod.hour", ""),
+				SettingBinding.text(txtDateModMinutes, "date.mod.minute", ""),
+				SettingBinding.text(txtDateModSeconds, "date.mod.second", ""),
+				SettingBinding.flag(chkRemoveExifTagsGps, "remove.exif.tags.gps", false),
+				SettingBinding.flag(chkRemoveExifTagsAll, "remove.exif.tags.all", false));
+	}
+
 	private void applySettingsFrom(AppSettings conf) {
-		txtSrcRootDirPath.setText(conf.getString("src.root.dir", ""));
-		txtFilePattern.setText(conf.getString("file.pattern", ""));
-		cmbFilePatternSyntax.setSelectedItem(FilePatternSyntax.of(conf.getBoolean("file.pattern.regex", false)));
-		chkContainsSubs.setSelected(conf.getBoolean("contains.subs", true));
-		chkContainsHiddens.setSelected(conf.getBoolean("contains.hiddens", false));
-
-		txtFileSizeRangeFrom.setText(conf.getString("file.size.range.from", ""));
-		txtFileSizeRangeTo.setText(conf.getString("file.size.range.to", ""));
-		cmbFileSizeUnit.setSelectedItem(conf.getEnum("file.size.unit", FileSizeUnit.class, FileSizeUnit.MB));
-		txtCreationTimeRangeFrom.setText(conf.getString("creation.time.range.from", ""));
-		txtCreationTimeRangeTo.setText(conf.getString("creation.time.range.to", ""));
-		txtModifiedTimeRangeFrom.setText(conf.getString("modified.time.range.from", ""));
-		txtModifiedTimeRangeTo.setText(conf.getString("modified.time.range.to", ""));
-
-		rdoOpeTypeCopy.setSelected(conf.getBoolean("ope.type.copy", true));
-		rdoOpeTypeMove.setSelected(conf.getBoolean("ope.type.move", false));
-		rdoOpeTypeOverwrite.setSelected(conf.getBoolean("ope.type.overwrite", false));
-
-		txtDestRootDirPath.setText(conf.getString("dest.root.dir", ""));
-		txtDestSubPathPattern.setText(conf.getString("dest.sub.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN));
-		cmbExistingFileMethod.setSelectedItem(conf.getEnum("existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm));
-		chkCheckFileDigest.setSelected(conf.getBoolean("check.file.digest", false));
-
-		chkChangeFileCreationDate.setSelected(conf.getBoolean("change.file.creation.date", false));
-		chkChangeFileModifiedDate.setSelected(conf.getBoolean("change.file.modified.date", false));
-		chkChangeFileAccessDate.setSelected(conf.getBoolean("change.file.access.date", false));
-		chkChangeExifDate.setSelected(conf.getBoolean("change.file.exif.date", false));
-		cmbBaseDateType.setSelectedItem(conf.getEnum("base.date.type", DateType.class, DateType.FileModifiedDate));
-		txtCustomBaseDate.setText(conf.getString("custom.base.date", ""));
-		cmbDateModType.setSelectedItem(conf.getEnum("date.mod.type", DateModType.class, DateModType.None));
-		txtDateModYears.setText(conf.getString("date.mod.year", ""));
-		txtDateModMonths.setText(conf.getString("date.mod.month", ""));
-		txtDateModDays.setText(conf.getString("date.mod.day", ""));
-		txtDateModHours.setText(conf.getString("date.mod.hour", ""));
-		txtDateModMinutes.setText(conf.getString("date.mod.minute", ""));
-		txtDateModSeconds.setText(conf.getString("date.mod.second", ""));
-		chkRemoveExifTagsGps.setSelected(conf.getBoolean("remove.exif.tags.gps", false));
-		chkRemoveExifTagsAll.setSelected(conf.getBoolean("remove.exif.tags.all", false));
-
+		for (SettingBinding binding : settingBindings()) {
+			binding.applyFrom().accept(conf);
+		}
 	}
 
 	protected void storeSettings() throws IOException {
@@ -1016,44 +1049,9 @@ public class MainFrame extends JFrame {
 	}
 
 	private void captureSettingsInto(AppSettings conf) {
-		conf.set("src.root.dir", txtSrcRootDirPath.getText());
-		conf.set("file.pattern", txtFilePattern.getText());
-		conf.set("file.pattern.regex", getSelectedFilePatternSyntax().isRegex());
-		conf.set("contains.subs", chkContainsSubs.isSelected());
-		conf.set("contains.hiddens", chkContainsHiddens.isSelected());
-
-		conf.set("file.size.range.from", txtFileSizeRangeFrom.getText());
-		conf.set("file.size.range.to", txtFileSizeRangeTo.getText());
-		conf.set("file.size.unit", cmbFileSizeUnit.getSelectedItem());
-		conf.set("creation.time.range.from", txtCreationTimeRangeFrom.getText());
-		conf.set("creation.time.range.to", txtCreationTimeRangeTo.getText());
-		conf.set("modified.time.range.from", txtModifiedTimeRangeFrom.getText());
-		conf.set("modified.time.range.to", txtModifiedTimeRangeTo.getText());
-
-		conf.set("ope.type.copy", rdoOpeTypeCopy.isSelected());
-		conf.set("ope.type.move", rdoOpeTypeMove.isSelected());
-		conf.set("ope.type.overwrite", rdoOpeTypeOverwrite.isSelected());
-
-		conf.set("dest.root.dir", txtDestRootDirPath.getText());
-		conf.set("dest.sub.path.pattern", txtDestSubPathPattern.getText());
-		conf.set("existing.file.method", cmbExistingFileMethod.getSelectedItem());
-		conf.set("check.file.digest", chkCheckFileDigest.isSelected());
-
-		conf.set("change.file.creation.date", chkChangeFileCreationDate.isSelected());
-		conf.set("change.file.modified.date", chkChangeFileModifiedDate.isSelected());
-		conf.set("change.file.access.date", chkChangeFileAccessDate.isSelected());
-		conf.set("change.file.exif.date", chkChangeExifDate.isSelected());
-		conf.set("base.date.type", cmbBaseDateType.getSelectedItem());
-		conf.set("custom.base.date", txtCustomBaseDate.getText());
-		conf.set("date.mod.type", cmbDateModType.getSelectedItem());
-		conf.set("date.mod.year", txtDateModYears.getText());
-		conf.set("date.mod.month", txtDateModMonths.getText());
-		conf.set("date.mod.day", txtDateModDays.getText());
-		conf.set("date.mod.hour", txtDateModHours.getText());
-		conf.set("date.mod.minute", txtDateModMinutes.getText());
-		conf.set("date.mod.second", txtDateModSeconds.getText());
-		conf.set("remove.exif.tags.gps", chkRemoveExifTagsGps.isSelected());
-		conf.set("remove.exif.tags.all", chkRemoveExifTagsAll.isSelected());
+		for (SettingBinding binding : settingBindings()) {
+			binding.captureInto().accept(conf);
+		}
 	}
 
 	private void rebuildPresetsMenu() {

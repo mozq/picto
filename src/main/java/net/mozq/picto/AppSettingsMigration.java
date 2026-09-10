@@ -32,6 +32,8 @@ final class AppSettingsMigration {
 	private static final String LEGACY_APP_NAME = "Picto";
 	private static final String LEGACY_CONFIG_FILE_NAME = "settings.properties";
 	private static final String SUBFOLDER_PATTERN_KEY = "dest.sub.path.pattern";
+	private static final String FILE_PATTERN_REGEX_KEY = "file.pattern.regex";
+	private static final String FILE_PATTERN_SYNTAX_KEY = "file.pattern.syntax";
 	private static final Map<String, String> RENAMED_VAR_NAMES = Map.of(
 			"ParentSubPath", "SubFolderPath",
 			"PhotoTakenDate", "TakenDate"
@@ -64,6 +66,9 @@ final class AppSettingsMigration {
 			String value = entry.getValue();
 			if (SUBFOLDER_PATTERN_KEY.equals(key)) {
 				value = migrateTemplate(value);
+			} else if (FILE_PATTERN_REGEX_KEY.equals(key)) {
+				key = FILE_PATTERN_SYNTAX_KEY;
+				value = migrateFilePatternSyntax(value);
 			}
 			settings.set(key, value);
 		}
@@ -210,6 +215,16 @@ final class AppSettingsMigration {
 			return "${" + migrateVarName(expression.substring(0, matchIndex)) + "?{" + migrateMatchCases(expression.substring(matchIndex + 1)) + "}}";
 		}
 		return "${" + migrateVarName(expression) + '}';
+	}
+
+	/**
+	 * The legacy setting was a plain boolean; the current one is backed by the (view-package-private, so
+	 * not referenceable from here) {@code FilePatternSyntax} enum instead, consistent with this app's other
+	 * combo-box settings. Settings values round-trip enums via {@code Enum.name()}, so this only needs to
+	 * produce the matching constant name, not the enum type itself.
+	 */
+	private static String migrateFilePatternSyntax(String legacyRegexFlag) {
+		return Boolean.parseBoolean(legacyRegexFlag) ? "REGEX" : "GLOB";
 	}
 
 	private static String migrateVarName(String varName) {
