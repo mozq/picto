@@ -227,7 +227,7 @@ class SuggestionPopup {
 		gbc.insets = new Insets(0, 0, 0, 0);
 		for (SuggestionSection section : sections) {
 			addSection(content, gbc, section.label());
-			addItems(content, gbc, section.items(), labelWidth);
+			addItems(content, gbc, section.items(), labelWidth, section.removable(), section.appendOnSelect());
 		}
 
 		gbc.gridy++;
@@ -249,13 +249,13 @@ class SuggestionPopup {
 		content.add(label, gbc);
 	}
 
-	private void addItems(JPanel content, GridBagConstraints gbc, List<SuggestionItem> items, int labelWidth) {
+	private void addItems(JPanel content, GridBagConstraints gbc, List<SuggestionItem> items, int labelWidth, boolean removable, boolean appendOnSelect) {
 		for (SuggestionItem item : items) {
-			addItem(content, gbc, item, labelWidth);
+			addItem(content, gbc, item, labelWidth, removable, appendOnSelect);
 		}
 	}
 
-	private void addItem(JPanel content, GridBagConstraints gbc, SuggestionItem item, int labelWidth) {
+	private void addItem(JPanel content, GridBagConstraints gbc, SuggestionItem item, int labelWidth, boolean removable, boolean appendOnSelect) {
 		JPanel row = new JPanel(new GridBagLayout());
 		Color defaultBackground = row.getBackground();
 		Color hoverBackground = createHoverBackground(defaultBackground);
@@ -277,6 +277,14 @@ class SuggestionPopup {
 
 			@Override
 			public void mousePressed(MouseEvent e) {
+				if (!appendOnSelect) {
+					// Picking a value replaces the whole field by default, since most items (history entries,
+					// full presets) are complete, ready-to-use values, not fragments to compose with. Only a
+					// section explicitly marked appendOnSelect (a placeholder meant to be combined with others)
+					// skips this, so a caret-relative valueConsumer (e.g. field.replaceSelection(value)) inserts
+					// at the caret instead of replacing everything.
+					field.selectAll();
+				}
 				valueConsumer.accept(item.value());
 				hidePopup();
 				field.requestFocusInWindow();
@@ -306,7 +314,7 @@ class SuggestionPopup {
 		valueGbc.weightx = 1.0;
 		row.add(valueLabel, valueGbc);
 
-		if (onDelete != null) {
+		if (onDelete != null && removable) {
 			JButton deleteButton = new JButton("✕");
 			deleteButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
 			deleteButton.setMargin(new Insets(0, 4, 0, 4));
@@ -355,7 +363,23 @@ class SuggestionPopup {
 		return new Color(defaultBackground.getRed(), defaultBackground.getGreen(), defaultBackground.getBlue(), 24);
 	}
 
-	record SuggestionSection(String label, List<SuggestionItem> items) {
+	/**
+	 * @param removable whether items show a delete ("✕") button that removes them from wherever they came from
+	 * instead of picking them.
+	 * @param appendOnSelect whether picking an item leaves the field's existing content in place instead of
+	 * replacing it - for a fragment meant to be composed with others (e.g. inserted at the caret via
+	 * {@code field.replaceSelection(value)}). Most sections are complete, ready-to-use values (a history
+	 * entry, a full preset), so replacing the whole field is the default.
+	 */
+	record SuggestionSection(String label, List<SuggestionItem> items, boolean removable, boolean appendOnSelect) {
+		SuggestionSection(String label, List<SuggestionItem> items) {
+			this(label, items, false, false);
+		}
+
+		/** A history section: removable, and (like any other default section) replaced on select, not appended. */
+		SuggestionSection(String label, List<SuggestionItem> items, boolean removable) {
+			this(label, items, removable, false);
+		}
 	}
 
 	record SuggestionItem(String label, String value, String tooltip) {

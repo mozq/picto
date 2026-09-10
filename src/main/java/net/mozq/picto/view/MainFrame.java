@@ -571,7 +571,7 @@ public class MainFrame extends JFrame {
 		txtSrcRootDirPath.setColumns(10);
 		InputSupport.installLabelFocusAction(lblSrcConditionsTitle, txtSrcRootDirPath, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtSrcRootDirPath);
-		new FolderHistoryPopup(txtSrcRootDirPath, FolderHistory.SOURCE_KEY);
+		new FolderHistoryPopup(txtSrcRootDirPath, InputHistory.SRC_ROOT_DIR_KEY);
 		btnSrcRootDirSelect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -736,7 +736,7 @@ public class MainFrame extends JFrame {
 		txtDestRootDirPath.setColumns(10);
 		InputSupport.installLabelFocusAction(lblDestConditionsTitle, txtDestRootDirPath, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtDestRootDirPath);
-		new FolderHistoryPopup(txtDestRootDirPath, FolderHistory.DESTINATION_KEY);
+		new FolderHistoryPopup(txtDestRootDirPath, InputHistory.DEST_ROOT_DIR_KEY);
 		btnDestRootDirSelect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser filechooser = new JFileChooser();
@@ -1922,10 +1922,12 @@ public class MainFrame extends JFrame {
 		}
 
 		if (!dryRun) {
-			FolderHistory.record(FolderHistory.SOURCE_KEY, processCondition.getSrcRootPath());
+			InputHistory.record(InputHistory.SRC_ROOT_DIR_KEY, processCondition.getSrcRootPath());
 			if (processCondition.getOperationType() != OperationType.Overwrite) {
-				FolderHistory.record(FolderHistory.DESTINATION_KEY, processCondition.getDestRootPath());
+				InputHistory.record(InputHistory.DEST_ROOT_DIR_KEY, processCondition.getDestRootPath());
 			}
+			InputHistory.record(InputHistory.FILE_PATTERN_KEY, fieldText(txtFilePattern));
+			InputHistory.record(InputHistory.DEST_SUB_PATH_PATTERN_KEY, fieldText(txtDestSubPathPattern));
 		}
 
 		ProcessDialog processDialog = new ProcessDialog(frame);

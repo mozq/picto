@@ -24,7 +24,7 @@ import javax.swing.text.JTextComponent;
 import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
-/** Shows a dropdown of recently used folder paths for a root-folder text field, backed by {@link FolderHistory}. */
+/** Shows a dropdown of recently used folder paths for a root-folder text field, backed by {@link InputHistory}. */
 class FolderHistoryPopup {
 	private static final int POPUP_MAX_HEIGHT = 220;
 	private static final int POPUP_MIN_WIDTH = 380;
@@ -41,8 +41,8 @@ class FolderHistoryPopup {
 					field.setText(value);
 					field.selectAll();
 				},
-				item -> FolderHistory.remove(historyKey, item.value()),
-				Messages.getString("MainFrame.folderHistory.remove"),
+				item -> InputHistory.remove(historyKey, item.value()),
+				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT,
 				relatedFocusComponents);
@@ -53,12 +53,13 @@ class FolderHistoryPopup {
 	}
 
 	private List<SuggestionSection> sections() {
-		List<String> entries = FolderHistory.load(historyKey);
+		List<String> entries = InputHistory.load(historyKey);
 		if (entries.isEmpty()) {
 			return List.of();
 		}
 		return List.of(new SuggestionSection(
-				Messages.getString("MainFrame.folderHistory.title"),
-				entries.stream().map(path -> new SuggestionItem("", path)).toList()));
+				Messages.getString("MainFrame.history.title"),
+				entries.stream().map(path -> new SuggestionItem("", path)).toList(),
+				true));
 	}
 }

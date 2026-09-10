@@ -18,6 +18,7 @@ package net.mozq.picto.view;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -53,41 +54,59 @@ class SubfolderTemplatePopup {
 				field,
 				SubfolderTemplatePopup::sections,
 				value -> field.replaceSelection(value),
+				item -> InputHistory.remove(InputHistory.DEST_SUB_PATH_PATTERN_KEY, item.value()),
+				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT);
 	}
 
 	private static List<SuggestionSection> sections() {
-		return List.of(
-				section("template",
-						item("keepOriginalStructure", "${SubFilePath}"),
-						item("byPhotoDate", "${TakenDate:uuuu-MM-dd}/${FileName}"),
-						item("byPhotoYearMonthDate", "${TakenDate:uuuu/MM/dd}/${FileName}"),
-						item("byParentAndPhotoDate", "${SubFolderPath}/${TakenDate:uuuu-MM-dd}/${FileName}"),
-						item("byCamera", "${Make}/${Model}/${FileName}"),
-						item("byCameraAndPhotoDate", "${Make}/${Model}/${TakenDate:uuuu-MM-dd}/${FileName}"),
-						item("byPhotoDateAndCamera", "${TakenDate:uuuu-MM-dd}/${Make}/${Model}/${FileName}")),
-				section("date",
+		List<SuggestionSection> sections = new ArrayList<>();
+		List<String> history = InputHistory.load(InputHistory.DEST_SUB_PATH_PATTERN_KEY);
+		if (!history.isEmpty()) {
+			sections.add(new SuggestionSection(
+					Messages.getString("MainFrame.history.title"),
+					history.stream().map(value -> new SuggestionItem("", value)).toList(),
+					true));
+		}
+		sections.add(section("template",
+				item("keepOriginalStructure", "${SubFilePath}"),
+				item("byPhotoDate", "${TakenDate:uuuu-MM-dd}/${FileName}"),
+				item("byPhotoYearMonthDate", "${TakenDate:uuuu/MM/dd}/${FileName}"),
+				item("byParentAndPhotoDate", "${SubFolderPath}/${TakenDate:uuuu-MM-dd}/${FileName}"),
+				item("byCamera", "${Make}/${Model}/${FileName}"),
+				item("byCameraAndPhotoDate", "${Make}/${Model}/${TakenDate:uuuu-MM-dd}/${FileName}"),
+				item("byPhotoDateAndCamera", "${TakenDate:uuuu-MM-dd}/${Make}/${Model}/${FileName}")));
+		sections.addAll(List.of(
+				fragmentSection("date",
 						item("photoTakenDate", "${TakenDate:uuuu-MM-dd}"),
 						item("photoTakenYearMonthDate", "${TakenDate:uuuu/MM/dd}")),
-				section("file",
+				fragmentSection("file",
 						item("subFilePath", "${SubFilePath}"),
 						item("subFolderPath", "${SubFolderPath}"),
 						item("fileName", "${FileName}"),
 						item("baseName", "${BaseName}"),
 						item("extension", "${Extension}")),
-				section("exif",
+				fragmentSection("exif",
 						item("make", "${Make}"),
 						item("model", "${Model}"),
 						item("fNumber", "${FNumber:0.0}"),
 						item("iso", "${ISO}")),
-				section("gps",
+				fragmentSection("gps",
 						item("latitude", "${GPSLat:0.000000}"),
-						item("longitude", "${GPSLon:0.000000}")));
+						item("longitude", "${GPSLon:0.000000}"))));
+		return sections;
 	}
 
 	private static SuggestionSection section(String key, SuggestionItem... items) {
 		return new SuggestionSection(Messages.getString(KEY_PREFIX + key), List.of(items));
+	}
+
+	/** A section of individual placeholders meant to be combined with others, inserted at the caret rather
+	 * than replacing the field's whole content. The "+ " prefix on the section title flags that, unlike
+	 * every other section, picking one of these adds to what's already there instead of replacing it. */
+	private static SuggestionSection fragmentSection(String key, SuggestionItem... items) {
+		return new SuggestionSection("+ " + Messages.getString(KEY_PREFIX + key), List.of(items), false, true);
 	}
 
 	private static SuggestionItem item(String key, String value) {

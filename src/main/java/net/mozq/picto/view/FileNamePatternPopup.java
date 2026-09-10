@@ -17,6 +17,7 @@
 package net.mozq.picto.view;
 
 import java.awt.Component;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
@@ -40,6 +41,8 @@ class FileNamePatternPopup {
 					field.setText(value);
 					field.selectAll();
 				},
+				item -> InputHistory.remove(InputHistory.FILE_PATTERN_KEY, item.value()),
+				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT,
 				relatedFocusComponents);
@@ -50,7 +53,16 @@ class FileNamePatternPopup {
 	}
 
 	private static List<SuggestionSection> sections(boolean regex) {
-		return regex ? regexSections() : wildcardSections();
+		List<SuggestionSection> sections = new ArrayList<>();
+		List<String> history = InputHistory.load(InputHistory.FILE_PATTERN_KEY);
+		if (!history.isEmpty()) {
+			sections.add(new SuggestionSection(
+					Messages.getString("MainFrame.history.title"),
+					history.stream().map(value -> new SuggestionItem("", value)).toList(),
+					true));
+		}
+		sections.addAll(regex ? regexSections() : wildcardSections());
+		return sections;
 	}
 
 	private static List<SuggestionSection> wildcardSections() {

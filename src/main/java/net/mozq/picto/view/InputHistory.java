@@ -23,14 +23,19 @@ import java.util.List;
 
 import net.mozq.picto.App;
 
-/** Most-recently-used folder path history, persisted in {@value net.mozq.picto.App#HISTORY_FILE_NAME}. */
-final class FolderHistory {
-	static final String SOURCE_KEY = "src.root.dir";
-	static final String DESTINATION_KEY = "dest.root.dir";
+/**
+ * Most-recently-used text input history (recent folders, file name patterns, Subfolder templates, ...),
+ * persisted in {@value net.mozq.picto.App#HISTORY_FILE_NAME}.
+ */
+final class InputHistory {
+	static final String SRC_ROOT_DIR_KEY = "src.root.dir";
+	static final String DEST_ROOT_DIR_KEY = "dest.root.dir";
+	static final String FILE_PATTERN_KEY = "file.pattern";
+	static final String DEST_SUB_PATH_PATTERN_KEY = "dest.sub.path.pattern";
 
 	private static final int MAX_ENTRIES = 5;
 
-	private FolderHistory() {
+	private InputHistory() {
 	}
 
 	static List<String> load(String key) {
@@ -38,7 +43,13 @@ final class FolderHistory {
 	}
 
 	static void record(String key, Path path) {
-		String value = path.toString();
+		record(key, path.toString());
+	}
+
+	static void record(String key, String value) {
+		if (value == null || value.isBlank()) {
+			return;
+		}
 		List<String> entries = new ArrayList<>(load(key));
 		entries.remove(value);
 		entries.add(0, value);
@@ -60,7 +71,7 @@ final class FolderHistory {
 		try {
 			App.history().store();
 		} catch (IOException e) {
-			App.handleWarn("Failed to save folder history", e);
+			App.handleWarn("Failed to save input history", e);
 		}
 	}
 }
