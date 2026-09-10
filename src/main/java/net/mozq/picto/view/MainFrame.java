@@ -1998,7 +1998,6 @@ public class MainFrame extends JFrame {
 
 		ProcessConditionValues values = collectProcessConditionValues();
 
-		// Validations
 		if (!showValidationResult(ProcessConditionValidator.validate(values))) {
 			return null;
 		}
@@ -2007,7 +2006,6 @@ public class MainFrame extends JFrame {
 			return null;
 		}
 
-		// Information
 		if (values.checkDigest && (values.changeExifDate || values.removeExifTagsGps || values.removeExifTagsAll)) {
 			int ret = JOptionPane.showConfirmDialog(
 					frame,
@@ -2023,7 +2021,6 @@ public class MainFrame extends JFrame {
 			values.checkDigest = false;
 		}
 
-		// Set values
 		PictoPathFilter pathFilter = buildPathFilter(values);
 
 

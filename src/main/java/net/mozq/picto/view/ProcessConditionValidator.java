@@ -124,17 +124,20 @@ final class ProcessConditionValidator {
 	}
 
 	private static Result validateRanges(ProcessConditionValues values) {
-		if (values.sizeRangeFrom != null && values.sizeRangeTo != null
-				&& values.sizeRangeFrom.longValue() > values.sizeRangeTo.longValue()) {
-			return new Result(Messages.getString("message.warn.sizeRange.is.invalid.range"), Field.NONE);
+		Result result = validateRange(values.sizeRangeFrom, values.sizeRangeTo, "message.warn.sizeRange.is.invalid.range");
+		if (result != null) {
+			return result;
 		}
-		if (values.creationTimeRangeFrom != null && values.creationTimeRangeTo != null
-				&& values.creationTimeRangeFrom.compareTo(values.creationTimeRangeTo) > 0) {
-			return new Result(Messages.getString("message.warn.creationTimeRange.is.invalid.range"), Field.NONE);
+		result = validateRange(values.creationTimeRangeFrom, values.creationTimeRangeTo, "message.warn.creationTimeRange.is.invalid.range");
+		if (result != null) {
+			return result;
 		}
-		if (values.modifiedTimeRangeFrom != null && values.modifiedTimeRangeTo != null
-				&& values.modifiedTimeRangeFrom.compareTo(values.modifiedTimeRangeTo) > 0) {
-			return new Result(Messages.getString("message.warn.modifiedTimeRange.is.invalid.range"), Field.NONE);
+		return validateRange(values.modifiedTimeRangeFrom, values.modifiedTimeRangeTo, "message.warn.modifiedTimeRange.is.invalid.range");
+	}
+
+	private static <T extends Comparable<T>> Result validateRange(T from, T to, String messageKey) {
+		if (from != null && to != null && from.compareTo(to) > 0) {
+			return new Result(Messages.getString(messageKey), Field.NONE);
 		}
 		return null;
 	}
