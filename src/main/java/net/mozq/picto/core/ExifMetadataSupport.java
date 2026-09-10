@@ -22,7 +22,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -52,7 +51,6 @@ import net.mozq.picto.view.Messages;
 final class ExifMetadataSupport {
 
 	private static final String EXIF_DATE_PATTERN = "yyyy:MM:dd HH:mm:ss";
-	private static final String EXIF_SUBSEC_PATTERN = "00";
 	private static final DateTimeFormatter EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern(EXIF_DATE_PATTERN);
 
 	private ExifMetadataSupport() {
@@ -194,9 +192,13 @@ final class ExifMetadataSupport {
 		}
 	}
 
+	private static String twoDigits(int value) {
+		return value < 10 ? "0" + value : Integer.toString(value);
+	}
+
 	private static void updateDate(TiffOutputSet outputSet, Date exifDate, TimeZone timeZone) {
 		String exifBaseDate = EXIF_DATE_FORMATTER.withZone(timeZone.toZoneId()).format(exifDate.toInstant());
-		String exifBaseSubsec = new DecimalFormat(EXIF_SUBSEC_PATTERN).format((int)(exifDate.getTime() / 10) % 100);
+		String exifBaseSubsec = twoDigits((int)(exifDate.getTime() / 10) % 100);
 
 		try {
 			TiffOutputDirectory rootDirectory = outputSet.getRootDirectory();

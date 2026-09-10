@@ -61,6 +61,7 @@ class DateTimeInputPopup {
 	private final JComboBox<MonthItem> cmbMonth = new JComboBox<>();
 	private final JPanel pnlDays = new JPanel(new GridLayout(7, 7, 2, 2));
 	private final JLabel[] weekdayLabels = new JLabel[7];
+	private final String[] weekdayNames = Messages.getString("DateTimeInputPopup.weekdays").split(",");
 	// Package-private (not private): lets a test locate a specific day's rendered button directly, e.g. to
 	// pin down that refreshDatePopup() leaves an already-correct, mid-click button's armed/pressed state alone.
 	final JButton[] dayButtons = new JButton[42];
@@ -315,9 +316,8 @@ class DateTimeInputPopup {
 		try {
 			cmbYear.setSelectedItem(Integer.valueOf(visibleMonth.getYear()));
 			cmbMonth.setSelectedItem(new MonthItem(visibleMonth.getMonthValue(), locale));
-			String[] weekdays = Messages.getString("DateTimeInputPopup.weekdays").split(",");
 			for (int i = 0; i < weekdayLabels.length; i++) {
-				weekdayLabels[i].setText(i < weekdays.length ? weekdays[i] : "");
+				weekdayLabels[i].setText(i < weekdayNames.length ? weekdayNames[i] : "");
 			}
 			LocalDate firstDay = visibleMonth.atDay(1);
 			int leadingDays = firstDay.getDayOfWeek().getValue() % 7;
