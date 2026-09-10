@@ -63,14 +63,17 @@ class DateTimeInputPopup {
 	private final JComboBox<MonthItem> cmbMonth = new JComboBox<>();
 	private final JPanel pnlDays = new JPanel(new GridLayout(7, 7, 2, 2));
 	private final JLabel[] weekdayLabels = new JLabel[7];
-	private final JButton[] dayButtons = new JButton[42];
+	// Package-private (not private): lets a test locate a specific day's rendered button directly, e.g. to
+	// pin down that refreshDatePopup() leaves an already-correct, mid-click button's armed/pressed state alone.
+	final JButton[] dayButtons = new JButton[42];
 	private JPanel datePanel;
 	private Popup popup;
 	private boolean updating;
 	private boolean windowFocusListenerInstalled;
 	private boolean refreshScheduled;
 	private PopupMode popupMode;
-	private YearMonth visibleMonth;
+	// Package-private (not private): lets a test drive refreshDatePopup() for a specific month.
+	YearMonth visibleMonth;
 
 	DateTimeInputPopup(JFormattedTextField field, boolean endOfRange, Locale locale) {
 		this.field = field;
@@ -293,7 +296,8 @@ class DateTimeInputPopup {
 		refreshDatePopup(DateTimeText.parseParts(field.getText()));
 	}
 
-	private void moveMonth(int months) {
+	// Package-private (not private): see dayButtons.
+	void moveMonth(int months) {
 		visibleMonth = visibleMonth.plusMonths(months);
 		refreshDatePopup(DateTimeText.parseParts(field.getText()));
 	}
@@ -309,7 +313,8 @@ class DateTimeInputPopup {
 		}
 	}
 
-	private void refreshDatePopup(DateParts parts) {
+	// Package-private (not private): see dayButtons.
+	void refreshDatePopup(DateParts parts) {
 		updating = true;
 		try {
 			cmbYear.setSelectedItem(Integer.valueOf(visibleMonth.getYear()));
