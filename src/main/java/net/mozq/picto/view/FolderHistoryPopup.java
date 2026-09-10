@@ -21,8 +21,6 @@ import java.util.List;
 
 import javax.swing.text.JTextComponent;
 
-import net.mozq.picto.App;
-import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
 /** Shows a dropdown of recently used folder paths for a root-folder text field, backed by {@link InputHistory}. */
@@ -42,7 +40,7 @@ class FolderHistoryPopup {
 					field.setText(value);
 					field.selectAll();
 				},
-				item -> InputHistory.remove(App.history(), historyKey, item.value()),
+				item -> InputHistory.remove(historyKey, item.value()),
 				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT,
@@ -54,13 +52,6 @@ class FolderHistoryPopup {
 	}
 
 	private List<SuggestionSection> sections() {
-		List<String> entries = InputHistory.load(App.history(), historyKey);
-		if (entries.isEmpty()) {
-			return List.of();
-		}
-		return List.of(new SuggestionSection(
-				Messages.getString("MainFrame.history.title"),
-				entries.stream().map(path -> new SuggestionItem("", path)).toList(),
-				true));
+		return SuggestionPopup.historySection(historyKey);
 	}
 }

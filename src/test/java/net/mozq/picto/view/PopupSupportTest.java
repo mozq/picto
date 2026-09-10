@@ -79,6 +79,18 @@ class PopupSupportTest {
 	}
 
 	@Test
+	void keepsOpenOnANullFocusOwnerWhenTheCallerAcceptsItRegardless() {
+		JTextField field = new JTextField();
+		JPanel popupPanel = new JPanel();
+
+		// A transient null focus owner (e.g. some look-and-feels report this mid-transition while a child
+		// combo box's own dropdown is opening) must not close the popup when the caller's isAlsoAllowed
+		// check doesn't actually depend on which component focus is on - the mechanism
+		// DateTimeInputPopup relies on for its year/month combo boxes instead of a separate ad-hoc guard.
+		assertFalse(PopupSupport.shouldHidePopup(null, field, popupPanel, c -> true));
+	}
+
+	@Test
 	void installWindowFocusListenerFailsUntilTheFieldHasAWindowAncestor() {
 		JTextField orphanField = new JTextField();
 		assertFalse(PopupSupport.installWindowFocusListener(orphanField, () -> { }, () -> { }));

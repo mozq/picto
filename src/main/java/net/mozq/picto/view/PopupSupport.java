@@ -114,13 +114,55 @@ final class PopupSupport {
 	static boolean shouldHidePopup(Component focusOwner, JTextComponent field, Component popupPanel, Predicate<Component> isAlsoAllowed) {
 		if (focusOwner == null) {
 			// KeyboardFocusManager.clearGlobalFocusOwner() (the click-away-clears-focus handling in
-			// InputSupport) reports a null focus owner rather than transferring focus elsewhere; treat
-			// that as the field itself no longer holding focus, unless it still (rarely) reports otherwise.
-			return !field.isFocusOwner();
+			// InputSupport) reports a null focus owner rather than transferring focus elsewhere, as does a
+			// child combo box's own dropdown list momentarily during some look-and-feels' open/close
+			// transition. Treat that as the field itself no longer holding focus, unless it still (rarely)
+			// reports otherwise, or the caller's isAlsoAllowed check doesn't actually depend on which
+			// component focus is on (e.g. "one of my own combo boxes currently has its dropdown open").
+			return !field.isFocusOwner() && !isAlsoAllowed.test(null);
 		}
 		if (focusOwner == field || SwingUtilities.isDescendingFrom(focusOwner, popupPanel)) {
 			return false;
 		}
 		return !isAlsoAllowed.test(focusOwner);
+	}
+
+	/**
+	 * The symmetric counterpart to {@link #shouldHidePopup}: whether a field-anchored popup should be
+	 * treated as currently in use for reopening/refreshing purposes. True while the field itself holds
+	 * focus, the current focus owner is a descendant of {@code popupPanel}, or {@code isAlsoAllowed} accepts
+	 * it (e.g. a caller-specific related control).
+	 */
+	static boolean isPopupFocusActive(JTextComponent field, Component popupPanel, Predicate<Component> isAlsoAllowed) {
+		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		if (field.isFocusOwner() || focusOwner == field) {
+			return true;
+		}
+		return focusOwner != null
+				&& (SwingUtilities.isDescendingFrom(focusOwner, popupPanel) || isAlsoAllowed.test(focusOwner));
+	}
+
+	/**
+	 * Coalesces repeated refresh requests into a single trailing {@code invokeLater}, re-checking
+	 * {@code stillActive} at delivery time in case the state that justified refreshing (e.g. the field still
+	 * has focus) has changed while the request was pending. {@link SuggestionPopup} and
+	 * {@link DateTimeInputPopup} each need their own instance, since the "already scheduled" flag is
+	 * per-popup state.
+	 */
+	static final class DebouncedRefresh {
+		private boolean scheduled;
+
+		void request(BooleanSupplier stillActive, Runnable refresh) {
+			if (scheduled) {
+				return;
+			}
+			scheduled = true;
+			SwingUtilities.invokeLater(() -> {
+				scheduled = false;
+				if (stillActive.getAsBoolean()) {
+					refresh.run();
+				}
+			});
+		}
 	}
 }

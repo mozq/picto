@@ -26,10 +26,11 @@ import net.mozq.picto.App;
 
 /**
  * Most-recently-used text input history (recent folders, file name patterns, Subfolder templates, ...),
- * persisted in {@value net.mozq.picto.App#HISTORY_FILE_NAME}. Every method takes the backing
- * {@link AppSettings} explicitly (production callers pass {@link App#history()}) rather than reading it
- * off {@code App} internally, so the cap/dedupe/persist logic can be exercised in a test against an
- * isolated, temp-file-backed settings instance instead of the user's real history file.
+ * persisted in {@value net.mozq.picto.App#HISTORY_FILE_NAME}. The core cap/dedupe/persist logic takes the
+ * backing {@link AppSettings} explicitly, so it can be exercised in a test against an isolated,
+ * temp-file-backed settings instance instead of the user's real history file; every production call site
+ * instead uses the zero-arg-settings overloads below, which bind to {@link App#history()} once here instead
+ * of each caller repeating that binding.
  */
 final class InputHistory {
 	static final String SRC_ROOT_DIR_KEY = "src.root.dir";
@@ -42,12 +43,24 @@ final class InputHistory {
 	private InputHistory() {
 	}
 
+	static List<String> load(String key) {
+		return load(App.history(), key);
+	}
+
 	static List<String> load(AppSettings settings, String key) {
 		return settings.getList(key, String.class, List.of());
 	}
 
+	static void record(String key, Path path) {
+		record(App.history(), key, path);
+	}
+
 	static void record(AppSettings settings, String key, Path path) {
 		record(settings, key, path.toString());
+	}
+
+	static void record(String key, String value) {
+		record(App.history(), key, value);
 	}
 
 	static void record(AppSettings settings, String key, String value) {
@@ -61,6 +74,10 @@ final class InputHistory {
 			entries.remove(entries.size() - 1);
 		}
 		save(settings, key, entries);
+	}
+
+	static void remove(String key, String value) {
+		remove(App.history(), key, value);
 	}
 
 	static void remove(AppSettings settings, String key, String value) {

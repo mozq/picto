@@ -17,11 +17,9 @@
 package net.mozq.picto.view;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.IllegalComponentStateException;
-import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -70,7 +68,7 @@ class DateTimeInputPopup {
 	private Popup popup;
 	private boolean updating;
 	private boolean windowFocusListenerInstalled;
-	private boolean refreshScheduled;
+	private final PopupSupport.DebouncedRefresh debouncedRefresh = new PopupSupport.DebouncedRefresh();
 	private PopupMode popupMode;
 	// Package-private (not private): lets a test drive refreshDatePopup() for a specific month.
 	YearMonth visibleMonth;
@@ -214,10 +212,14 @@ class DateTimeInputPopup {
 	}
 
 	private void hidePopupIfFocusMovedAway() {
-		if (cmbYear.isPopupVisible() || cmbMonth.isPopupVisible()) {
-			return;
-		}
-		if (PopupSupport.shouldHidePopup(field, popupPanel, _ -> false)) {
+		// The year/month combo boxes' own dropdown lists render in their own floating windows, not as
+		// descendants of popupPanel or field, so a focus transition while one is open (including a
+		// transient null focus owner some look-and-feels report mid-transition) would otherwise be
+		// misread by shouldHidePopup as focus having left the popup entirely, closing the whole calendar
+		// out from under the user's in-progress year/month selection. isAlsoAllowed here ignores the focus
+		// owner it's given and checks isPopupVisible() directly instead, since it must also accept the
+		// transient-null case shouldHidePopup's null branch consults it for.
+		if (PopupSupport.shouldHidePopup(field, popupPanel, _ -> cmbYear.isPopupVisible() || cmbMonth.isPopupVisible())) {
 			hidePopup();
 		}
 	}
@@ -230,25 +232,19 @@ class DateTimeInputPopup {
 	}
 
 	private void refreshPopupLocation() {
-		if (popup == null || refreshScheduled) {
+		if (popup == null) {
 			return;
 		}
-		refreshScheduled = true;
-		SwingUtilities.invokeLater(() -> {
-			refreshScheduled = false;
-			if (popup == null || !field.isEnabled() || !isPopupFocusActive()) {
-				return;
-			}
-			hidePopupInstance();
-			showPopup();
-		});
+		debouncedRefresh.request(
+				() -> popup != null && field.isEnabled() && isPopupFocusActive(),
+				() -> {
+					hidePopupInstance();
+					showPopup();
+				});
 	}
 
 	private boolean isPopupFocusActive() {
-		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-		return field.isFocusOwner()
-				|| focusOwner == field
-				|| focusOwner != null && SwingUtilities.isDescendingFrom(focusOwner, popupPanel);
+		return PopupSupport.isPopupFocusActive(field, popupPanel, _ -> false);
 	}
 
 	private void buildDatePopup() {

@@ -23,7 +23,6 @@ import java.util.function.BooleanSupplier;
 
 import javax.swing.text.JTextComponent;
 
-import net.mozq.picto.App;
 import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
@@ -42,7 +41,7 @@ class FileNamePatternPopup {
 					field.setText(value);
 					field.selectAll();
 				},
-				item -> InputHistory.remove(App.history(), InputHistory.FILE_PATTERN_KEY, item.value()),
+				item -> InputHistory.remove(InputHistory.FILE_PATTERN_KEY, item.value()),
 				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT,
@@ -54,14 +53,7 @@ class FileNamePatternPopup {
 	}
 
 	private static List<SuggestionSection> sections(boolean regex) {
-		List<SuggestionSection> sections = new ArrayList<>();
-		List<String> history = InputHistory.load(App.history(), InputHistory.FILE_PATTERN_KEY);
-		if (!history.isEmpty()) {
-			sections.add(new SuggestionSection(
-					Messages.getString("MainFrame.history.title"),
-					history.stream().map(value -> new SuggestionItem("", value)).toList(),
-					true));
-		}
+		List<SuggestionSection> sections = new ArrayList<>(SuggestionPopup.historySection(InputHistory.FILE_PATTERN_KEY));
 		sections.addAll(regex ? regexSections() : wildcardSections());
 		return sections;
 	}

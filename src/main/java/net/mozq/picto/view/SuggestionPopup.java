@@ -26,7 +26,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.IllegalComponentStateException;
 import java.awt.Insets;
-import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
@@ -64,7 +63,7 @@ class SuggestionPopup {
 	private final int maxHeight;
 	private Popup popup;
 	private boolean windowFocusListenerInstalled;
-	private boolean refreshScheduled;
+	private final PopupSupport.DebouncedRefresh debouncedRefresh = new PopupSupport.DebouncedRefresh();
 
 	SuggestionPopup(
 			JTextComponent field,
@@ -175,18 +174,15 @@ class SuggestionPopup {
 	}
 
 	private void refreshPopup() {
-		if (popup == null || refreshScheduled) {
+		if (popup == null) {
 			return;
 		}
-		refreshScheduled = true;
-		SwingUtilities.invokeLater(() -> {
-			refreshScheduled = false;
-			if (popup == null || !field.isEnabled() || !isPopupFocusActive()) {
-				return;
-			}
-			hidePopup();
-			showPopup();
-		});
+		debouncedRefresh.request(
+				() -> popup != null && field.isEnabled() && isPopupFocusActive(),
+				() -> {
+					hidePopup();
+					showPopup();
+				});
 	}
 
 	// Package-private (not private) so a test can exercise the rendering and click behavior directly,
@@ -201,8 +197,7 @@ class SuggestionPopup {
 	}
 
 	private boolean isPopupFocusActive() {
-		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-		return field.isFocusOwner() || isRelatedFocusOwner(focusOwner);
+		return PopupSupport.isPopupFocusActive(field, popupPanel, this::isRelatedFocusOwner);
 	}
 
 	private boolean isRelatedFocusOwner(Component focusOwner) {
@@ -364,6 +359,23 @@ class SuggestionPopup {
 			return color;
 		}
 		return new Color(defaultBackground.getRed(), defaultBackground.getGreen(), defaultBackground.getBlue(), 24);
+	}
+
+	/**
+	 * The "Recent" section shared by every history-backed popup (folder fields, file name pattern, Subfolder
+	 * template): up to {@link InputHistory}'s cap of previously used values for {@code key}, or an empty list
+	 * when there's no history yet - so callers can {@code addAll} this into their own section list without
+	 * each re-deriving the same removable/title-key wrapping independently.
+	 */
+	static List<SuggestionSection> historySection(String key) {
+		List<String> entries = InputHistory.load(key);
+		if (entries.isEmpty()) {
+			return List.of();
+		}
+		return List.of(new SuggestionSection(
+				Messages.getString("MainFrame.history.title"),
+				entries.stream().map(value -> new SuggestionItem("", value)).toList(),
+				true));
 	}
 
 	/**

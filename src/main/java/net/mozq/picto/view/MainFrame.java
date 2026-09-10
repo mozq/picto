@@ -1922,12 +1922,12 @@ public class MainFrame extends JFrame {
 		}
 
 		if (!dryRun) {
-			InputHistory.record(App.history(), InputHistory.SRC_ROOT_DIR_KEY, processCondition.getSrcRootPath());
+			InputHistory.record(InputHistory.SRC_ROOT_DIR_KEY, processCondition.getSrcRootPath());
 			if (processCondition.getOperationType() != OperationType.Overwrite) {
-				InputHistory.record(App.history(), InputHistory.DEST_ROOT_DIR_KEY, processCondition.getDestRootPath());
+				InputHistory.record(InputHistory.DEST_ROOT_DIR_KEY, processCondition.getDestRootPath());
 			}
-			InputHistory.record(App.history(), InputHistory.FILE_PATTERN_KEY, fieldText(txtFilePattern));
-			InputHistory.record(App.history(), InputHistory.DEST_SUB_PATH_PATTERN_KEY, fieldText(txtDestSubPathPattern));
+			InputHistory.record(InputHistory.FILE_PATTERN_KEY, fieldText(txtFilePattern));
+			InputHistory.record(InputHistory.DEST_SUB_PATH_PATTERN_KEY, fieldText(txtDestSubPathPattern));
 		}
 
 		ProcessDialog processDialog = new ProcessDialog(frame);
