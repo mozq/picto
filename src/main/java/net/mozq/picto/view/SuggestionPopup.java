@@ -64,6 +64,7 @@ class SuggestionPopup {
 	private Popup popup;
 	private boolean windowFocusListenerInstalled;
 	private final PopupSupport.DebouncedRefresh debouncedRefresh = new PopupSupport.DebouncedRefresh();
+	private final PopupSupport.EscapeToHide escapeToHide;
 
 	SuggestionPopup(
 			JTextComponent field,
@@ -97,6 +98,7 @@ class SuggestionPopup {
 		this.maxHeight = maxHeight;
 		this.relatedFocusComponents = List.of(relatedFocusComponents);
 		this.popupPanel.setBorder(PopupSupport.createPopupBorder());
+		this.escapeToHide = new PopupSupport.EscapeToHide(field, this::hidePopup);
 		installListeners();
 	}
 
@@ -155,6 +157,7 @@ class SuggestionPopup {
 			Point location = field.getLocationOnScreen();
 			popup = PopupFactory.getSharedInstance().getPopup(field, popupPanel, location.x, location.y + field.getHeight());
 			popup.show();
+			escapeToHide.install();
 		} catch (IllegalComponentStateException _) {
 			hidePopup();
 		}
@@ -174,6 +177,7 @@ class SuggestionPopup {
 		if (activePopup == this) {
 			activePopup = null;
 		}
+		escapeToHide.uninstall();
 	}
 
 	private void refreshPopup() {

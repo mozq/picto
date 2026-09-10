@@ -20,16 +20,21 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.KeyboardFocusManager;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeListener;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
@@ -174,6 +179,39 @@ final class PopupSupport {
 					refresh.run();
 				}
 			});
+		}
+	}
+
+	/**
+	 * Lets Escape close a field-anchored popup without moving focus off the field, for when the field
+	 * already has focus but the popup itself is just in the way (the standard convention for dismissing an
+	 * autocomplete/suggestion overlay - browser address bars, IDE completion, OS text-field suggestions all
+	 * do this). The binding is installed only while the popup is actually showing and removed as soon as it
+	 * closes, so pressing Escape with nothing showing falls through to any outer Escape handling (e.g. a
+	 * dialog's own close-on-Escape) instead of being silently swallowed.
+	 */
+	static final class EscapeToHide {
+		private static final String ACTION_KEY = "picto.hideOnEscape";
+		private static final KeyStroke ESCAPE = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+
+		private final JComponent field;
+
+		EscapeToHide(JComponent field, Runnable onEscape) {
+			this.field = field;
+			field.getActionMap().put(ACTION_KEY, new AbstractAction() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					onEscape.run();
+				}
+			});
+		}
+
+		void install() {
+			field.getInputMap(JComponent.WHEN_FOCUSED).put(ESCAPE, ACTION_KEY);
+		}
+
+		void uninstall() {
+			field.getInputMap(JComponent.WHEN_FOCUSED).remove(ESCAPE);
 		}
 	}
 }

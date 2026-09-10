@@ -17,13 +17,20 @@
 package net.mozq.picto.view;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyEvent;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 import org.junit.jupiter.api.Test;
 
@@ -106,6 +113,27 @@ class PopupSupportTest {
 				new FocusEvent(field, FocusEvent.FOCUS_GAINED, false, null, FocusEvent.Cause.MOUSE_EVENT)));
 		assertFalse(PopupSupport.isWindowActivationFocus(
 				new FocusEvent(field, FocusEvent.FOCUS_GAINED, false, null, FocusEvent.Cause.TRAVERSAL_FORWARD)));
+	}
+
+	@Test
+	void escapeToHideOnlyInterceptsEscapeWhileInstalled() {
+		JTextField field = new JTextField();
+		AtomicBoolean hidden = new AtomicBoolean();
+		PopupSupport.EscapeToHide escapeToHide = new PopupSupport.EscapeToHide(field, () -> hidden.set(true));
+		KeyStroke escapeKey = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+
+		assertNull(field.getInputMap(JComponent.WHEN_FOCUSED).get(escapeKey),
+				"must not intercept Escape before install(), so it falls through to any outer handling");
+
+		escapeToHide.install();
+		Object actionKey = field.getInputMap(JComponent.WHEN_FOCUSED).get(escapeKey);
+		assertNotNull(actionKey);
+		field.getActionMap().get(actionKey).actionPerformed(new ActionEvent(field, ActionEvent.ACTION_PERFORMED, null));
+		assertTrue(hidden.get(), "the bound action must invoke the onEscape callback");
+
+		escapeToHide.uninstall();
+		assertNull(field.getInputMap(JComponent.WHEN_FOCUSED).get(escapeKey),
+				"must stop intercepting Escape once uninstalled");
 	}
 
 	@Test

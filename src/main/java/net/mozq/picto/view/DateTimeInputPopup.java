@@ -70,6 +70,7 @@ class DateTimeInputPopup {
 	private boolean updating;
 	private boolean windowFocusListenerInstalled;
 	private final PopupSupport.DebouncedRefresh debouncedRefresh = new PopupSupport.DebouncedRefresh();
+	private final PopupSupport.EscapeToHide escapeToHide;
 	private PopupMode popupMode;
 	// Package-private (not private): lets a test drive refreshDatePopup() for a specific month.
 	YearMonth visibleMonth;
@@ -80,6 +81,7 @@ class DateTimeInputPopup {
 		this.locale = locale;
 		this.visibleMonth = representativeMonth(DateTimeText.parseParts(field.getText()));
 		this.popupPanel.setBorder(PopupSupport.createPopupBorder());
+		this.escapeToHide = new PopupSupport.EscapeToHide(field, this::hidePopup);
 		buildDatePopup();
 		installListeners();
 	}
@@ -193,6 +195,7 @@ class DateTimeInputPopup {
 			Point location = field.getLocationOnScreen();
 			popup = PopupFactory.getSharedInstance().getPopup(field, popupPanel, location.x, location.y + field.getHeight());
 			popup.show();
+			escapeToHide.install();
 		} catch (IllegalComponentStateException _) {
 			hidePopup();
 		}
@@ -233,6 +236,7 @@ class DateTimeInputPopup {
 			popup.hide();
 			popup = null;
 		}
+		escapeToHide.uninstall();
 	}
 
 	private void refreshPopupLocation() {
