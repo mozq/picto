@@ -37,6 +37,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Popup;
@@ -46,6 +47,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.text.JTextComponent;
 
+import com.formdev.flatlaf.FlatClientProperties;
+
 class SuggestionPopup {
 	private static final int LABEL_COLUMN_PADDING = 8;
 	private static SuggestionPopup activePopup;
@@ -53,6 +56,8 @@ class SuggestionPopup {
 	private final JTextComponent field;
 	private final Supplier<List<SuggestionSection>> sectionsSupplier;
 	private final Consumer<String> valueConsumer;
+	private final Consumer<SuggestionItem> onDelete;
+	private final String deleteTooltip;
 	private final List<Component> relatedFocusComponents;
 	private final JPanel popupPanel = new JPanel(new BorderLayout());
 	private final int minWidth;
@@ -68,9 +73,27 @@ class SuggestionPopup {
 			int minWidth,
 			int maxHeight,
 			Component... relatedFocusComponents) {
+		this(field, sectionsSupplier, valueConsumer, null, null, minWidth, maxHeight, relatedFocusComponents);
+	}
+
+	/**
+	 * @param onDelete when non-null, each item shows a small "remove" button (tooltipped with
+	 * {@code deleteTooltip}) that calls this with the item instead of picking it, then refreshes the popup.
+	 */
+	SuggestionPopup(
+			JTextComponent field,
+			Supplier<List<SuggestionSection>> sectionsSupplier,
+			Consumer<String> valueConsumer,
+			Consumer<SuggestionItem> onDelete,
+			String deleteTooltip,
+			int minWidth,
+			int maxHeight,
+			Component... relatedFocusComponents) {
 		this.field = field;
 		this.sectionsSupplier = sectionsSupplier;
 		this.valueConsumer = valueConsumer;
+		this.onDelete = onDelete;
+		this.deleteTooltip = deleteTooltip;
 		this.minWidth = minWidth;
 		this.maxHeight = maxHeight;
 		this.relatedFocusComponents = List.of(relatedFocusComponents);
@@ -112,7 +135,7 @@ class SuggestionPopup {
 	}
 
 	private void showPopup() {
-		if (!field.isEnabled() || !isPopupFocusActive() || popup != null) {
+		if (!field.isEnabled() || !isPopupFocusActive() || popup != null || !hasAnyItems()) {
 			return;
 		}
 		if (activePopup != null && activePopup != this) {
@@ -164,6 +187,15 @@ class SuggestionPopup {
 			hidePopup();
 			showPopup();
 		});
+	}
+
+	private boolean hasAnyItems() {
+		for (SuggestionSection section : sectionsSupplier.get()) {
+			if (!section.items().isEmpty()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isPopupFocusActive() {
@@ -273,6 +305,28 @@ class SuggestionPopup {
 		valueGbc.anchor = GridBagConstraints.WEST;
 		valueGbc.weightx = 1.0;
 		row.add(valueLabel, valueGbc);
+
+		if (onDelete != null) {
+			JButton deleteButton = new JButton("✕");
+			deleteButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+			deleteButton.setMargin(new Insets(0, 4, 0, 4));
+			deleteButton.setToolTipText(deleteTooltip);
+			deleteButton.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			deleteButton.addActionListener(_ -> {
+				onDelete.accept(item);
+				// Clicking the button shifts focus to it; refresh()'s reopen check only keeps the popup
+				// open while the field (or a declared related component) has focus, so hand focus back
+				// to the field first or the popup would simply vanish instead of redrawing without this item.
+				field.requestFocusInWindow();
+				refresh();
+			});
+			GridBagConstraints deleteGbc = new GridBagConstraints();
+			deleteGbc.gridx = 2;
+			deleteGbc.gridy = 0;
+			deleteGbc.anchor = GridBagConstraints.EAST;
+			deleteGbc.insets = new Insets(0, 8, 0, 0);
+			row.add(deleteButton, deleteGbc);
+		}
 
 		gbc.gridy++;
 		content.add(row, gbc);

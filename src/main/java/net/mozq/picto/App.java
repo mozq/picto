@@ -31,6 +31,7 @@ public class App {
 	public static final String GROUP_NAME = "mozq";
 	public static final String APP_NAME = "picto";
 	public static final String SETTINGS_FILE_NAME = "settings.conf";
+	public static final String HISTORY_FILE_NAME = "history.conf";
 	public static final String WARNS_FILE_NAME = "warns.log";
 	public static final String ERRORS_FILE_NAME = "errors.log";
 
@@ -38,6 +39,7 @@ public class App {
 			.withZone(ZoneId.systemDefault());
 
 	private static AppSettings settings = null;
+	private static AppSettings history = null;
 	private static AppSettingsMigration.Result settingsMigrationResult = AppSettingsMigration.Result.none();
 	private static Path warnsFilePath = null;
 	private static Path errorsFilePath = null;
@@ -54,6 +56,11 @@ public class App {
 			settings.load();
 		}
 
+		// Load history (e.g. recently used folders) - kept separate from settings.conf since it's
+		// recorded usage data rather than a user-chosen preference.
+		history = AppSettings.of(GROUP_NAME, APP_NAME, HISTORY_FILE_NAME);
+		history.load();
+
 		Path appDirectory = settings.path().getParent();
 		warnsFilePath = appDirectory.resolve(WARNS_FILE_NAME);
 		errorsFilePath = appDirectory.resolve(ERRORS_FILE_NAME);
@@ -65,6 +72,10 @@ public class App {
 
 	public static AppSettings settings() {
 		return settings;
+	}
+
+	public static AppSettings history() {
+		return history;
 	}
 
 	public static void deleteMigratedLegacySettingsIfNeeded() {
