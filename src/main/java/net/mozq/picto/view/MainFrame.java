@@ -574,21 +574,7 @@ public class MainFrame extends JFrame {
 		InputSupport.installLabelFocusAction(lblSrcConditionsTitle, txtSrcRootDirPath, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtSrcRootDirPath);
 		new FolderHistoryPopup(txtSrcRootDirPath, InputHistory.SRC_ROOT_DIR_KEY);
-		btnSrcRootDirSelect.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser filechooser = new JFileChooser();
-				filechooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				if (!txtSrcRootDirPath.getText().isEmpty()) {
-					filechooser.setCurrentDirectory(new File(txtSrcRootDirPath.getText()));
-				}
-
-				int selected = filechooser.showOpenDialog(frame);
-				if (selected == JFileChooser.APPROVE_OPTION) {
-					File file = filechooser.getSelectedFile();
-					txtSrcRootDirPath.setText(file.getAbsolutePath());
-				}
-			}
-		});
+		installFolderChooserButton(btnSrcRootDirSelect, txtSrcRootDirPath);
 
 		sourceOptionsPanel = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
 		stylizeOptionsBody(sourceOptionsPanel, OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT);
@@ -739,21 +725,7 @@ public class MainFrame extends JFrame {
 		InputSupport.installLabelFocusAction(lblDestConditionsTitle, txtDestRootDirPath, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtDestRootDirPath);
 		new FolderHistoryPopup(txtDestRootDirPath, InputHistory.DEST_ROOT_DIR_KEY);
-		btnDestRootDirSelect.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser filechooser = new JFileChooser();
-				filechooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				if (!txtDestRootDirPath.getText().isEmpty()) {
-					filechooser.setCurrentDirectory(new File(txtDestRootDirPath.getText()));
-				}
-
-				int selected = filechooser.showOpenDialog(frame);
-				if (selected == JFileChooser.APPROVE_OPTION) {
-					File file = filechooser.getSelectedFile();
-					txtDestRootDirPath.setText(file.getAbsolutePath());
-				}
-			}
-		});
+		installFolderChooserButton(btnDestRootDirSelect, txtDestRootDirPath);
 
 		destinationOptionsPanel = new DestinationOptionsPanel();
 		stylizeOptionsBody(destinationOptionsPanel);
@@ -1438,6 +1410,22 @@ public class MainFrame extends JFrame {
 		button.setMargin(new Insets(2, 4, 2, 4));
 		setOptionsToggleButtonText(button, title, false);
 		return button;
+	}
+
+	private void installFolderChooserButton(JButton button, JTextField targetField) {
+		button.addActionListener(_ -> {
+			JFileChooser filechooser = new JFileChooser();
+			filechooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			if (!targetField.getText().isEmpty()) {
+				filechooser.setCurrentDirectory(new File(targetField.getText()));
+			}
+
+			int selected = filechooser.showOpenDialog(frame);
+			if (selected == JFileChooser.APPROVE_OPTION) {
+				File file = filechooser.getSelectedFile();
+				targetField.setText(file.getAbsolutePath());
+			}
+		});
 	}
 
 	private static void configureFolderSelectButton(JButton button) {
