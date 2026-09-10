@@ -84,14 +84,23 @@ final class InputSupport {
 			// interacted with; let it finish committing the selection undisturbed.
 			return false;
 		}
-		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
-		if (focusOwner == null) {
-			return false;
-		}
 		if (!(event.getSource() instanceof Component)) {
 			return false;
 		}
 		Component clicked = (Component)event.getSource();
+		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		return isClickAway(focusOwner, clicked);
+	}
+
+	/**
+	 * The click-away decision itself, factored out of {@link #isClickAwayFromFocusedComponent(AWTEvent)} so it
+	 * can be exercised deterministically (e.g. from a test) with synthetic components instead of the ambient
+	 * {@code KeyboardFocusManager} focus owner and a real {@code AWTEvent}.
+	 */
+	static boolean isClickAway(Component focusOwner, Component clicked) {
+		if (focusOwner == null) {
+			return false;
+		}
 		if (clicked == focusOwner || SwingUtilities.isDescendingFrom(clicked, focusOwner)) {
 			return false;
 		}

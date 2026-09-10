@@ -189,7 +189,9 @@ class SuggestionPopup {
 		});
 	}
 
-	private boolean hasAnyItems() {
+	// Package-private (not private) so a test can exercise the rendering and click behavior directly,
+	// without a real focused window to drive showPopup()'s focus-gated path.
+	boolean hasAnyItems() {
 		for (SuggestionSection section : sectionsSupplier.get()) {
 			if (!section.items().isEmpty()) {
 				return true;
@@ -215,7 +217,8 @@ class SuggestionPopup {
 		return false;
 	}
 
-	private JScrollPane createContent() {
+	// Package-private (not private): see hasAnyItems().
+	JScrollPane createContent() {
 		List<SuggestionSection> sections = sectionsSupplier.get();
 		int labelWidth = calculateLabelWidth(sections);
 

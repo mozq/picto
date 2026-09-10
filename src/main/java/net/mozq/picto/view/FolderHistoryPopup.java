@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.swing.text.JTextComponent;
 
+import net.mozq.picto.App;
 import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
@@ -41,7 +42,7 @@ class FolderHistoryPopup {
 					field.setText(value);
 					field.selectAll();
 				},
-				item -> InputHistory.remove(historyKey, item.value()),
+				item -> InputHistory.remove(App.history(), historyKey, item.value()),
 				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT,
@@ -53,7 +54,7 @@ class FolderHistoryPopup {
 	}
 
 	private List<SuggestionSection> sections() {
-		List<String> entries = InputHistory.load(historyKey);
+		List<String> entries = InputHistory.load(App.history(), historyKey);
 		if (entries.isEmpty()) {
 			return List.of();
 		}

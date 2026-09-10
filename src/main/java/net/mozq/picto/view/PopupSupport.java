@@ -104,7 +104,14 @@ final class PopupSupport {
 	 * by {@code isAlsoAllowed} (e.g. a caller-specific related control) holds focus.
 	 */
 	static boolean shouldHidePopup(JTextComponent field, Component popupPanel, Predicate<Component> isAlsoAllowed) {
-		Component focusOwner = KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+		return shouldHidePopup(
+				KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner(), field, popupPanel, isAlsoAllowed);
+	}
+
+	/** Same as {@link #shouldHidePopup(JTextComponent, Component, Predicate)}, with the focus owner passed in
+	 * explicitly (rather than read from the ambient {@code KeyboardFocusManager}) so the decision can be
+	 * exercised deterministically, e.g. from a test, without a real focused window. */
+	static boolean shouldHidePopup(Component focusOwner, JTextComponent field, Component popupPanel, Predicate<Component> isAlsoAllowed) {
 		if (focusOwner == null) {
 			// KeyboardFocusManager.clearGlobalFocusOwner() (the click-away-clears-focus handling in
 			// InputSupport) reports a null focus owner rather than transferring focus elsewhere; treat

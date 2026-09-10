@@ -28,6 +28,7 @@ import javax.swing.text.JTextComponent;
 
 import net.mozq.nanotemplate.NanoTemplate;
 
+import net.mozq.picto.App;
 import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
@@ -54,7 +55,7 @@ class SubfolderTemplatePopup {
 				field,
 				SubfolderTemplatePopup::sections,
 				value -> field.replaceSelection(value),
-				item -> InputHistory.remove(InputHistory.DEST_SUB_PATH_PATTERN_KEY, item.value()),
+				item -> InputHistory.remove(App.history(), InputHistory.DEST_SUB_PATH_PATTERN_KEY, item.value()),
 				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT);
@@ -62,7 +63,7 @@ class SubfolderTemplatePopup {
 
 	private static List<SuggestionSection> sections() {
 		List<SuggestionSection> sections = new ArrayList<>();
-		List<String> history = InputHistory.load(InputHistory.DEST_SUB_PATH_PATTERN_KEY);
+		List<String> history = InputHistory.load(App.history(), InputHistory.DEST_SUB_PATH_PATTERN_KEY);
 		if (!history.isEmpty()) {
 			sections.add(new SuggestionSection(
 					Messages.getString("MainFrame.history.title"),
