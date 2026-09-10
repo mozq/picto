@@ -110,6 +110,9 @@ class SuggestionPopup {
 		field.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
+				if (PopupSupport.isWindowActivationFocus(e)) {
+					return;
+				}
 				SwingUtilities.invokeLater(SuggestionPopup.this::showPopup);
 			}
 

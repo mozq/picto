@@ -22,6 +22,7 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Window;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.FocusEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeListener;
@@ -125,6 +126,16 @@ final class PopupSupport {
 			return false;
 		}
 		return !isAlsoAllowed.test(focusOwner);
+	}
+
+	/**
+	 * Whether {@code e} is the focus grant Swing performs automatically when a window becomes active and
+	 * needs to pick a default focus owner, rather than one caused by an actual user action (a click, Tab,
+	 * or explicit request). Field-anchored popups use this to avoid popping up uninvited the moment a
+	 * window first opens, while still letting the field receive that initial focus normally.
+	 */
+	static boolean isWindowActivationFocus(FocusEvent e) {
+		return e.getCause() == FocusEvent.Cause.ACTIVATION;
 	}
 
 	/**

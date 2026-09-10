@@ -19,6 +19,8 @@ package net.mozq.picto.view;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.event.FocusEvent;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -88,6 +90,22 @@ class PopupSupportTest {
 		// check doesn't actually depend on which component focus is on - the mechanism
 		// DateTimeInputPopup relies on for its year/month combo boxes instead of a separate ad-hoc guard.
 		assertFalse(PopupSupport.shouldHidePopup(null, field, popupPanel, c -> true));
+	}
+
+	@Test
+	void windowActivationFocusIsRecognizedRegardlessOfUserDrivenFocusCauses() {
+		JTextField field = new JTextField();
+
+		// Swing reports the automatic focus grant a window makes when it becomes active (no user action
+		// involved) as ACTIVATION - this is exactly the transition a popup must not react to, e.g. by
+		// popping up uninvited the moment a window first opens. A real click or Tab traversal reports a
+		// different cause and must still be treated as a genuine focus gain.
+		assertTrue(PopupSupport.isWindowActivationFocus(
+				new FocusEvent(field, FocusEvent.FOCUS_GAINED, false, null, FocusEvent.Cause.ACTIVATION)));
+		assertFalse(PopupSupport.isWindowActivationFocus(
+				new FocusEvent(field, FocusEvent.FOCUS_GAINED, false, null, FocusEvent.Cause.MOUSE_EVENT)));
+		assertFalse(PopupSupport.isWindowActivationFocus(
+				new FocusEvent(field, FocusEvent.FOCUS_GAINED, false, null, FocusEvent.Cause.TRAVERSAL_FORWARD)));
 	}
 
 	@Test
