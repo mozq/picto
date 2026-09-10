@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -36,6 +37,8 @@ import net.mozq.picto.core.ResumableFileWalker;
  */
 final class SourceFileScanner {
 	private static final long IDLE_POLL_MS = 100;
+	private static final long STATUS_THROTTLE_MS = 100;
+	private static final long STATUS_THROTTLE_NANOS = TimeUnit.MILLISECONDS.toNanos(STATUS_THROTTLE_MS);
 
 	private final Path srcRootPath;
 	private final List<ProcessCore.CachedFile> cache = new ArrayList<>();
@@ -43,6 +46,9 @@ final class SourceFileScanner {
 	private final AtomicBoolean cancelled = new AtomicBoolean();
 	private boolean exhausted;
 	private boolean stopped;
+	// Pump-thread-only state (no synchronization needed: pump() is the sole writer/reader of these two).
+	private boolean statusPosted;
+	private long lastStatusPostNanos;
 
 	private volatile PictoPathFilter targetFilter;
 	private volatile boolean targetIncludeSubfolders;
@@ -127,6 +133,24 @@ final class SourceFileScanner {
 					currentMatches++;
 				}
 			}
+			postStatusIfDue();
+		}
+	}
+
+	/**
+	 * Posts progress at most once every {@link #STATUS_THROTTLE_MS} while scanning, instead of once per file
+	 * found: on a large folder, posting unthrottled floods the EDT (each post is wrapped in an
+	 * invokeLater by the caller) with far more UI updates than a human can perceive, competing with
+	 * keystroke and other UI event handling. The first post is never throttled, so a caller that reacts to
+	 * the very first progress update (e.g. to pause the scan) still sees one promptly. Terminal/user-driven
+	 * transitions (exhaustion, stop/resume, a condition change) always post immediately via their own
+	 * statusListener.accept(status()) calls, bypassing this throttle entirely.
+	 */
+	private void postStatusIfDue() {
+		long now = System.nanoTime();
+		if (!statusPosted || now - lastStatusPostNanos >= STATUS_THROTTLE_NANOS) {
+			statusPosted = true;
+			lastStatusPostNanos = now;
 			statusListener.accept(status());
 		}
 	}
