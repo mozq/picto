@@ -60,6 +60,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
@@ -105,6 +106,7 @@ public class ProcessDialog extends JDialog {
 	private final JButton btnStop;
 	private JPanel pnlControls;
 	private JButton btnClose;
+	private Runnable onStateChanged = () -> { };
 
 	/**
 	 * Create the dialog.
@@ -292,11 +294,16 @@ public class ProcessDialog extends JDialog {
 		btnClose.setMnemonic(KeyEvent.VK_C);
 		btnClose.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				dialog.dispose();
+				dialog.setVisible(false);
 			}
 		});
 		btnClose.setVisible(false);
 		pnlControls.add(btnClose);
+
+		// Hiding (not disposing) on both Close and the window's own close button lets MainFrame keep this
+		// dialog around and bring it back into view later - the results stay reachable until superseded by
+		// a new run, instead of being lost the moment the window is dismissed.
+		setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 
 		getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
 				KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "picto.stopOrClose");
@@ -316,6 +323,20 @@ public class ProcessDialog extends JDialog {
 		tableModel.addTableModelListener(_ -> updateOverallProgress());
 
 		dialog = this;
+	}
+
+	/**
+	 * Lets a caller (MainFrame) track this dialog's processing/completed state from outside, e.g. to keep a
+	 * status indicator in sync and to know when it's safe to let another run start. Called once right after
+	 * a run starts and once when it completes; not called for intermediate per-file progress.
+	 */
+	public void setOnStateChanged(Runnable onStateChanged) {
+		this.onStateChanged = onStateChanged;
+	}
+
+	/** Whether a run is currently in progress (the Stop button is showing), as opposed to finished/idle. */
+	public boolean isProcessing() {
+		return btnStop.isVisible();
 	}
 
 	public void doProcess(ProcessCondition processCondition) {
@@ -348,6 +369,7 @@ public class ProcessDialog extends JDialog {
 			}
 		});
 		processRunner.start();
+		onStateChanged.run();
 	}
 
 	public void addProcessData(ProcessData processData) {
@@ -457,6 +479,7 @@ public class ProcessDialog extends JDialog {
 			btnStop.setVisible(false);
 			btnClose.setVisible(true);
 			updateOverallProgress();
+			onStateChanged.run();
 		});
 	}
 
@@ -538,6 +561,7 @@ public class ProcessDialog extends JDialog {
 			}
 		});
 		processRunner.reprocess(items);
+		onStateChanged.run();
 	}
 
 	private static void runOnEventDispatchThread(Runnable runnable) {

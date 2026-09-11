@@ -74,6 +74,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
@@ -124,6 +125,8 @@ public class MainFrame extends JFrame {
 	private static final int INLINE_VGAP = 2;
 	private static final int RUN_SPLIT_BUTTON_OVERLAP = 4;
 	private static final int RUN_MENU_BUTTON_WIDTH = 28;
+	private static final int RUN_STATUS_ICON_SIZE = 24;
+	private static final int RUN_STATUS_ICON_PADDING = 8;
 	private static final int OPTIONS_BODY_PADDING = 12;
 	private static final int OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT = 4;
 	private static final int OPTIONS_BODY_ARC = 12;
@@ -239,6 +242,8 @@ public class MainFrame extends JFrame {
 	private JMenuItem mntmImportSettings;
 	private JMenuItem mntmExportSettings;
 	private boolean processing;
+	private JLabel lblRunStatus;
+	private ProcessDialog lastProcessDialog;
 
 	private static final class MainFrameState {
 		private final Rectangle bounds;
@@ -868,9 +873,45 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-		JPanel pnlRunButton = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+		JPanel pnlRunButton = new JPanel(new FlowLayout(FlowLayout.CENTER, INLINE_HGAP, 0));
 		pnlRunButton.setBorder(null);
 		pnlRunButton.add(newRunSplitButtonPanel(btnStart, btnStartMenu));
+
+		// A fixed-size square, regardless of whether an icon is currently set, so toggling it on/off (or
+		// between the processing/results icons) never shifts btnStart's own centered position. The icon is
+		// centered inside it with room to spare on every side, so the circular hover chip (a square with an
+		// arc equal to its own size rounds into a true circle) reads as clickable padding around the icon
+		// rather than a shape hugging it tightly.
+		int runStatusDiameter = RUN_STATUS_ICON_SIZE + RUN_STATUS_ICON_PADDING * 2;
+		lblRunStatus = new JLabel();
+		lblRunStatus.setPreferredSize(new Dimension(runStatusDiameter, runStatusDiameter));
+		lblRunStatus.setHorizontalAlignment(SwingConstants.CENTER);
+		lblRunStatus.setOpaque(true);
+		lblRunStatus.putClientProperty(FlatClientProperties.STYLE, "arc: " + runStatusDiameter);
+		Color runStatusBackground = lblRunStatus.getBackground();
+		Color runStatusHoverBackground = shade(color("Panel.background", new Color(0xf2f2f2)));
+		lblRunStatus.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				showLastProcessDialog();
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// Nothing to click through to yet (no run has happened since the last one was superseded) -
+				// the hover highlight would otherwise falsely suggest this spot does something right now.
+				if (lblRunStatus.getIcon() != null) {
+					lblRunStatus.setBackground(runStatusHoverBackground);
+				}
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				lblRunStatus.setBackground(runStatusBackground);
+			}
+		});
+		pnlRunButton.add(lblRunStatus);
+
 		pnlControls.add(pnlRunButton, BorderLayout.CENTER);
 
 		lblRunSummary = newRunSummaryLabel();
@@ -1900,6 +1941,13 @@ public class MainFrame extends JFrame {
 	}
 
 	private void runProcess(boolean dryRun) {
+		if (lastProcessDialog != null && lastProcessDialog.isProcessing()) {
+			// A run is still going in the background (the dialog may have just been closed rather than
+			// stopped) - surface it instead of starting a second one concurrently over the same files.
+			showLastProcessDialog();
+			return;
+		}
+
 		ProcessCondition processCondition = createProcessCondition(dryRun);
 
 		if (processCondition == null) {
@@ -1916,15 +1964,51 @@ public class MainFrame extends JFrame {
 			InputHistory.record(InputHistory.DEST_SUB_PATH_PATTERN_KEY, fieldText(txtDestSubPathPattern));
 		}
 
+		if (lastProcessDialog != null) {
+			// The previous run already finished (isProcessing() is false above) and the user has moved on
+			// to a new one; its results are no longer reachable via the status icon once replaced, so it's
+			// safe to release it now.
+			lastProcessDialog.dispose();
+		}
+
 		ProcessDialog processDialog = new ProcessDialog(frame);
 		processDialog.setModalityType(ModalityType.DOCUMENT_MODAL);
 		processDialog.setLocationRelativeTo(frame);
+		processDialog.setOnStateChanged(this::updateRunStatusIndicator);
+		lastProcessDialog = processDialog;
 		processing = true;
 		mnSettings.setEnabled(false);
-		try {
-			processDialog.doProcess(processCondition);
-			processDialog.setVisible(true);
-		} finally {
+		processDialog.doProcess(processCondition);
+		// setVisible(true) on a modal dialog blocks until it's hidden, which - now that closing only hides
+		// it (see ProcessDialog's HIDE_ON_CLOSE) - can happen well before the background run actually
+		// completes. Clearing `processing`/re-enabling the settings menu is handled by
+		// updateRunStatusIndicator() reacting to the dialog's real completion instead of happening here.
+		processDialog.setVisible(true);
+	}
+
+	private void showLastProcessDialog() {
+		if (lastProcessDialog == null) {
+			return;
+		}
+		lastProcessDialog.setVisible(true);
+		lastProcessDialog.toFront();
+	}
+
+	private void updateRunStatusIndicator() {
+		if (lastProcessDialog == null) {
+			lblRunStatus.setIcon(null);
+			lblRunStatus.setToolTipText(null);
+			lblRunStatus.setCursor(Cursor.getDefaultCursor());
+			return;
+		}
+		lblRunStatus.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		Color runStatusIconColor = color("Label.foreground", Color.BLACK);
+		if (lastProcessDialog.isProcessing()) {
+			lblRunStatus.setIcon(IconSupport.loadIcon("net/mozq/picto/resources/icons/icon-run-processing.png", RUN_STATUS_ICON_SIZE, runStatusIconColor));
+			lblRunStatus.setToolTipText(Messages.getString("MainFrame.runStatus.processing"));
+		} else {
+			lblRunStatus.setIcon(IconSupport.loadIcon("net/mozq/picto/resources/icons/icon-run-results.png", RUN_STATUS_ICON_SIZE, runStatusIconColor));
+			lblRunStatus.setToolTipText(Messages.getString("MainFrame.runStatus.results"));
 			processing = false;
 			mnSettings.setEnabled(true);
 		}
