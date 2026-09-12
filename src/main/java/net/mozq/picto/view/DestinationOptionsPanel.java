@@ -50,7 +50,7 @@ class DestinationOptionsPanel extends JPanel {
 		layout.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(layout);
 
-		lblSubFilePathPattern = new JLabel(Messages.getString("MainFrame.destSubPathPattern"));
+		lblSubFilePathPattern = new JLabel(Messages.getString("MainFrame.dest.subFilePathPattern"));
 		GridBagConstraints lblSubFilePathPatternConstraints = new GridBagConstraints();
 		lblSubFilePathPatternConstraints.anchor = GridBagConstraints.WEST;
 		lblSubFilePathPatternConstraints.insets = new Insets(0, 0, 5, 5);
@@ -74,7 +74,7 @@ class DestinationOptionsPanel extends JPanel {
 		txtSubFilePathPatternConstraints.gridy = 0;
 		add(txtSubFilePathPattern, txtSubFilePathPatternConstraints);
 
-		lblExistingFileMethod = new JLabel(Messages.getString("MainFrame.existingFileMethod"));
+		lblExistingFileMethod = new JLabel(Messages.getString("MainFrame.dest.existingFileMethod"));
 		GridBagConstraints lblExistingFileMethodConstraints = new GridBagConstraints();
 		lblExistingFileMethodConstraints.anchor = GridBagConstraints.WEST;
 		lblExistingFileMethodConstraints.insets = new Insets(0, 0, 5, 5);
@@ -93,7 +93,7 @@ class DestinationOptionsPanel extends JPanel {
 		cmbExistingFileMethod.setModel(new DefaultComboBoxModel<>(ExistingFileMethod.values()));
 		add(cmbExistingFileMethod, cmbExistingFileMethodConstraints);
 
-		lblValidateFile = new JLabel(Messages.getString("MainFrame.validateFile"));
+		lblValidateFile = new JLabel(Messages.getString("MainFrame.dest.validateFile"));
 		GridBagConstraints lblValidateFileConstraints = new GridBagConstraints();
 		lblValidateFileConstraints.anchor = GridBagConstraints.WEST;
 		lblValidateFileConstraints.insets = new Insets(0, 0, 0, 5);
@@ -101,7 +101,7 @@ class DestinationOptionsPanel extends JPanel {
 		lblValidateFileConstraints.gridy = 2;
 		add(lblValidateFile, lblValidateFileConstraints);
 
-		chkCompareFileDigest = new JCheckBox(Messages.getString("MainFrame.checkFileDigest"));
+		chkCompareFileDigest = new JCheckBox(Messages.getString("MainFrame.dest.compareFileDigest"));
 		lblValidateFile.setLabelFor(chkCompareFileDigest);
 		InputSupport.installLabelFocusAction(lblValidateFile, chkCompareFileDigest, LabelFocusBehavior.FOCUS_ONLY);
 		GridBagConstraints chkCompareFileDigestConstraints = new GridBagConstraints();

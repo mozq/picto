@@ -98,7 +98,7 @@ class SourceOptionsPanel extends JPanel {
 		matchCountPanelConstraints.gridy = 0;
 		add(matchCountPanel, matchCountPanelConstraints);
 
-		lblMatchCount = new JLabel(Messages.getString("MainFrame.matchCount.prompt"));
+		lblMatchCount = new JLabel(Messages.getString("MainFrame.src.matchCount.prompt"));
 		lblMatchCount.setFont(lblMatchCount.getFont().deriveFont(lblMatchCount.getFont().getSize2D() - 2f));
 		lblMatchCount.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		matchCountPanel.add(lblMatchCount);
@@ -114,7 +114,7 @@ class SourceOptionsPanel extends JPanel {
 		btnMatchCountStop.setFont(btnMatchCountStop.getFont().deriveFont(btnMatchCountStop.getFont().getSize2D() + 2f));
 		btnMatchCountStop.setMargin(new Insets(0, 2, 0, 2));
 		btnMatchCountStop.setPreferredSize(new Dimension(20, 20));
-		btnMatchCountStop.setToolTipText(Messages.getString("MainFrame.matchCount.stop"));
+		btnMatchCountStop.setToolTipText(Messages.getString("MainFrame.src.matchCount.stop"));
 		btnMatchCountStop.setVisible(false);
 		matchCountPanel.add(btnMatchCountStop);
 
@@ -150,7 +150,7 @@ class SourceOptionsPanel extends JPanel {
 			}
 		});
 
-		lblFileNamePattern = new JLabel(Messages.getString("MainFrame.filePattern"));
+		lblFileNamePattern = new JLabel(Messages.getString("MainFrame.src.fileNamePattern"));
 		GridBagConstraints lblFileNamePatternConstraints = new GridBagConstraints();
 		lblFileNamePatternConstraints.anchor = GridBagConstraints.WEST;
 		lblFileNamePatternConstraints.insets = new Insets(0, 0, 5, 5);
@@ -199,7 +199,7 @@ class SourceOptionsPanel extends JPanel {
 		cmbFileNamePatternSyntaxConstraints.gridy = 0;
 		pnlFileNamePattern.add(cmbFileNamePatternSyntax, cmbFileNamePatternSyntaxConstraints);
 
-		chkIncludeSubfolders = new JCheckBox(Messages.getString("MainFrame.containsSubs"));
+		chkIncludeSubfolders = new JCheckBox(Messages.getString("MainFrame.src.includeSubfolders"));
 		GridBagConstraints chkIncludeSubfoldersConstraints = new GridBagConstraints();
 		chkIncludeSubfoldersConstraints.anchor = GridBagConstraints.WEST;
 		chkIncludeSubfoldersConstraints.insets = new Insets(0, 0, 5, 0);
@@ -207,7 +207,7 @@ class SourceOptionsPanel extends JPanel {
 		chkIncludeSubfoldersConstraints.gridy = 2;
 		add(chkIncludeSubfolders, chkIncludeSubfoldersConstraints);
 
-		chkIncludeHiddenFiles = new JCheckBox(Messages.getString("MainFrame.containsHiddens"));
+		chkIncludeHiddenFiles = new JCheckBox(Messages.getString("MainFrame.src.includeHiddenFiles"));
 		GridBagConstraints chkIncludeHiddenFilesConstraints = new GridBagConstraints();
 		chkIncludeHiddenFilesConstraints.fill = GridBagConstraints.BOTH;
 		chkIncludeHiddenFilesConstraints.insets = new Insets(0, 0, 5, 0);
@@ -215,7 +215,7 @@ class SourceOptionsPanel extends JPanel {
 		chkIncludeHiddenFilesConstraints.gridy = 3;
 		add(chkIncludeHiddenFiles, chkIncludeHiddenFilesConstraints);
 
-		lblFileSize = new JLabel(Messages.getString("MainFrame.fileSizeRange"));
+		lblFileSize = new JLabel(Messages.getString("MainFrame.src.fileSize"));
 		GridBagConstraints lblFileSizeConstraints = new GridBagConstraints();
 		lblFileSizeConstraints.anchor = GridBagConstraints.WEST;
 		lblFileSizeConstraints.insets = new Insets(0, 0, 5, 5);
@@ -241,7 +241,7 @@ class SourceOptionsPanel extends JPanel {
 		txtFileSizeFrom.setHorizontalAlignment(JTextField.RIGHT);
 		pnlFileSize.add(txtFileSizeFrom);
 
-		lblFileSizeTo = new JLabel(Messages.getString("MainFrame.fileSizeRangeTo"));
+		lblFileSizeTo = new JLabel(Messages.getString("MainFrame.src.fileSizeTo"));
 		pnlFileSize.add(lblFileSizeTo);
 
 		txtFileSizeTo = new JTextField();
@@ -254,7 +254,7 @@ class SourceOptionsPanel extends JPanel {
 		pnlFileSize.add(cmbFileSizeUnit);
 		cmbFileSizeUnit.setModel(new DefaultComboBoxModel<>(FileSizeUnit.values()));
 
-		lblCreated = new JLabel(Messages.getString("MainFrame.creationTimeRange"));
+		lblCreated = new JLabel(Messages.getString("MainFrame.src.created"));
 		GridBagConstraints lblCreatedConstraints = new GridBagConstraints();
 		lblCreatedConstraints.anchor = GridBagConstraints.WEST;
 		lblCreatedConstraints.insets = new Insets(0, 0, 5, 5);
@@ -272,18 +272,18 @@ class SourceOptionsPanel extends JPanel {
 		add(pnlCreated, pnlCreatedConstraints);
 		pnlCreated.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
-		txtCreatedFrom = newDateTimeField(Messages.getString("MainFrame.creationTimeRangeFrom.tooltip"), false);
+		txtCreatedFrom = newDateTimeField(Messages.getString("MainFrame.src.createdFrom.tooltip"), false);
 		lblCreated.setLabelFor(txtCreatedFrom);
 		InputSupport.installLabelFocusAction(lblCreated, txtCreatedFrom, LabelFocusBehavior.CARET_START);
 		pnlCreated.add(txtCreatedFrom);
 
-		lblCreatedTo = new JLabel(Messages.getString("MainFrame.creationTimeRangeTo"));
+		lblCreatedTo = new JLabel(Messages.getString("MainFrame.src.createdTo"));
 		pnlCreated.add(lblCreatedTo);
 
-		txtCreatedTo = newDateTimeField(Messages.getString("MainFrame.creationTimeRangeTo.tooltip"), true);
+		txtCreatedTo = newDateTimeField(Messages.getString("MainFrame.src.createdTo.tooltip"), true);
 		pnlCreated.add(txtCreatedTo);
 
-		lblModified = new JLabel(Messages.getString("MainFrame.modifiedTimeRange"));
+		lblModified = new JLabel(Messages.getString("MainFrame.src.modified"));
 		GridBagConstraints lblModifiedConstraints = new GridBagConstraints();
 		lblModifiedConstraints.anchor = GridBagConstraints.WEST;
 		lblModifiedConstraints.insets = new Insets(0, 0, 0, 5);
@@ -300,15 +300,15 @@ class SourceOptionsPanel extends JPanel {
 		add(pnlModified, pnlModifiedConstraints);
 		pnlModified.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
-		txtModifiedFrom = newDateTimeField(Messages.getString("MainFrame.modifiedTimeRangeFrom.tooltip"), false);
+		txtModifiedFrom = newDateTimeField(Messages.getString("MainFrame.src.modifiedFrom.tooltip"), false);
 		lblModified.setLabelFor(txtModifiedFrom);
 		InputSupport.installLabelFocusAction(lblModified, txtModifiedFrom, LabelFocusBehavior.CARET_START);
 		pnlModified.add(txtModifiedFrom);
 
-		lblModifiedTo = new JLabel(Messages.getString("MainFrame.modifiedTimeRangeTo"));
+		lblModifiedTo = new JLabel(Messages.getString("MainFrame.src.modifiedTo"));
 		pnlModified.add(lblModifiedTo);
 
-		txtModifiedTo = newDateTimeField(Messages.getString("MainFrame.modifiedTimeRangeTo.tooltip"), true);
+		txtModifiedTo = newDateTimeField(Messages.getString("MainFrame.src.modifiedTo.tooltip"), true);
 		pnlModified.add(txtModifiedTo);
 	}
 

@@ -70,7 +70,7 @@ class ChangesFileDatePanel extends JPanel {
 		fileDateLayout.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(fileDateLayout);
 
-		lblTargetDate = new JLabel(Messages.getString("MainFrame.changeFileTargetDate"));
+		lblTargetDate = new JLabel(Messages.getString("MainFrame.changes.filedate.targetDate"));
 		GridBagConstraints lblTargetDateConstraints = new GridBagConstraints();
 		lblTargetDateConstraints.anchor = GridBagConstraints.WEST;
 		lblTargetDateConstraints.insets = new Insets(0, 0, 5, 5);
@@ -95,25 +95,25 @@ class ChangesFileDatePanel extends JPanel {
 				enableChanged.run();
 			}
 		};
-		chkCreationDate = new JCheckBox(Messages.getString("MainFrame.changeFileCreationDate"));
+		chkCreationDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.creationDate"));
 		lblTargetDate.setLabelFor(chkCreationDate);
 		InputSupport.installLabelFocusAction(lblTargetDate, chkCreationDate, LabelFocusBehavior.FOCUS_ONLY);
 		chkCreationDate.addChangeListener(changeListener);
 		pnlTargetDate.add(chkCreationDate);
 
-		chkModifiedDate = new JCheckBox(Messages.getString("MainFrame.changeFileModifiedDate"));
+		chkModifiedDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.modifiedDate"));
 		chkModifiedDate.addChangeListener(changeListener);
 		pnlTargetDate.add(chkModifiedDate);
 
-		chkAccessDate = new JCheckBox(Messages.getString("MainFrame.changeFileAccessDate"));
+		chkAccessDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.accessDate"));
 		chkAccessDate.addChangeListener(changeListener);
 		pnlTargetDate.add(chkAccessDate);
 
-		chkExifDate = new JCheckBox(Messages.getString("MainFrame.changeFileExifDate"));
+		chkExifDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.exifDate"));
 		chkExifDate.addChangeListener(changeListener);
 		pnlTargetDate.add(chkExifDate);
 
-		lblBaseDate = new JLabel(Messages.getString("MainFrame.changeFileBaseDateType"));
+		lblBaseDate = new JLabel(Messages.getString("MainFrame.changes.filedate.baseDate"));
 		GridBagConstraints lblBaseDateConstraints = new GridBagConstraints();
 		lblBaseDateConstraints.anchor = GridBagConstraints.WEST;
 		lblBaseDateConstraints.insets = new Insets(0, 0, 5, 5);
@@ -152,7 +152,7 @@ class ChangesFileDatePanel extends JPanel {
 			layoutChanged.run();
 		});
 
-		lblAdjustment = new JLabel(Messages.getString("MainFrame.changeFileEditBaseDate"));
+		lblAdjustment = new JLabel(Messages.getString("MainFrame.changes.filedate.adjustment"));
 		GridBagConstraints lblAdjustmentConstraints = new GridBagConstraints();
 		lblAdjustmentConstraints.anchor = GridBagConstraints.WEST;
 		lblAdjustmentConstraints.insets = new Insets(0, 0, 0, 5);

@@ -32,7 +32,7 @@ import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
 class SubfolderTemplatePopup {
-	private static final String KEY_PREFIX = "MainFrame.destSubPathInsert.";
+	private static final String KEY_PREFIX = "MainFrame.dest.subFilePathInsert.";
 	private static final int POPUP_MAX_HEIGHT = 280;
 	private static final int POPUP_MIN_WIDTH = 440;
 	private static final Map<String, Object> SAMPLE_VALUES = Map.ofEntries(
@@ -64,16 +64,16 @@ class SubfolderTemplatePopup {
 		List<SuggestionSection> sections = new ArrayList<>(SuggestionPopup.historySection(InputHistory.DEST_SUB_PATH_PATTERN_KEY));
 		sections.add(section("template",
 				item("keepOriginalStructure", "${SubFilePath}"),
-				item("byPhotoDate", "${TakenDate:uuuu-MM-dd}/${FileName}"),
-				item("byPhotoYearMonthDate", "${TakenDate:uuuu/MM/dd}/${FileName}"),
-				item("byParentAndPhotoDate", "${SubFolderPath}/${TakenDate:uuuu-MM-dd}/${FileName}"),
+				item("byTakenDate", "${TakenDate:uuuu-MM-dd}/${FileName}"),
+				item("byTakenYearMonthDate", "${TakenDate:uuuu/MM/dd}/${FileName}"),
+				item("byParentAndTakenDate", "${SubFolderPath}/${TakenDate:uuuu-MM-dd}/${FileName}"),
 				item("byCamera", "${Make}/${Model}/${FileName}"),
-				item("byCameraAndPhotoDate", "${Make}/${Model}/${TakenDate:uuuu-MM-dd}/${FileName}"),
-				item("byPhotoDateAndCamera", "${TakenDate:uuuu-MM-dd}/${Make}/${Model}/${FileName}")));
+				item("byCameraAndTakenDate", "${Make}/${Model}/${TakenDate:uuuu-MM-dd}/${FileName}"),
+				item("byTakenDateAndCamera", "${TakenDate:uuuu-MM-dd}/${Make}/${Model}/${FileName}")));
 		sections.addAll(List.of(
 				fragmentSection("date",
-						item("photoTakenDate", "${TakenDate:uuuu-MM-dd}"),
-						item("photoTakenYearMonthDate", "${TakenDate:uuuu/MM/dd}")),
+						item("takenDate", "${TakenDate:uuuu-MM-dd}"),
+						item("takenYearMonthDate", "${TakenDate:uuuu/MM/dd}")),
 				fragmentSection("file",
 						item("subFilePath", "${SubFilePath}"),
 						item("subFolderPath", "${SubFolderPath}"),

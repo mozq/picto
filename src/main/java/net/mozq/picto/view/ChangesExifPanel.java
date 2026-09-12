@@ -39,7 +39,7 @@ class ChangesExifPanel extends JPanel {
 		exifLayout.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		setLayout(exifLayout);
 
-		chkRemoveGps = new JCheckBox(Messages.getString("MainFrame.removeExifTagsGps"));
+		chkRemoveGps = new JCheckBox(Messages.getString("MainFrame.changes.exif.removeGps"));
 		GridBagConstraints removeGpsConstraints = new GridBagConstraints();
 		removeGpsConstraints.anchor = GridBagConstraints.WEST;
 		removeGpsConstraints.insets = new Insets(0, 0, 5, 0);
@@ -47,7 +47,7 @@ class ChangesExifPanel extends JPanel {
 		removeGpsConstraints.gridy = 0;
 		add(chkRemoveGps, removeGpsConstraints);
 
-		chkRemoveAll = new JCheckBox(Messages.getString("MainFrame.removeExifTagsAll"));
+		chkRemoveAll = new JCheckBox(Messages.getString("MainFrame.changes.exif.removeAll"));
 		GridBagConstraints removeAllConstraints = new GridBagConstraints();
 		removeAllConstraints.anchor = GridBagConstraints.WEST;
 		removeAllConstraints.gridx = 0;

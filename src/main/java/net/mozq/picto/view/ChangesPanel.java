@@ -29,9 +29,9 @@ class ChangesPanel extends JTabbedPane {
 		putClientProperty("JTabbedPane.tabType", "card");
 
 		filedate = new ChangesFileDatePanel(sectionPadding, inlineHgap, inlineVgap, enableChanged, layoutChanged);
-		addTab(Messages.getString("MainFrame.changeFileDateTitle"), null, filedate, null);
+		addTab(Messages.getString("MainFrame.changes.filedate.title"), null, filedate, null);
 
 		exif = new ChangesExifPanel(sectionPadding);
-		addTab(Messages.getString("MainFrame.changeExifTitle"), null, exif, null);
+		addTab(Messages.getString("MainFrame.changes.exif.title"), null, exif, null);
 	}
 }

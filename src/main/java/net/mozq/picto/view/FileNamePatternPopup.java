@@ -28,7 +28,7 @@ import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
 class FileNamePatternPopup {
-	private static final String KEY_PREFIX = "MainFrame.filePatternPreset.";
+	private static final String KEY_PREFIX = "MainFrame.src.fileNamePatternPreset.";
 	private static final int POPUP_MAX_HEIGHT = 260;
 	private static final int POPUP_MIN_WIDTH = 430;
 
