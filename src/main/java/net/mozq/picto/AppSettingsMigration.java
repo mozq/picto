@@ -34,6 +34,10 @@ final class AppSettingsMigration {
 	private static final String SUBFOLDER_PATTERN_KEY = "dest.sub.path.pattern";
 	private static final String FILE_PATTERN_REGEX_KEY = "file.pattern.regex";
 	private static final String FILE_PATTERN_SYNTAX_KEY = "file.pattern.syntax";
+	private static final String OPE_TYPE_COPY_KEY = "ope.type.copy";
+	private static final String OPE_TYPE_MOVE_KEY = "ope.type.move";
+	private static final String OPE_TYPE_OVERWRITE_KEY = "ope.type.overwrite";
+	private static final String OPERATION_TYPE_KEY = "operation.type";
 	private static final Map<String, String> RENAMED_VAR_NAMES = Map.of(
 			"ParentSubPath", "SubFolderPath",
 			"PhotoTakenDate", "TakenDate"
@@ -58,7 +62,9 @@ final class AppSettingsMigration {
 	}
 
 	static Result migrate(AppSettings settings, Path legacySettingsFile) throws IOException {
-		for (Map.Entry<String, String> entry : readLegacyProperties(legacySettingsFile).entrySet()) {
+		Map<String, String> legacyProperties = readLegacyProperties(legacySettingsFile);
+		boolean operationTypeMigrated = false;
+		for (Map.Entry<String, String> entry : legacyProperties.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
 			if (SUBFOLDER_PATTERN_KEY.equals(key)) {
@@ -66,11 +72,42 @@ final class AppSettingsMigration {
 			} else if (FILE_PATTERN_REGEX_KEY.equals(key)) {
 				key = FILE_PATTERN_SYNTAX_KEY;
 				value = migrateFilePatternSyntax(value);
+			} else if (isOperationTypeKey(key)) {
+				// Three separate booleans collapse into one enum; only act on whichever of the three is
+				// encountered first, so the merged key lands at that position instead of being appended at
+				// the end, and skip the other two entirely rather than also writing them under their old
+				// (now unbound) names.
+				if (operationTypeMigrated) {
+					continue;
+				}
+				operationTypeMigrated = true;
+				key = OPERATION_TYPE_KEY;
+				value = migrateOperationType(legacyProperties);
 			}
 			settings.set(key, value);
 		}
 
 		return new Result(true, legacySettingsFile);
+	}
+
+	private static boolean isOperationTypeKey(String key) {
+		return OPE_TYPE_COPY_KEY.equals(key) || OPE_TYPE_MOVE_KEY.equals(key) || OPE_TYPE_OVERWRITE_KEY.equals(key);
+	}
+
+	/**
+	 * The legacy setting was three independent booleans (radio buttons predate this app's
+	 * {@code SettingBinding.radioChoice}); the current one is the single {@code OperationType} enum they
+	 * always mapped to 1:1. Settings values round-trip enums via {@code Enum.name()}, so this only needs to
+	 * produce the matching constant name.
+	 */
+	private static String migrateOperationType(Map<String, String> legacyProperties) {
+		if (Boolean.parseBoolean(legacyProperties.get(OPE_TYPE_MOVE_KEY))) {
+			return "Move";
+		}
+		if (Boolean.parseBoolean(legacyProperties.get(OPE_TYPE_OVERWRITE_KEY))) {
+			return "Overwrite";
+		}
+		return "Copy";
 	}
 
 	static void deleteLegacyFiles(Result result) {

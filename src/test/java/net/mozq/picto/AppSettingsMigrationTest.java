@@ -123,6 +123,69 @@ class AppSettingsMigrationTest {
 	}
 
 	@Test
+	void migratesOperationTypeMoveTrueToTheEnumsMoveConstant() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"ope.type.copy=false",
+				"ope.type.move=true",
+				"ope.type.overwrite=false"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("Move", settings.getString("operation.type", ""));
+		assertFalse(settings.keySet().contains("ope.type.copy"));
+		assertFalse(settings.keySet().contains("ope.type.move"));
+		assertFalse(settings.keySet().contains("ope.type.overwrite"));
+	}
+
+	@Test
+	void migratesOperationTypeOverwriteTrueToTheEnumsOverwriteConstant() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"ope.type.copy=false",
+				"ope.type.move=false",
+				"ope.type.overwrite=true"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("Overwrite", settings.getString("operation.type", ""));
+	}
+
+	@Test
+	void migratesOperationTypeToCopyWhenNeitherMoveNorOverwriteIsTrue() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"ope.type.copy=true",
+				"ope.type.move=false",
+				"ope.type.overwrite=false"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals("Copy", settings.getString("operation.type", ""));
+	}
+
+	@Test
+	void mergesTheThreeOperationTypeKeysIntoOneAtTheFirstOnesPosition() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"src.root.dir=/photos",
+				"ope.type.copy=false",
+				"ope.type.move=true",
+				"ope.type.overwrite=false",
+				"contains.subs=true"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals(
+				List.of("src.root.dir", "operation.type", "contains.subs"),
+				List.copyOf(settings.keySet()));
+	}
+
+	@Test
 	void deletesLegacySettingsLogsAndEmptyDirectories() throws IOException {
 		Path legacyDirectory = tempDir.resolve("Mozq").resolve("Picto");
 		Files.createDirectories(legacyDirectory);

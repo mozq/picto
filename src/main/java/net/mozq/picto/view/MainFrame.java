@@ -608,16 +608,19 @@ public class MainFrame extends JFrame {
 
 		rdoOpeTypeCopy = new JRadioButton(Messages.getString("MainFrame.opeTypeCopy"));
 		rdoOpeTypeCopy.setMnemonic(KeyEvent.VK_C);
+		rdoOpeTypeCopy.setActionCommand(OperationType.Copy.name());
 		btngrpOpeType.add(rdoOpeTypeCopy);
 		pnlOpeType.add(rdoOpeTypeCopy);
 
 		rdoOpeTypeMove = new JRadioButton(Messages.getString("MainFrame.opeTypeMove"));
 		rdoOpeTypeMove.setMnemonic(KeyEvent.VK_M);
+		rdoOpeTypeMove.setActionCommand(OperationType.Move.name());
 		btngrpOpeType.add(rdoOpeTypeMove);
 		pnlOpeType.add(rdoOpeTypeMove);
 
 		rdoOpeTypeOverwrite = new JRadioButton(Messages.getString("MainFrame.opeTypeOverwrite"));
 		rdoOpeTypeOverwrite.setMnemonic(KeyEvent.VK_O);
+		rdoOpeTypeOverwrite.setActionCommand(OperationType.Overwrite.name());
 		btngrpOpeType.add(rdoOpeTypeOverwrite);
 		pnlOpeType.add(rdoOpeTypeOverwrite);
 
@@ -954,6 +957,40 @@ public class MainFrame extends JFrame {
 					conf -> conf.set(key, combo.getSelectedItem()),
 					conf -> conf.set(key, defaultValue));
 		}
+
+		/**
+		 * Like {@link #choice}, but for a mutually exclusive set of radio buttons instead of a combo box.
+		 * Each button in {@code group} must have its action command set to the name of the enum constant it
+		 * represents (as {@link MainFrame#buildOperationPanel} does for the operation-type radios), so this
+		 * can read and set the selection generically instead of every caller writing its own button-to-enum
+		 * mapping.
+		 */
+		static <E extends Enum<E>> SettingBinding radioChoice(ButtonGroup group, String key, Class<E> type, E defaultValue) {
+			return new SettingBinding(
+					conf -> selectButtonFor(group, conf.getEnum(key, type, defaultValue)),
+					conf -> conf.set(key, selectedEnumValue(group, type, defaultValue)),
+					conf -> conf.set(key, defaultValue));
+		}
+	}
+
+	private static <E extends Enum<E>> void selectButtonFor(ButtonGroup group, E value) {
+		for (java.util.Enumeration<AbstractButton> e = group.getElements(); e.hasMoreElements();) {
+			AbstractButton button = e.nextElement();
+			if (button.getActionCommand().equals(value.name())) {
+				button.setSelected(true);
+				return;
+			}
+		}
+	}
+
+	private static <E extends Enum<E>> E selectedEnumValue(ButtonGroup group, Class<E> type, E defaultValue) {
+		for (java.util.Enumeration<AbstractButton> e = group.getElements(); e.hasMoreElements();) {
+			AbstractButton button = e.nextElement();
+			if (button.isSelected()) {
+				return Enum.valueOf(type, button.getActionCommand());
+			}
+		}
+		return defaultValue;
 	}
 
 	private List<SettingBinding> settingBindings() {
@@ -972,9 +1009,7 @@ public class MainFrame extends JFrame {
 				SettingBinding.text(txtModifiedTimeRangeFrom, "modified.time.range.from", ""),
 				SettingBinding.text(txtModifiedTimeRangeTo, "modified.time.range.to", ""),
 
-				SettingBinding.flag(rdoOpeTypeCopy, "ope.type.copy", true),
-				SettingBinding.flag(rdoOpeTypeMove, "ope.type.move", false),
-				SettingBinding.flag(rdoOpeTypeOverwrite, "ope.type.overwrite", false),
+				SettingBinding.radioChoice(btngrpOpeType, "operation.type", OperationType.class, OperationType.Copy),
 
 				SettingBinding.text(txtDestRootDirPath, "dest.root.dir", ""),
 				SettingBinding.text(txtDestSubPathPattern, "dest.sub.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN),
@@ -2308,13 +2343,7 @@ public class MainFrame extends JFrame {
 		values.followLinks = false;
 		values.depth = (chkContainsSubs.isEnabled() && chkContainsSubs.isSelected()) ? Integer.MAX_VALUE : 1;
 
-		if (rdoOpeTypeMove.isSelected()) {
-			values.operationType = OperationType.Move;
-		} else if (rdoOpeTypeOverwrite.isSelected()) {
-			values.operationType = OperationType.Overwrite;
-		} else {
-			values.operationType = OperationType.Copy;
-		}
+		values.operationType = selectedEnumValue(btngrpOpeType, OperationType.class, OperationType.Copy);
 
 		values.destRootDirPath = Paths.get(txtDestRootDirPath.getText()).normalize();
 		values.destSubPathPattern = fieldText(txtDestSubPathPattern);
