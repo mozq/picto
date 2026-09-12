@@ -49,10 +49,8 @@ class AppSettingsMigrationTest {
 		// file.pattern.syntax must land where file.pattern.regex was defined, not get appended at the end,
 		// even though migrating it also renames the key (unlike dest.sub.path.pattern, migrated in place).
 		assertEquals(
-				List.of("locale", "appearance", "src.root.dir", "file.pattern.syntax", "dest.sub.path.pattern", "contains.subs"),
+				List.of("src.root.dir", "file.pattern.syntax", "dest.sub.path.pattern", "contains.subs"),
 				List.copyOf(settings.keySet()));
-		assertEquals("system", settings.getString("locale", ""));
-		assertEquals("system", settings.getString("appearance", ""));
 		assertEquals("/photos", settings.getString("src.root.dir", ""));
 		assertEquals("REGEX", settings.getString("file.pattern.syntax", ""));
 		assertEquals("${FNumber:0.0}/${WhiteBalance?{0:'Auto',1:'Manual',default:'Others'}}",

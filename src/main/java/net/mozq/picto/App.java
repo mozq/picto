@@ -32,6 +32,7 @@ public class App {
 	public static final String APP_NAME = "picto";
 	public static final String SETTINGS_FILE_NAME = "settings.conf";
 	public static final String HISTORY_FILE_NAME = "history.conf";
+	public static final String PREFERENCES_FILE_NAME = "preferences.conf";
 	public static final String WARNS_FILE_NAME = "warns.log";
 	public static final String ERRORS_FILE_NAME = "errors.log";
 
@@ -40,6 +41,7 @@ public class App {
 
 	private static AppSettings settings = null;
 	private static AppSettings history = null;
+	private static AppSettings preferences = null;
 	private static AppSettingsMigration.Result settingsMigrationResult = AppSettingsMigration.Result.none();
 	private static Path warnsFilePath = null;
 	private static Path errorsFilePath = null;
@@ -61,6 +63,11 @@ public class App {
 		history = AppSettings.of(GROUP_NAME, APP_NAME, HISTORY_FILE_NAME);
 		history.load();
 
+		// Kept separate from settings.conf since these are app-wide UI preferences (locale, appearance),
+		// not part of a processing run - they must never end up in a preset or a settings export/import.
+		preferences = AppSettings.of(GROUP_NAME, APP_NAME, PREFERENCES_FILE_NAME);
+		preferences.load();
+
 		Path appDirectory = settings.path().getParent();
 		warnsFilePath = appDirectory.resolve(WARNS_FILE_NAME);
 		errorsFilePath = appDirectory.resolve(ERRORS_FILE_NAME);
@@ -76,6 +83,10 @@ public class App {
 
 	public static AppSettings history() {
 		return history;
+	}
+
+	public static AppSettings preferences() {
+		return preferences;
 	}
 
 	public static void deleteMigratedLegacySettingsIfNeeded() {

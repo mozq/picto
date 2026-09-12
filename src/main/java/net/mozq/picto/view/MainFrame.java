@@ -24,6 +24,7 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Dimension;
 import java.awt.Cursor;
@@ -46,9 +47,15 @@ import java.nio.file.Paths;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.Consumer;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
@@ -135,13 +142,12 @@ public class MainFrame extends JFrame {
 	private static final int MID_BRIGHTNESS = 128;
 	private static final String CHECKED_ITEM_PREFIX = "✓ ";
 	private static final String PRESETS_DIR_NAME = "presets";
-	private static final String PRESET_FILE_NAME_EXT = "conf";
+	static final String PRESET_FILE_NAME_EXT = "conf";
 	private static final int PRESET_SHORTCUT_COUNT = 9;
+	private static final String PICTO_FILE_NAME_EXT = "picto";
 	private static final int MATCH_COUNT_DEBOUNCE_MS = 400;
 
 	private TimeZone timeZone = TimeZone.getDefault();
-
-	private static final String SETTINGS_FILE_NAME_EXT = "conf";
 
 	private final JFrame frame;
 	private boolean windowLayoutReady;
@@ -239,8 +245,6 @@ public class MainFrame extends JFrame {
 	private JMenu mnPresets;
 	private JMenu mnHelp;
 	private JMenuItem mntmHelp;
-	private JMenuItem mntmImportSettings;
-	private JMenuItem mntmExportSettings;
 	private boolean processing;
 	private JLabel lblRunStatus;
 	private ProcessDialog lastProcessDialog;
@@ -416,83 +420,25 @@ public class MainFrame extends JFrame {
 
 		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
-		mntmImportSettings = new JMenuItem(Messages.getString("MainFrame.menu.settings.importSettings"));
-		mntmImportSettings.setMnemonic(KeyEvent.VK_I);
-		mntmImportSettings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
-		mntmImportSettings.addActionListener(new ActionListener() {
+		JMenuItem mntmImportData = new JMenuItem(Messages.getString("MainFrame.menu.settings.importData"));
+		mntmImportData.setMnemonic(KeyEvent.VK_I);
+		mntmImportData.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
+		mntmImportData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser filechooser = new JFileChooser();
-				filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("settings.ext.description"), SETTINGS_FILE_NAME_EXT));
-
-				int selected = filechooser.showOpenDialog(frame);
-				if (selected == JFileChooser.APPROVE_OPTION) {
-					File file = filechooser.getSelectedFile();
-					try {
-						App.settings().loadFrom(file.toPath());
-						loadSettings();
-
-						JOptionPane.showMessageDialog(
-								null,
-								Messages.getString("message.info.import.settings"),
-								null,
-								JOptionPane.INFORMATION_MESSAGE
-								);
-					} catch (Exception e1) {
-						JOptionPane.showMessageDialog(
-								null,
-								Messages.getString("message.error.import.settings", e1.getLocalizedMessage()),
-								null,
-								JOptionPane.ERROR_MESSAGE
-								);
-
-						App.handleError(e1.getMessage(), e1);
-					}
-				}
+				promptImportData();
 			}
 		});
-		mnSettings.add(mntmImportSettings);
+		mnSettings.add(mntmImportData);
 
-		mntmExportSettings = new JMenuItem(Messages.getString("MainFrame.menu.settings.exportSettings"));
-		mntmExportSettings.setMnemonic(KeyEvent.VK_E);
-		mntmExportSettings.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
-		mntmExportSettings.addActionListener(new ActionListener() {
+		JMenuItem mntmExportData = new JMenuItem(Messages.getString("MainFrame.menu.settings.exportData"));
+		mntmExportData.setMnemonic(KeyEvent.VK_E);
+		mntmExportData.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
+		mntmExportData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser filechooser = new JFileChooser();
-				filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("settings.ext.description"), SETTINGS_FILE_NAME_EXT));
-
-				int selected = filechooser.showSaveDialog(frame);
-				if (selected == JFileChooser.APPROVE_OPTION) {
-					File file = filechooser.getSelectedFile();
-
-					if (!SETTINGS_FILE_NAME_EXT.equals(FileNameSupport.extension(file.getName()))) {
-						file = new File(file.getParentFile(), file.getName() + "." + SETTINGS_FILE_NAME_EXT);
-					}
-
-					try {
-						App.settings().storeTo(file.toPath());
-
-						JOptionPane.showMessageDialog(
-								null,
-								Messages.getString("message.info.export.settings"),
-								null,
-								JOptionPane.INFORMATION_MESSAGE
-								);
-					} catch (Exception e1) {
-						JOptionPane.showMessageDialog(
-								null,
-								Messages.getString("message.error.export.settings", e1.getLocalizedMessage()),
-								null,
-								JOptionPane.ERROR_MESSAGE
-								);
-
-						App.handleError(e1.getMessage(), e1);
-					}
-				}
+				promptExportData();
 			}
 		});
-		mnSettings.add(mntmExportSettings);
+		mnSettings.add(mntmExportData);
 
 		mnHelp = new JMenu(Messages.getString("MainFrame.menu.help"));
 		mnHelp.setMnemonic(KeyEvent.VK_H);
@@ -984,23 +930,29 @@ public class MainFrame extends JFrame {
 	 * out, declared once so {@link #applySettingsFrom} and {@link #captureSettingsInto} can't drift apart on
 	 * the key, default, or field a future change touches only one side of.
 	 */
-	private record SettingBinding(Consumer<AppSettings> applyFrom, Consumer<AppSettings> captureInto) {
+	private record SettingBinding(
+			Consumer<AppSettings> applyFrom,
+			Consumer<AppSettings> captureInto,
+			Consumer<AppSettings> applyDefault) {
 		static SettingBinding text(JTextComponent field, String key, String defaultValue) {
 			return new SettingBinding(
 					conf -> field.setText(conf.getString(key, defaultValue)),
-					conf -> conf.set(key, field.getText()));
+					conf -> conf.set(key, field.getText()),
+					conf -> conf.set(key, defaultValue));
 		}
 
 		static SettingBinding flag(AbstractButton button, String key, boolean defaultValue) {
 			return new SettingBinding(
 					conf -> button.setSelected(conf.getBoolean(key, defaultValue)),
-					conf -> conf.set(key, button.isSelected()));
+					conf -> conf.set(key, button.isSelected()),
+					conf -> conf.set(key, defaultValue));
 		}
 
 		static <E extends Enum<E>> SettingBinding choice(JComboBox<E> combo, String key, Class<E> type, E defaultValue) {
 			return new SettingBinding(
 					conf -> combo.setSelectedItem(conf.getEnum(key, type, defaultValue)),
-					conf -> conf.set(key, combo.getSelectedItem()));
+					conf -> conf.set(key, combo.getSelectedItem()),
+					conf -> conf.set(key, defaultValue));
 		}
 	}
 
@@ -1055,9 +1007,6 @@ public class MainFrame extends JFrame {
 	protected void storeSettings() throws IOException {
 		AppSettings conf = App.settings();
 
-		conf.set(AppMain.PREF_LOCALE_KEY, conf.getString(AppMain.PREF_LOCALE_KEY, AppMain.PREF_SYSTEM));
-		conf.set(AppMain.PREF_APPEARANCE_KEY, conf.getString(AppMain.PREF_APPEARANCE_KEY, AppMain.PREF_SYSTEM));
-
 		captureSettingsInto(conf);
 
 		conf.store();
@@ -1067,6 +1016,17 @@ public class MainFrame extends JFrame {
 	private void captureSettingsInto(AppSettings conf) {
 		for (SettingBinding binding : settingBindings()) {
 			binding.captureInto().accept(conf);
+		}
+	}
+
+	/**
+	 * Writes each bound setting's schema default into {@code conf}, without reading or touching any Swing
+	 * component. Used as the base for a newly imported preset, so a key the import doesn't mention still
+	 * ends up with the same value a never-customized preset would have, rather than being left undefined.
+	 */
+	void applyDefaultSettings(AppSettings conf) {
+		for (SettingBinding binding : settingBindings()) {
+			binding.applyDefault().accept(conf);
 		}
 	}
 
@@ -1307,13 +1267,333 @@ public class MainFrame extends JFrame {
 		}
 	}
 
+	private enum PresetConflictResolution {
+		RENAME, REPLACE, SKIP
+	}
+
+	private void promptExportData() {
+		boolean historyAvailable = Files.exists(App.history().path());
+		boolean presetsAvailable = !listPresets().isEmpty();
+
+		DataArchiveSupport.DataCategories selection = promptDataCategorySelection(
+				Messages.getString("MainFrame.menu.settings.exportData"),
+				true,
+				presetsAvailable,
+				historyAvailable);
+		if (selection == null) {
+			return;
+		}
+		if (!selection.any()) {
+			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.dataSelection.empty"), null, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		JFileChooser filechooser = new JFileChooser();
+		filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("data.ext.description"), PICTO_FILE_NAME_EXT));
+
+		int selected = filechooser.showSaveDialog(frame);
+		if (selected != JFileChooser.APPROVE_OPTION) {
+			return;
+		}
+		File file = filechooser.getSelectedFile();
+		if (!PICTO_FILE_NAME_EXT.equals(FileNameSupport.extension(file.getName()))) {
+			file = new File(file.getParentFile(), file.getName() + "." + PICTO_FILE_NAME_EXT);
+		}
+
+		try {
+			exportData(file.toPath(), selection);
+
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.info.export.data"),
+					null,
+					JOptionPane.INFORMATION_MESSAGE
+					);
+		} catch (Exception e1) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.error.export.data", e1.getLocalizedMessage()),
+					null,
+					JOptionPane.ERROR_MESSAGE
+					);
+
+			App.handleError(e1.getMessage(), e1);
+		}
+	}
+
+	private void exportData(Path zipPath, DataArchiveSupport.DataCategories selection) throws IOException {
+		try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipPath))) {
+			if (selection.settings()) {
+				DataArchiveSupport.writeSettingsEntry(zos, DataArchiveSupport.SETTINGS_ENTRY_NAME, App.settings());
+			}
+			if (selection.history()) {
+				DataArchiveSupport.writeSettingsEntry(zos, DataArchiveSupport.HISTORY_ENTRY_NAME, App.history());
+			}
+			if (selection.presets()) {
+				AppSettingsDirectory dir = presetsDirectory();
+				int index = 1;
+				for (PresetEntry preset : listPresets()) {
+					DataArchiveSupport.writeFileEntry(zos, DataArchiveSupport.presetEntryName(index), dir.path().resolve(preset.fileName()));
+					index++;
+				}
+			}
+		}
+	}
+
+	private void promptImportData() {
+		JFileChooser filechooser = new JFileChooser();
+		filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("data.ext.description"), PICTO_FILE_NAME_EXT));
+
+		int selected = filechooser.showOpenDialog(frame);
+		if (selected != JFileChooser.APPROVE_OPTION) {
+			return;
+		}
+		Path zipPath = filechooser.getSelectedFile().toPath();
+
+		DataArchiveSupport.DataCategories available;
+		try {
+			available = DataArchiveSupport.readAvailableCategories(zipPath);
+		} catch (Exception e1) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
+					null,
+					JOptionPane.ERROR_MESSAGE
+					);
+			App.handleError(e1.getMessage(), e1);
+			return;
+		}
+		if (!available.any()) {
+			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.importData.none"), null, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		DataArchiveSupport.DataCategories selection = promptDataCategorySelection(
+				Messages.getString("MainFrame.menu.settings.importData"),
+				available.settings(),
+				available.presets(),
+				available.history());
+		if (selection == null) {
+			return;
+		}
+		if (!selection.any()) {
+			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.dataSelection.empty"), null, JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		try {
+			if (!importData(zipPath, selection)) {
+				return;
+			}
+			if (selection.settings()) {
+				loadSettings();
+			}
+
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.info.import.data"),
+					null,
+					JOptionPane.INFORMATION_MESSAGE
+					);
+		} catch (Exception e1) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
+					null,
+					JOptionPane.ERROR_MESSAGE
+					);
+
+			App.handleError(e1.getMessage(), e1);
+		}
+	}
+
+	/**
+	 * Parses and validates every selected category before applying or persisting any of them, so corrupt or
+	 * unreadable archive entries fail without changing the current settings. Once persistence starts, later
+	 * write failures are reported to the user but are not fully rolled back. Returns {@code false} if the user
+	 * cancelled the preset name-conflict prompt, in which case nothing was applied.
+	 */
+	private boolean importData(Path zipPath, DataArchiveSupport.DataCategories selection) throws IOException {
+		Map<String, Object> settingsValues = null;
+		Map<String, Object> historyValues = null;
+		List<AppSettings> preparedPresets = null;
+
+		try (ZipFile zip = new ZipFile(zipPath.toFile())) {
+			if (selection.settings()) {
+				settingsValues = DataArchiveSupport.readEntryValues(zip, DataArchiveSupport.SETTINGS_ENTRY_NAME);
+			}
+			if (selection.history()) {
+				historyValues = DataArchiveSupport.readEntryValues(zip, DataArchiveSupport.HISTORY_ENTRY_NAME);
+			}
+			if (selection.presets()) {
+				preparedPresets = preparePresetImports(zip);
+				if (preparedPresets == null) {
+					return false;
+				}
+			}
+		}
+
+		if (settingsValues != null) {
+			for (Map.Entry<String, Object> entry : settingsValues.entrySet()) {
+				App.settings().set(entry.getKey(), entry.getValue());
+			}
+			App.settings().store();
+		}
+		if (historyValues != null) {
+			for (Map.Entry<String, Object> entry : historyValues.entrySet()) {
+				App.history().set(entry.getKey(), entry.getValue());
+			}
+			App.history().store();
+		}
+		if (preparedPresets != null) {
+			presetsDirectory().ensureExists();
+			for (AppSettings preset : preparedPresets) {
+				preset.store();
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Builds the {@link AppSettings} to store for each imported preset, without writing any of them yet.
+	 * Returns {@code null} if the user cancelled the name-conflict prompt (shown at most once, covering
+	 * every conflicting name in this batch at once).
+	 */
+	private List<AppSettings> preparePresetImports(ZipFile zip) throws IOException {
+		List<DataArchiveSupport.ParsedPreset> parsed = DataArchiveSupport.readPresetEntries(zip);
+
+		List<PresetEntry> existingPresets = listPresets();
+		Map<String, PresetEntry> existingByName = new HashMap<>();
+		for (PresetEntry preset : existingPresets) {
+			existingByName.put(preset.name(), preset);
+		}
+
+		List<String> conflictingNames = new ArrayList<>();
+		for (DataArchiveSupport.ParsedPreset p : parsed) {
+			if (existingByName.containsKey(p.name())) {
+				conflictingNames.add(p.name());
+			}
+		}
+
+		PresetConflictResolution resolution = PresetConflictResolution.RENAME;
+		if (!conflictingNames.isEmpty()) {
+			PresetConflictResolution chosen = promptPresetConflictResolution(conflictingNames);
+			if (chosen == null) {
+				return null;
+			}
+			resolution = chosen;
+		}
+
+		AppSettingsDirectory dir = presetsDirectory();
+		Set<String> namesInUse = new HashSet<>(existingByName.keySet());
+		Set<String> fileNamesInUse = new HashSet<>();
+		for (PresetEntry preset : existingPresets) {
+			fileNamesInUse.add(preset.fileName());
+		}
+
+		List<AppSettings> result = new ArrayList<>();
+		for (DataArchiveSupport.ParsedPreset p : parsed) {
+			PresetEntry existing = existingByName.get(p.name());
+			if (existing == null || resolution == PresetConflictResolution.RENAME) {
+				String finalName = DataArchiveSupport.uniqueDisplayName(p.name(), namesInUse);
+				String fileName = DataArchiveSupport.allocatePresetFileName(fileNamesInUse);
+				result.add(buildPresetImport(dir, fileName, finalName, p.values()));
+			} else if (resolution == PresetConflictResolution.REPLACE) {
+				// Discards the existing preset's own content instead of merging onto it, so a replaced
+				// preset ends up built exactly like a new one - same defaults, same imported keys - just
+				// written under the existing name/file instead of a new one.
+				result.add(buildPresetImport(dir, existing.fileName(), existing.name(), p.values()));
+			}
+			// SKIP: leave the existing preset untouched.
+		}
+		return result;
+	}
+
+	private AppSettings buildPresetImport(AppSettingsDirectory dir, String fileName, String name, Map<String, Object> values) {
+		return DataArchiveSupport.buildPresetSettings(dir, fileName, this::applyDefaultSettings, values, name);
+	}
+
+	private DataArchiveSupport.DataCategories promptDataCategorySelection(
+			String title,
+			boolean settingsAvailable,
+			boolean presetsAvailable,
+			boolean historyAvailable) {
+		JCheckBox chkSettings = new JCheckBox(Messages.getString("MainFrame.dataCategory.settings"), settingsAvailable);
+		chkSettings.setEnabled(settingsAvailable);
+		JCheckBox chkPresets = new JCheckBox(Messages.getString("MainFrame.dataCategory.presets"), presetsAvailable);
+		chkPresets.setEnabled(presetsAvailable);
+		JCheckBox chkHistory = new JCheckBox(Messages.getString("MainFrame.dataCategory.history"), historyAvailable);
+		chkHistory.setEnabled(historyAvailable);
+
+		JPanel panel = new JPanel(new GridLayout(0, 1, 0, INLINE_VGAP));
+		panel.add(chkSettings);
+		panel.add(chkPresets);
+		panel.add(chkHistory);
+
+		int result = JOptionPane.showConfirmDialog(frame, panel, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (result != JOptionPane.OK_OPTION) {
+			return null;
+		}
+		return new DataArchiveSupport.DataCategories(chkSettings.isSelected(), chkPresets.isSelected(), chkHistory.isSelected());
+	}
+
+	private PresetConflictResolution promptPresetConflictResolution(List<String> conflictingNames) {
+		JRadioButton rdoRename = new JRadioButton(Messages.getString("MainFrame.presetConflict.rename"), true);
+		JRadioButton rdoReplace = new JRadioButton(Messages.getString("MainFrame.presetConflict.replace"));
+		JRadioButton rdoSkip = new JRadioButton(Messages.getString("MainFrame.presetConflict.skip"));
+		ButtonGroup group = new ButtonGroup();
+		group.add(rdoRename);
+		group.add(rdoReplace);
+		group.add(rdoSkip);
+
+		StringBuilder names = new StringBuilder();
+		for (String name : conflictingNames) {
+			if (!names.isEmpty()) {
+				names.append("<br>");
+			}
+			names.append(escapeHtml(name));
+		}
+
+		JPanel panel = new JPanel(new BorderLayout(0, INLINE_VGAP));
+		panel.add(new JLabel(Messages.getString("MainFrame.presetConflict.message", names.toString())), BorderLayout.NORTH);
+		JPanel radios = new JPanel(new GridLayout(0, 1));
+		radios.add(rdoRename);
+		radios.add(rdoReplace);
+		radios.add(rdoSkip);
+		panel.add(radios, BorderLayout.CENTER);
+
+		int result = JOptionPane.showConfirmDialog(
+				frame,
+				panel,
+				Messages.getString("MainFrame.presetConflict.title"),
+				JOptionPane.OK_CANCEL_OPTION,
+				JOptionPane.WARNING_MESSAGE
+				);
+		if (result != JOptionPane.OK_OPTION) {
+			return null;
+		}
+		if (rdoReplace.isSelected()) {
+			return PresetConflictResolution.REPLACE;
+		}
+		if (rdoSkip.isSelected()) {
+			return PresetConflictResolution.SKIP;
+		}
+		return PresetConflictResolution.RENAME;
+	}
+
+	private static String escapeHtml(String s) {
+		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
 	private void addSettingsMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value, int mnemonic) {
 		JRadioButtonMenuItem item = new JRadioButtonMenuItem(label);
 		if (mnemonic != 0) {
 			item.setMnemonic(mnemonic);
 		}
 		item.setActionCommand(value);
-		item.setSelected(value.equals(App.settings().getString(key, AppMain.PREF_SYSTEM)));
+		item.setSelected(value.equals(App.preferences().getString(key, AppMain.PREF_SYSTEM)));
 		item.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (processing) {
@@ -1321,10 +1601,10 @@ public class MainFrame extends JFrame {
 					showSettingsProcessingMessage();
 					return;
 				}
-				if (!value.equals(App.settings().getString(key, AppMain.PREF_SYSTEM))) {
-					App.settings().set(key, value);
+				if (!value.equals(App.preferences().getString(key, AppMain.PREF_SYSTEM))) {
+					App.preferences().set(key, value);
 					try {
-						storeSettings();
+						App.preferences().store();
 						applySettingsImmediately();
 					} catch (IOException e1) {
 						JOptionPane.showMessageDialog(
@@ -1343,7 +1623,7 @@ public class MainFrame extends JFrame {
 	}
 
 	private static void selectCurrentSettingsMenuItem(ButtonGroup group, String key) {
-		String currentValue = App.settings().getString(key, AppMain.PREF_SYSTEM);
+		String currentValue = App.preferences().getString(key, AppMain.PREF_SYSTEM);
 		for (java.util.Enumeration<AbstractButton> e = group.getElements(); e.hasMoreElements();) {
 			AbstractButton button = e.nextElement();
 			if (currentValue.equals(button.getActionCommand())) {

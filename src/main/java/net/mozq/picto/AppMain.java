@@ -91,7 +91,7 @@ public class AppMain {
 	}
 
 	private static Locale configuredLocale() {
-		String locale = App.settings().getString(PREF_LOCALE_KEY, PREF_SYSTEM);
+		String locale = App.preferences().getString(PREF_LOCALE_KEY, PREF_SYSTEM);
 		if (PREF_LOCALE_EN.equals(locale)) {
 			return Locale.ENGLISH;
 		}
@@ -133,7 +133,7 @@ public class AppMain {
 	}
 
 	private static boolean configuredDarkMode() {
-		String appearance = App.settings().getString(PREF_APPEARANCE_KEY, PREF_SYSTEM);
+		String appearance = App.preferences().getString(PREF_APPEARANCE_KEY, PREF_SYSTEM);
 		if (PREF_APPEARANCE_DARK.equals(appearance)) {
 			return true;
 		}

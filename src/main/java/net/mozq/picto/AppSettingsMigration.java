@@ -58,9 +58,6 @@ final class AppSettingsMigration {
 	}
 
 	static Result migrate(AppSettings settings, Path legacySettingsFile) throws IOException {
-		settings.set(AppMain.PREF_LOCALE_KEY, AppMain.PREF_SYSTEM);
-		settings.set(AppMain.PREF_APPEARANCE_KEY, AppMain.PREF_SYSTEM);
-
 		for (Map.Entry<String, String> entry : readLegacyProperties(legacySettingsFile).entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
