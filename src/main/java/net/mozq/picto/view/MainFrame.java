@@ -846,6 +846,7 @@ public class MainFrame extends JFrame {
 		btnStart.setMnemonic(KeyEvent.VK_R);
 		btnStart.putClientProperty("JButton.buttonType", "default");
 		btnStart.setMargin(new Insets(7, 28, 7, 28));
+		btnStart.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		btnStart.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				runProcess(false);
@@ -856,11 +857,13 @@ public class MainFrame extends JFrame {
 		btnStartMenu.putClientProperty(FlatClientProperties.BUTTON_TYPE, "default");
 		btnStartMenu.putClientProperty(FlatClientProperties.MINIMUM_WIDTH, 0);
 		btnStartMenu.setMargin(new Insets(7, 5, 7, 5));
+		btnStartMenu.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		Dimension btnStartMenuSize = btnStartMenu.getPreferredSize();
 		btnStartMenuSize.width = RUN_MENU_BUTTON_WIDTH;
 		btnStartMenu.setPreferredSize(btnStartMenuSize);
 		JPopupMenu runMenu = new JPopupMenu();
 		JMenuItem mntmDryRun = new JMenuItem(Messages.getString("MainFrame.dryRun"));
+		mntmDryRun.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		mntmDryRun.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				runProcess(true);
@@ -1449,6 +1452,7 @@ public class MainFrame extends JFrame {
 		button.setContentAreaFilled(false);
 		button.setFocusPainted(false);
 		button.setMargin(new Insets(2, 4, 2, 4));
+		button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		setOptionsToggleButtonText(button, title, false);
 		return button;
 	}
