@@ -476,7 +476,7 @@ public class MainFrame extends JFrame {
 		txtSrcFolder.setColumns(10);
 		InputSupport.installLabelFocusAction(lblSrcConditionsTitle, txtSrcFolder, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtSrcFolder);
-		new FolderHistoryPopup(txtSrcFolder, InputHistory.SRC_ROOT_DIR_KEY);
+		new FolderHistoryPopup(txtSrcFolder, InputHistory.SRC_FOLDER_KEY);
 		installFolderChooserButton(btnSrcFolderSelect, txtSrcFolder);
 
 		srcOpt = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
@@ -610,7 +610,7 @@ public class MainFrame extends JFrame {
 		txtDestFolder.setColumns(10);
 		InputSupport.installLabelFocusAction(lblDestConditionsTitle, txtDestFolder, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtDestFolder);
-		new FolderHistoryPopup(txtDestFolder, InputHistory.DEST_ROOT_DIR_KEY);
+		new FolderHistoryPopup(txtDestFolder, InputHistory.DEST_FOLDER_KEY);
 		installFolderChooserButton(btnDestFolderSelect, txtDestFolder);
 
 		destOpt = new DestinationOptionsPanel();
@@ -895,42 +895,42 @@ public class MainFrame extends JFrame {
 
 	private List<SettingBinding> settingBindings() {
 		return List.of(
-				SettingBinding.text(txtSrcFolder, "src.root.dir", ""),
-				SettingBinding.text(srcOpt.txtFileNamePattern, "file.pattern", ""),
-				SettingBinding.choice(srcOpt.cmbFileNamePatternSyntax, "file.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.Glob),
-				SettingBinding.flag(srcOpt.chkIncludeSubfolders, "contains.subs", true),
-				SettingBinding.flag(srcOpt.chkIncludeHiddenFiles, "contains.hiddens", false),
+				SettingBinding.text(txtSrcFolder, "src.folder", ""),
+				SettingBinding.text(srcOpt.txtFileNamePattern, "src.file.name.pattern", ""),
+				SettingBinding.choice(srcOpt.cmbFileNamePatternSyntax, "src.file.name.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.Glob),
+				SettingBinding.flag(srcOpt.chkIncludeSubfolders, "src.include.subfolders", true),
+				SettingBinding.flag(srcOpt.chkIncludeHiddenFiles, "src.include.hidden.files", false),
 
-				SettingBinding.text(srcOpt.txtFileSizeFrom, "file.size.range.from", ""),
-				SettingBinding.text(srcOpt.txtFileSizeTo, "file.size.range.to", ""),
-				SettingBinding.choice(srcOpt.cmbFileSizeUnit, "file.size.unit", FileSizeUnit.class, FileSizeUnit.MB),
-				SettingBinding.text(srcOpt.txtCreatedFrom, "creation.time.range.from", ""),
-				SettingBinding.text(srcOpt.txtCreatedTo, "creation.time.range.to", ""),
-				SettingBinding.text(srcOpt.txtModifiedFrom, "modified.time.range.from", ""),
-				SettingBinding.text(srcOpt.txtModifiedTo, "modified.time.range.to", ""),
+				SettingBinding.text(srcOpt.txtFileSizeFrom, "src.file.size.from", ""),
+				SettingBinding.text(srcOpt.txtFileSizeTo, "src.file.size.to", ""),
+				SettingBinding.choice(srcOpt.cmbFileSizeUnit, "src.file.size.unit", FileSizeUnit.class, FileSizeUnit.MB),
+				SettingBinding.text(srcOpt.txtCreatedFrom, "src.created.from", ""),
+				SettingBinding.text(srcOpt.txtCreatedTo, "src.created.to", ""),
+				SettingBinding.text(srcOpt.txtModifiedFrom, "src.modified.from", ""),
+				SettingBinding.text(srcOpt.txtModifiedTo, "src.modified.to", ""),
 
 				SettingBinding.radioChoice(btngrpOperationType, "operation.type", OperationType.class, OperationType.Copy),
 
-				SettingBinding.text(txtDestFolder, "dest.root.dir", ""),
-				SettingBinding.text(destOpt.txtSubFilePathPattern, "dest.sub.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN),
-				SettingBinding.choice(destOpt.cmbExistingFileMethod, "existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm),
-				SettingBinding.flag(destOpt.chkCompareFileDigest, "check.file.digest", false),
+				SettingBinding.text(txtDestFolder, "dest.folder", ""),
+				SettingBinding.text(destOpt.txtSubFilePathPattern, "dest.sub.file.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN),
+				SettingBinding.choice(destOpt.cmbExistingFileMethod, "dest.existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm),
+				SettingBinding.flag(destOpt.chkCompareFileDigest, "dest.compare.file.digest", false),
 
-				SettingBinding.flag(changes.filedate.chkCreationDate, "change.file.creation.date", false),
-				SettingBinding.flag(changes.filedate.chkModifiedDate, "change.file.modified.date", false),
-				SettingBinding.flag(changes.filedate.chkAccessDate, "change.file.access.date", false),
-				SettingBinding.flag(changes.filedate.chkExifDate, "change.file.exif.date", false),
-				SettingBinding.choice(changes.filedate.cmbBaseDate, "base.date.type", DateType.class, DateType.FileModifiedDate),
-				SettingBinding.text(changes.filedate.txtCustomBaseDate, "custom.base.date", ""),
-				SettingBinding.choice(changes.filedate.cmbAdjustmentType, "date.mod.type", DateModType.class, DateModType.None),
-				SettingBinding.text(changes.filedate.txtAdjustmentYear, "date.mod.year", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentMonth, "date.mod.month", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentDay, "date.mod.day", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentHour, "date.mod.hour", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentMinute, "date.mod.minute", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentSecond, "date.mod.second", ""),
-				SettingBinding.flag(changes.exif.chkRemoveGps, "remove.exif.tags.gps", false),
-				SettingBinding.flag(changes.exif.chkRemoveAll, "remove.exif.tags.all", false));
+				SettingBinding.flag(changes.filedate.chkCreationDate, "changes.filedate.creation.date", false),
+				SettingBinding.flag(changes.filedate.chkModifiedDate, "changes.filedate.modified.date", false),
+				SettingBinding.flag(changes.filedate.chkAccessDate, "changes.filedate.access.date", false),
+				SettingBinding.flag(changes.filedate.chkExifDate, "changes.filedate.exif.date", false),
+				SettingBinding.choice(changes.filedate.cmbBaseDate, "changes.filedate.base.date", DateType.class, DateType.FileModifiedDate),
+				SettingBinding.text(changes.filedate.txtCustomBaseDate, "changes.filedate.custom.base.date", ""),
+				SettingBinding.choice(changes.filedate.cmbAdjustmentType, "changes.filedate.adjustment.type", DateModType.class, DateModType.None),
+				SettingBinding.text(changes.filedate.txtAdjustmentYear, "changes.filedate.adjustment.year", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentMonth, "changes.filedate.adjustment.month", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentDay, "changes.filedate.adjustment.day", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentHour, "changes.filedate.adjustment.hour", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentMinute, "changes.filedate.adjustment.minute", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentSecond, "changes.filedate.adjustment.second", ""),
+				SettingBinding.flag(changes.exif.chkRemoveGps, "changes.exif.remove.gps", false),
+				SettingBinding.flag(changes.exif.chkRemoveAll, "changes.exif.remove.all", false));
 	}
 
 	private void applySettingsFrom(AppSettings conf) {
@@ -2175,12 +2175,12 @@ public class MainFrame extends JFrame {
 		}
 
 		if (!dryRun) {
-			InputHistory.record(InputHistory.SRC_ROOT_DIR_KEY, processCondition.getSrcRootPath());
+			InputHistory.record(InputHistory.SRC_FOLDER_KEY, processCondition.getSrcRootPath());
+			InputHistory.record(InputHistory.SRC_FILE_NAME_PATTERN_KEY, fieldText(srcOpt.txtFileNamePattern));
 			if (processCondition.getOperationType() != OperationType.Overwrite) {
-				InputHistory.record(InputHistory.DEST_ROOT_DIR_KEY, processCondition.getDestRootPath());
+				InputHistory.record(InputHistory.DEST_FOLDER_KEY, processCondition.getDestRootPath());
 			}
-			InputHistory.record(InputHistory.FILE_PATTERN_KEY, fieldText(srcOpt.txtFileNamePattern));
-			InputHistory.record(InputHistory.DEST_SUB_PATH_PATTERN_KEY, fieldText(destOpt.txtSubFilePathPattern));
+			InputHistory.record(InputHistory.DEST_SUB_FILE_PATH_PATTERN_KEY, fieldText(destOpt.txtSubFilePathPattern));
 		}
 
 		if (lastProcessDialog != null) {

@@ -33,10 +33,10 @@ import net.mozq.picto.App;
  * of each caller repeating that binding.
  */
 final class InputHistory {
-	static final String SRC_ROOT_DIR_KEY = "src.root.dir";
-	static final String DEST_ROOT_DIR_KEY = "dest.root.dir";
-	static final String FILE_PATTERN_KEY = "file.pattern";
-	static final String DEST_SUB_PATH_PATTERN_KEY = "dest.sub.path.pattern";
+	static final String SRC_FOLDER_KEY = "src.folder";
+	static final String SRC_FILE_NAME_PATTERN_KEY = "src.file.name.pattern";
+	static final String DEST_FOLDER_KEY = "dest.folder";
+	static final String DEST_SUB_FILE_PATH_PATTERN_KEY = "dest.sub.file.path.pattern";
 
 	private static final int MAX_ENTRIES = 5;
 

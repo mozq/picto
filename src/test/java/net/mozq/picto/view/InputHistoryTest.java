@@ -95,11 +95,11 @@ class InputHistoryTest {
 	@Test
 	void keysAreIndependentOfEachOther() {
 		AppSettings settings = settings();
-		InputHistory.record(settings, InputHistory.SRC_ROOT_DIR_KEY, "/src");
-		InputHistory.record(settings, InputHistory.DEST_ROOT_DIR_KEY, "/dest");
+		InputHistory.record(settings, InputHistory.SRC_FOLDER_KEY, "/src");
+		InputHistory.record(settings, InputHistory.DEST_FOLDER_KEY, "/dest");
 
-		assertEquals(List.of("/src"), InputHistory.load(settings, InputHistory.SRC_ROOT_DIR_KEY));
-		assertEquals(List.of("/dest"), InputHistory.load(settings, InputHistory.DEST_ROOT_DIR_KEY));
+		assertEquals(List.of("/src"), InputHistory.load(settings, InputHistory.SRC_FOLDER_KEY));
+		assertEquals(List.of("/dest"), InputHistory.load(settings, InputHistory.DEST_FOLDER_KEY));
 	}
 
 	@Test

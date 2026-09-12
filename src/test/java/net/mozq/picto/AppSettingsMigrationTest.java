@@ -46,16 +46,17 @@ class AppSettingsMigrationTest {
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		// file.pattern.syntax must land where file.pattern.regex was defined, not get appended at the end,
-		// even though migrating it also renames the key (unlike dest.sub.path.pattern, migrated in place).
+		// src.file.name.pattern.syntax must land where file.pattern.regex was defined, not get appended at
+		// the end, even though migrating it also renames the key (unlike dest.sub.file.path.pattern and
+		// src.include.subfolders, renamed in place).
 		assertEquals(
-				List.of("src.root.dir", "file.pattern.syntax", "dest.sub.path.pattern", "contains.subs"),
+				List.of("src.folder", "src.file.name.pattern.syntax", "dest.sub.file.path.pattern", "src.include.subfolders"),
 				List.copyOf(settings.keySet()));
-		assertEquals("/photos", settings.getString("src.root.dir", ""));
-		assertEquals("Regex", settings.getString("file.pattern.syntax", ""));
+		assertEquals("/photos", settings.getString("src.folder", ""));
+		assertEquals("Regex", settings.getString("src.file.name.pattern.syntax", ""));
 		assertEquals("${FNumber:0.0}/${WhiteBalance?{0:'Auto',1:'Manual',default:'Others'}}",
-				settings.getString("dest.sub.path.pattern", ""));
-		assertEquals("true", settings.getString("contains.subs", ""));
+				settings.getString("dest.sub.file.path.pattern", ""));
+		assertEquals("true", settings.getString("src.include.subfolders", ""));
 	}
 
 	@Test
@@ -68,7 +69,7 @@ class AppSettingsMigrationTest {
 		AppSettingsMigration.migrate(settings, legacySettings);
 
 		assertEquals("${SubFolderPath}/${BaseName}.${Extension}",
-				settings.getString("dest.sub.path.pattern", ""));
+				settings.getString("dest.sub.file.path.pattern", ""));
 	}
 
 	@Test
@@ -81,7 +82,7 @@ class AppSettingsMigrationTest {
 		AppSettingsMigration.migrate(settings, legacySettings);
 
 		assertEquals("${SubFolderPath?{:'Unsorted',default:'Other'}}/${FileName}",
-				settings.getString("dest.sub.path.pattern", ""));
+				settings.getString("dest.sub.file.path.pattern", ""));
 	}
 
 	@Test
@@ -94,7 +95,7 @@ class AppSettingsMigrationTest {
 		AppSettingsMigration.migrate(settings, legacySettings);
 
 		assertEquals("${SubFolderPath}/${TakenDate:uuuu/MM}/${FileName}",
-				settings.getString("dest.sub.path.pattern", ""));
+				settings.getString("dest.sub.file.path.pattern", ""));
 	}
 
 	@Test
@@ -106,7 +107,7 @@ class AppSettingsMigrationTest {
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		assertEquals("Regex", settings.getString("file.pattern.syntax", ""));
+		assertEquals("Regex", settings.getString("src.file.name.pattern.syntax", ""));
 		assertFalse(settings.keySet().contains("file.pattern.regex"));
 	}
 
@@ -119,7 +120,7 @@ class AppSettingsMigrationTest {
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		assertEquals("Glob", settings.getString("file.pattern.syntax", ""));
+		assertEquals("Glob", settings.getString("src.file.name.pattern.syntax", ""));
 	}
 
 	@Test
@@ -181,7 +182,7 @@ class AppSettingsMigrationTest {
 		AppSettingsMigration.migrate(settings, legacySettings);
 
 		assertEquals(
-				List.of("src.root.dir", "operation.type", "contains.subs"),
+				List.of("src.folder", "operation.type", "src.include.subfolders"),
 				List.copyOf(settings.keySet()));
 	}
 

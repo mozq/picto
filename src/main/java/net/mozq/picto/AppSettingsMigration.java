@@ -33,8 +33,9 @@ final class AppSettingsMigration {
 	private static final String LEGACY_APP_NAME = "Picto";
 	private static final String LEGACY_CONFIG_FILE_NAME = "settings.properties";
 	private static final String SUBFOLDER_PATTERN_KEY = "dest.sub.path.pattern";
+	private static final String NEW_SUBFOLDER_PATTERN_KEY = "dest.sub.file.path.pattern";
 	private static final String FILE_PATTERN_REGEX_KEY = "file.pattern.regex";
-	private static final String FILE_PATTERN_SYNTAX_KEY = "file.pattern.syntax";
+	private static final String FILE_PATTERN_SYNTAX_KEY = "src.file.name.pattern.syntax";
 	private static final String OPE_TYPE_COPY_KEY = "ope.type.copy";
 	private static final String OPE_TYPE_MOVE_KEY = "ope.type.move";
 	private static final String OPE_TYPE_OVERWRITE_KEY = "ope.type.overwrite";
@@ -42,6 +43,40 @@ final class AppSettingsMigration {
 	private static final Map<String, String> RENAMED_VAR_NAMES = Map.of(
 			"ParentSubPath", "SubFolderPath",
 			"PhotoTakenDate", "TakenDate"
+			);
+	// Every other legacy key maps 1:1 onto its current name (grouped under src./dest./changes.filedate./
+	// changes.exif. prefixes); dest.sub.path.pattern, file.pattern.regex and the ope.type.* trio are handled
+	// above since they also need their value transformed, not just the key renamed.
+	private static final Map<String, String> RENAMED_KEYS = Map.ofEntries(
+			Map.entry("src.root.dir", "src.folder"),
+			Map.entry("file.pattern", "src.file.name.pattern"),
+			Map.entry("contains.subs", "src.include.subfolders"),
+			Map.entry("contains.hiddens", "src.include.hidden.files"),
+			Map.entry("file.size.range.from", "src.file.size.from"),
+			Map.entry("file.size.range.to", "src.file.size.to"),
+			Map.entry("file.size.unit", "src.file.size.unit"),
+			Map.entry("creation.time.range.from", "src.created.from"),
+			Map.entry("creation.time.range.to", "src.created.to"),
+			Map.entry("modified.time.range.from", "src.modified.from"),
+			Map.entry("modified.time.range.to", "src.modified.to"),
+			Map.entry("dest.root.dir", "dest.folder"),
+			Map.entry("existing.file.method", "dest.existing.file.method"),
+			Map.entry("check.file.digest", "dest.compare.file.digest"),
+			Map.entry("change.file.creation.date", "changes.filedate.creation.date"),
+			Map.entry("change.file.modified.date", "changes.filedate.modified.date"),
+			Map.entry("change.file.access.date", "changes.filedate.access.date"),
+			Map.entry("change.file.exif.date", "changes.filedate.exif.date"),
+			Map.entry("base.date.type", "changes.filedate.base.date"),
+			Map.entry("custom.base.date", "changes.filedate.custom.base.date"),
+			Map.entry("date.mod.type", "changes.filedate.adjustment.type"),
+			Map.entry("date.mod.year", "changes.filedate.adjustment.year"),
+			Map.entry("date.mod.month", "changes.filedate.adjustment.month"),
+			Map.entry("date.mod.day", "changes.filedate.adjustment.day"),
+			Map.entry("date.mod.hour", "changes.filedate.adjustment.hour"),
+			Map.entry("date.mod.minute", "changes.filedate.adjustment.minute"),
+			Map.entry("date.mod.second", "changes.filedate.adjustment.second"),
+			Map.entry("remove.exif.tags.gps", "changes.exif.remove.gps"),
+			Map.entry("remove.exif.tags.all", "changes.exif.remove.all")
 			);
 
 	private AppSettingsMigration() {
@@ -69,6 +104,7 @@ final class AppSettingsMigration {
 			String key = entry.getKey();
 			String value = entry.getValue();
 			if (SUBFOLDER_PATTERN_KEY.equals(key)) {
+				key = NEW_SUBFOLDER_PATTERN_KEY;
 				value = migrateTemplate(value);
 			} else if (FILE_PATTERN_REGEX_KEY.equals(key)) {
 				key = FILE_PATTERN_SYNTAX_KEY;
@@ -84,6 +120,8 @@ final class AppSettingsMigration {
 				operationTypeMigrated = true;
 				key = OPERATION_TYPE_KEY;
 				value = migrateOperationType(legacyProperties);
+			} else {
+				key = RENAMED_KEYS.getOrDefault(key, key);
 			}
 			settings.set(key, value);
 		}

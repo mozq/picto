@@ -42,7 +42,7 @@ class FileNamePatternPopup {
 					field.setText(value);
 					field.selectAll();
 				},
-				item -> InputHistory.remove(InputHistory.FILE_PATTERN_KEY, item.value()),
+				item -> InputHistory.remove(InputHistory.SRC_FILE_NAME_PATTERN_KEY, item.value()),
 				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT,
@@ -54,7 +54,7 @@ class FileNamePatternPopup {
 	}
 
 	private static List<SuggestionSection> sections(FilePatternSyntax syntax) {
-		List<SuggestionSection> sections = new ArrayList<>(SuggestionPopup.historySection(InputHistory.FILE_PATTERN_KEY));
+		List<SuggestionSection> sections = new ArrayList<>(SuggestionPopup.historySection(InputHistory.SRC_FILE_NAME_PATTERN_KEY));
 		sections.addAll(switch (syntax) {
 			case Glob -> globSections();
 			case Regex -> regexSections();

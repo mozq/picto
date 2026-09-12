@@ -54,14 +54,14 @@ class SubfolderTemplatePopup {
 				field,
 				SubfolderTemplatePopup::sections,
 				value -> field.replaceSelection(value),
-				item -> InputHistory.remove(InputHistory.DEST_SUB_PATH_PATTERN_KEY, item.value()),
+				item -> InputHistory.remove(InputHistory.DEST_SUB_FILE_PATH_PATTERN_KEY, item.value()),
 				Messages.getString("MainFrame.history.remove"),
 				POPUP_MIN_WIDTH,
 				POPUP_MAX_HEIGHT);
 	}
 
 	private static List<SuggestionSection> sections() {
-		List<SuggestionSection> sections = new ArrayList<>(SuggestionPopup.historySection(InputHistory.DEST_SUB_PATH_PATTERN_KEY));
+		List<SuggestionSection> sections = new ArrayList<>(SuggestionPopup.historySection(InputHistory.DEST_SUB_FILE_PATH_PATTERN_KEY));
 		sections.add(section("template",
 				item("keepOriginalStructure", "${SubFilePath}"),
 				item("byTakenDate", "${TakenDate:uuuu-MM-dd}/${FileName}"),
