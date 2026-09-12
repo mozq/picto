@@ -35,12 +35,12 @@ import net.mozq.picto.enums.ExistingFileMethod;
 class DestinationOptionsPanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 
-	final JLabel destSubPathPatternLabel;
-	final JTextField destSubPathPatternTextField;
-	final JLabel existingFileMethodLabel;
-	final JComboBox<ExistingFileMethod> existingFileMethodComboBox;
-	final JLabel validateFileLabel;
-	final JCheckBox checkFileDigestCheckBox;
+	final JLabel lblSubFilePathPattern;
+	final JTextField txtSubFilePathPattern;
+	final JLabel lblExistingFileMethod;
+	final JComboBox<ExistingFileMethod> cmbExistingFileMethod;
+	final JLabel lblValidateFile;
+	final JCheckBox chkCompareFileDigest;
 
 	DestinationOptionsPanel() {
 		GridBagLayout layout = new GridBagLayout();
@@ -50,64 +50,64 @@ class DestinationOptionsPanel extends JPanel {
 		layout.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
 		setLayout(layout);
 
-		destSubPathPatternLabel = new JLabel(Messages.getString("MainFrame.destSubPathPattern"));
-		GridBagConstraints destSubPathPatternLabelConstraints = new GridBagConstraints();
-		destSubPathPatternLabelConstraints.anchor = GridBagConstraints.WEST;
-		destSubPathPatternLabelConstraints.insets = new Insets(0, 0, 5, 5);
-		destSubPathPatternLabelConstraints.gridx = 0;
-		destSubPathPatternLabelConstraints.gridy = 0;
-		add(destSubPathPatternLabel, destSubPathPatternLabelConstraints);
+		lblSubFilePathPattern = new JLabel(Messages.getString("MainFrame.destSubPathPattern"));
+		GridBagConstraints lblSubFilePathPatternConstraints = new GridBagConstraints();
+		lblSubFilePathPatternConstraints.anchor = GridBagConstraints.WEST;
+		lblSubFilePathPatternConstraints.insets = new Insets(0, 0, 5, 5);
+		lblSubFilePathPatternConstraints.gridx = 0;
+		lblSubFilePathPatternConstraints.gridy = 0;
+		add(lblSubFilePathPattern, lblSubFilePathPatternConstraints);
 
-		destSubPathPatternTextField = new JTextField();
-		destSubPathPatternTextField.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
-		destSubPathPatternTextField.putClientProperty(
+		txtSubFilePathPattern = new JTextField();
+		txtSubFilePathPattern.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
+		txtSubFilePathPattern.putClientProperty(
 				FlatClientProperties.TEXT_FIELD_LEADING_ICON,
 				UIManager.getIcon("FileView.fileIcon"));
-		destSubPathPatternLabel.setLabelFor(destSubPathPatternTextField);
-		InputSupport.installLabelFocusAction(destSubPathPatternLabel, destSubPathPatternTextField, LabelFocusBehavior.CARET_END);
-		destSubPathPatternTextField.setColumns(10);
-		new SubfolderTemplatePopup(destSubPathPatternTextField);
-		GridBagConstraints destSubPathPatternTextFieldConstraints = new GridBagConstraints();
-		destSubPathPatternTextFieldConstraints.insets = new Insets(0, 0, 5, 0);
-		destSubPathPatternTextFieldConstraints.fill = GridBagConstraints.HORIZONTAL;
-		destSubPathPatternTextFieldConstraints.gridx = 1;
-		destSubPathPatternTextFieldConstraints.gridy = 0;
-		add(destSubPathPatternTextField, destSubPathPatternTextFieldConstraints);
+		lblSubFilePathPattern.setLabelFor(txtSubFilePathPattern);
+		InputSupport.installLabelFocusAction(lblSubFilePathPattern, txtSubFilePathPattern, LabelFocusBehavior.CARET_END);
+		txtSubFilePathPattern.setColumns(10);
+		new SubfolderTemplatePopup(txtSubFilePathPattern);
+		GridBagConstraints txtSubFilePathPatternConstraints = new GridBagConstraints();
+		txtSubFilePathPatternConstraints.insets = new Insets(0, 0, 5, 0);
+		txtSubFilePathPatternConstraints.fill = GridBagConstraints.HORIZONTAL;
+		txtSubFilePathPatternConstraints.gridx = 1;
+		txtSubFilePathPatternConstraints.gridy = 0;
+		add(txtSubFilePathPattern, txtSubFilePathPatternConstraints);
 
-		existingFileMethodLabel = new JLabel(Messages.getString("MainFrame.existingFileMethod"));
-		GridBagConstraints existingFileMethodLabelConstraints = new GridBagConstraints();
-		existingFileMethodLabelConstraints.anchor = GridBagConstraints.WEST;
-		existingFileMethodLabelConstraints.insets = new Insets(0, 0, 5, 5);
-		existingFileMethodLabelConstraints.gridx = 0;
-		existingFileMethodLabelConstraints.gridy = 1;
-		add(existingFileMethodLabel, existingFileMethodLabelConstraints);
+		lblExistingFileMethod = new JLabel(Messages.getString("MainFrame.existingFileMethod"));
+		GridBagConstraints lblExistingFileMethodConstraints = new GridBagConstraints();
+		lblExistingFileMethodConstraints.anchor = GridBagConstraints.WEST;
+		lblExistingFileMethodConstraints.insets = new Insets(0, 0, 5, 5);
+		lblExistingFileMethodConstraints.gridx = 0;
+		lblExistingFileMethodConstraints.gridy = 1;
+		add(lblExistingFileMethod, lblExistingFileMethodConstraints);
 
-		existingFileMethodComboBox = new JComboBox<>();
-		existingFileMethodLabel.setLabelFor(existingFileMethodComboBox);
-		InputSupport.installLabelFocusAction(existingFileMethodLabel, existingFileMethodComboBox, LabelFocusBehavior.FOCUS_ONLY);
-		GridBagConstraints existingFileMethodComboBoxConstraints = new GridBagConstraints();
-		existingFileMethodComboBoxConstraints.insets = new Insets(0, 0, 5, 0);
-		existingFileMethodComboBoxConstraints.anchor = GridBagConstraints.WEST;
-		existingFileMethodComboBoxConstraints.gridx = 1;
-		existingFileMethodComboBoxConstraints.gridy = 1;
-		existingFileMethodComboBox.setModel(new DefaultComboBoxModel<>(ExistingFileMethod.values()));
-		add(existingFileMethodComboBox, existingFileMethodComboBoxConstraints);
+		cmbExistingFileMethod = new JComboBox<>();
+		lblExistingFileMethod.setLabelFor(cmbExistingFileMethod);
+		InputSupport.installLabelFocusAction(lblExistingFileMethod, cmbExistingFileMethod, LabelFocusBehavior.FOCUS_ONLY);
+		GridBagConstraints cmbExistingFileMethodConstraints = new GridBagConstraints();
+		cmbExistingFileMethodConstraints.insets = new Insets(0, 0, 5, 0);
+		cmbExistingFileMethodConstraints.anchor = GridBagConstraints.WEST;
+		cmbExistingFileMethodConstraints.gridx = 1;
+		cmbExistingFileMethodConstraints.gridy = 1;
+		cmbExistingFileMethod.setModel(new DefaultComboBoxModel<>(ExistingFileMethod.values()));
+		add(cmbExistingFileMethod, cmbExistingFileMethodConstraints);
 
-		validateFileLabel = new JLabel(Messages.getString("MainFrame.validateFile"));
-		GridBagConstraints validateFileLabelConstraints = new GridBagConstraints();
-		validateFileLabelConstraints.anchor = GridBagConstraints.WEST;
-		validateFileLabelConstraints.insets = new Insets(0, 0, 0, 5);
-		validateFileLabelConstraints.gridx = 0;
-		validateFileLabelConstraints.gridy = 2;
-		add(validateFileLabel, validateFileLabelConstraints);
+		lblValidateFile = new JLabel(Messages.getString("MainFrame.validateFile"));
+		GridBagConstraints lblValidateFileConstraints = new GridBagConstraints();
+		lblValidateFileConstraints.anchor = GridBagConstraints.WEST;
+		lblValidateFileConstraints.insets = new Insets(0, 0, 0, 5);
+		lblValidateFileConstraints.gridx = 0;
+		lblValidateFileConstraints.gridy = 2;
+		add(lblValidateFile, lblValidateFileConstraints);
 
-		checkFileDigestCheckBox = new JCheckBox(Messages.getString("MainFrame.checkFileDigest"));
-		validateFileLabel.setLabelFor(checkFileDigestCheckBox);
-		InputSupport.installLabelFocusAction(validateFileLabel, checkFileDigestCheckBox, LabelFocusBehavior.FOCUS_ONLY);
-		GridBagConstraints checkFileDigestConstraints = new GridBagConstraints();
-		checkFileDigestConstraints.anchor = GridBagConstraints.WEST;
-		checkFileDigestConstraints.gridx = 1;
-		checkFileDigestConstraints.gridy = 2;
-		add(checkFileDigestCheckBox, checkFileDigestConstraints);
+		chkCompareFileDigest = new JCheckBox(Messages.getString("MainFrame.checkFileDigest"));
+		lblValidateFile.setLabelFor(chkCompareFileDigest);
+		InputSupport.installLabelFocusAction(lblValidateFile, chkCompareFileDigest, LabelFocusBehavior.FOCUS_ONLY);
+		GridBagConstraints chkCompareFileDigestConstraints = new GridBagConstraints();
+		chkCompareFileDigestConstraints.anchor = GridBagConstraints.WEST;
+		chkCompareFileDigestConstraints.gridx = 1;
+		chkCompareFileDigestConstraints.gridy = 2;
+		add(chkCompareFileDigest, chkCompareFileDigestConstraints);
 	}
 }

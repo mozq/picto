@@ -76,7 +76,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
-import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
@@ -156,71 +155,23 @@ public class MainFrame extends JFrame {
 	private JPanel contentPane;
 
 	private JPanel pnlSrcConditions;
-	private JPanel pnlSrcRootDirPath;
-	private JTextField txtSrcRootDirPath;
-	private JButton btnSrcRootDirSelect;
-	private JLabel lblFilePattern;
-	private JTextField txtFilePattern;
-	private JComboBox<FilePatternSyntax> cmbFilePatternSyntax;
-	private JCheckBox chkContainsSubs;
-	private JCheckBox chkContainsHiddens;
-	private JLabel lblFileSizeRange;
-	private JTextField txtFileSizeRangeFrom;
-	private JLabel lblFileSizeRangeTo;
-	private JTextField txtFileSizeRangeTo;
-	private JComboBox<FileSizeUnit> cmbFileSizeUnit;
-	private JLabel lblCreationTimeRange;
-	private JFormattedTextField txtCreationTimeRangeFrom;
-	private JLabel lblCreationTimeRangeTo;
-	private JFormattedTextField txtCreationTimeRangeTo;
-	private JLabel lblModifiedTimeRange;
-	private JFormattedTextField txtModifiedTimeRangeFrom;
-	private JLabel lblModifiedTimeRangeTo;
-	private JFormattedTextField txtModifiedTimeRangeTo;
+	private JPanel pnlSrcFolder;
+	private JTextField txtSrcFolder;
+	private JButton btnSrcFolderSelect;
 
 	private JPanel pnlDestConditions;
 	private JPanel pnlOperation;
-	private JPanel pnlOpeType;
-	private ButtonGroup btngrpOpeType = new ButtonGroup();
-	private JRadioButton rdoOpeTypeCopy;
-	private JRadioButton rdoOpeTypeMove;
-	private JRadioButton rdoOpeTypeOverwrite;
-	private JLabel lblExistingFileMethod;
-	private JComboBox<ExistingFileMethod> cmbExistingFileMethod;
+	private JPanel pnlOperationType;
+	private ButtonGroup btngrpOperationType = new ButtonGroup();
+	private JRadioButton rdoOperationTypeCopy;
+	private JRadioButton rdoOperationTypeMove;
+	private JRadioButton rdoOperationTypeOverwrite;
 	private JPanel pnlControls;
-	private JTextField txtDestRootDirPath;
-	private JButton btnDestRootDirSelect;
-	private JLabel lblDestSubPathPattern;
-	private JTextField txtDestSubPathPattern;
-	private JPanel pnlDestRootDirPath;
-	private JLabel lblValidateFile;
-	private JCheckBox chkCheckFileDigest;
+	private JTextField txtDestFolder;
+	private JButton btnDestFolderSelect;
+	private JPanel pnlDestFolder;
 
-	private JTabbedPane tabModConditions;
-	private JLabel lblTargetDate;
-	private JCheckBox chkChangeFileCreationDate;
-	private JCheckBox chkChangeFileModifiedDate;
-	private JCheckBox chkChangeFileAccessDate;
-	private JCheckBox chkChangeExifDate;
-	private JLabel lblBaseDateType;
-	private JComboBox<DateType> cmbBaseDateType;
-	private JFormattedTextField txtCustomBaseDate;
-	private JLabel lblEditBaseDate;
-	private JComboBox<DateModType> cmbDateModType;
-	private JTextField txtDateModYears;
-	private JLabel lblSepYM;
-	private JTextField txtDateModMonths;
-	private JLabel lblSepMD;
-	private JTextField txtDateModDays;
-	private JLabel lblSepDH;
-	private JTextField txtDateModHours;
-	private JLabel lblSepHM;
-	private JTextField txtDateModMinutes;
-	private JLabel lblSepMS;
-	private JTextField txtDateModSeconds;
-
-	private JCheckBox chkRemoveExifTagsGps;
-	private JCheckBox chkRemoveExifTagsAll;
+	private ChangesPanel changes;
 
 	private JButton btnStart;
 	private JButton btnStartMenu;
@@ -228,8 +179,8 @@ public class MainFrame extends JFrame {
 	private JToggleButton btnDestOptions;
 	private JToggleButton btnChanges;
 	private JLabel lblDestConditionsTitle;
-	private SourceOptionsPanel sourceOptionsPanel;
-	private DestinationOptionsPanel destinationOptionsPanel;
+	private SourceOptionsPanel srcOpt;
+	private DestinationOptionsPanel destOpt;
 	private JTextArea txtSrcOptionsSummary;
 	private JTextArea txtDestOptionsSummary;
 	private JTextArea txtChangesSummary;
@@ -498,61 +449,61 @@ public class MainFrame extends JFrame {
 		gbc_lblSrcConditionsTitle.gridy = 0;
 		pnlSrcConditions.add(lblSrcConditionsTitle, gbc_lblSrcConditionsTitle);
 
-		pnlSrcRootDirPath = new JPanel();
-		pnlSrcRootDirPath.setBorder(null);
-		GridBagConstraints gbc_pnlSrcRootDirPath = new GridBagConstraints();
-		gbc_pnlSrcRootDirPath.insets = new Insets(0, 0, 5, 0);
-		gbc_pnlSrcRootDirPath.fill = GridBagConstraints.BOTH;
-		gbc_pnlSrcRootDirPath.gridx = 1;
-		gbc_pnlSrcRootDirPath.gridy = 0;
-		pnlSrcConditions.add(pnlSrcRootDirPath, gbc_pnlSrcRootDirPath);
-		pnlSrcRootDirPath.setLayout(new BorderLayout(INLINE_HGAP, 0));
+		pnlSrcFolder = new JPanel();
+		pnlSrcFolder.setBorder(null);
+		GridBagConstraints gbc_pnlSrcFolder = new GridBagConstraints();
+		gbc_pnlSrcFolder.insets = new Insets(0, 0, 5, 0);
+		gbc_pnlSrcFolder.fill = GridBagConstraints.BOTH;
+		gbc_pnlSrcFolder.gridx = 1;
+		gbc_pnlSrcFolder.gridy = 0;
+		pnlSrcConditions.add(pnlSrcFolder, gbc_pnlSrcFolder);
+		pnlSrcFolder.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
-		btnSrcRootDirSelect = new JButton(Messages.getString("MainFrame.srcRootDirSelect"));
-		configureFolderSelectButton(btnSrcRootDirSelect);
+		btnSrcFolderSelect = new JButton(Messages.getString("MainFrame.srcRootDirSelect"));
+		configureFolderSelectButton(btnSrcFolderSelect);
 		btnSrcOptions = newOptionsToggleButton(Messages.getString("MainFrame.srcOptionsTitle"));
-		JPanel pnlSrcRootDirActions = new JPanel(new BorderLayout(0, 0));
-		pnlSrcRootDirActions.add(btnSrcOptions, BorderLayout.EAST);
-		pnlSrcRootDirPath.add(pnlSrcRootDirActions, BorderLayout.EAST);
+		JPanel pnlSrcFolderActions = new JPanel(new BorderLayout(0, 0));
+		pnlSrcFolderActions.add(btnSrcOptions, BorderLayout.EAST);
+		pnlSrcFolder.add(pnlSrcFolderActions, BorderLayout.EAST);
 
-		txtSrcRootDirPath = new JTextField();
-		txtSrcRootDirPath.putClientProperty("JTextField.trailingComponent", btnSrcRootDirSelect);
-		txtSrcRootDirPath.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, UIManager.getIcon("FileView.directoryIcon"));
-		lblSrcConditionsTitle.setLabelFor(txtSrcRootDirPath);
-		txtSrcRootDirPath.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.srcRootDirPath"));
-		txtSrcRootDirPath.setToolTipText(Messages.getString("MainFrame.srcRootDirPath"));
-		pnlSrcRootDirPath.add(txtSrcRootDirPath, BorderLayout.CENTER);
-		txtSrcRootDirPath.setColumns(10);
-		InputSupport.installLabelFocusAction(lblSrcConditionsTitle, txtSrcRootDirPath, LabelFocusBehavior.CARET_END);
-		InputSupport.installFolderDropTarget(txtSrcRootDirPath);
-		new FolderHistoryPopup(txtSrcRootDirPath, InputHistory.SRC_ROOT_DIR_KEY);
-		installFolderChooserButton(btnSrcRootDirSelect, txtSrcRootDirPath);
+		txtSrcFolder = new JTextField();
+		txtSrcFolder.putClientProperty("JTextField.trailingComponent", btnSrcFolderSelect);
+		txtSrcFolder.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, UIManager.getIcon("FileView.directoryIcon"));
+		lblSrcConditionsTitle.setLabelFor(txtSrcFolder);
+		txtSrcFolder.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.srcRootDirPath"));
+		txtSrcFolder.setToolTipText(Messages.getString("MainFrame.srcRootDirPath"));
+		pnlSrcFolder.add(txtSrcFolder, BorderLayout.CENTER);
+		txtSrcFolder.setColumns(10);
+		InputSupport.installLabelFocusAction(lblSrcConditionsTitle, txtSrcFolder, LabelFocusBehavior.CARET_END);
+		InputSupport.installFolderDropTarget(txtSrcFolder);
+		new FolderHistoryPopup(txtSrcFolder, InputHistory.SRC_ROOT_DIR_KEY);
+		installFolderChooserButton(btnSrcFolderSelect, txtSrcFolder);
 
-		sourceOptionsPanel = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
-		stylizeOptionsBody(sourceOptionsPanel, OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT);
-		sourceOptionsPanel.matchCountLabel.addMouseListener(new MouseAdapter() {
+		srcOpt = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
+		stylizeOptionsBody(srcOpt, OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT);
+		srcOpt.lblMatchCount.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				matchCountLabelClicked();
 			}
 		});
-		sourceOptionsPanel.matchCountStopButton.addActionListener(_ -> matchCountStopButtonClicked());
+		srcOpt.btnMatchCountStop.addActionListener(_ -> matchCountStopButtonClicked());
 
-		GridBagConstraints gbc_sourceOptionsPanel = new GridBagConstraints();
-		gbc_sourceOptionsPanel.fill = GridBagConstraints.BOTH;
-		gbc_sourceOptionsPanel.gridwidth = 2;
-		gbc_sourceOptionsPanel.insets = new Insets(0, 0, 5, 0);
-		gbc_sourceOptionsPanel.gridx = 1;
-		gbc_sourceOptionsPanel.gridy = 1;
-		pnlSrcConditions.add(sourceOptionsPanel, gbc_sourceOptionsPanel);
-		setOptionsExpanded(btnSrcOptions, sourceOptionsPanel, Messages.getString("MainFrame.srcOptionsTitle"), false);
+		GridBagConstraints gbc_srcOpt = new GridBagConstraints();
+		gbc_srcOpt.fill = GridBagConstraints.BOTH;
+		gbc_srcOpt.gridwidth = 2;
+		gbc_srcOpt.insets = new Insets(0, 0, 5, 0);
+		gbc_srcOpt.gridx = 1;
+		gbc_srcOpt.gridy = 1;
+		pnlSrcConditions.add(srcOpt, gbc_srcOpt);
+		setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.srcOptionsTitle"), false);
 		btnSrcOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setOptionsExpanded(btnSrcOptions, sourceOptionsPanel, Messages.getString("MainFrame.srcOptionsTitle"), btnSrcOptions.isSelected());
+				setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.srcOptionsTitle"), btnSrcOptions.isSelected());
 			}
 		});
 
-		txtSrcOptionsSummary = newOptionsSummaryText(btnSrcOptions, sourceOptionsPanel, Messages.getString("MainFrame.srcOptionsTitle"));
+		txtSrcOptionsSummary = newOptionsSummaryText(btnSrcOptions, srcOpt, Messages.getString("MainFrame.srcOptionsTitle"));
 		GridBagConstraints gbc_txtSrcOptionsSummary = new GridBagConstraints();
 		gbc_txtSrcOptionsSummary.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtSrcOptionsSummary.gridwidth = 2;
@@ -560,25 +511,6 @@ public class MainFrame extends JFrame {
 		gbc_txtSrcOptionsSummary.gridx = 1;
 		gbc_txtSrcOptionsSummary.gridy = 1;
 		pnlSrcConditions.add(txtSrcOptionsSummary, gbc_txtSrcOptionsSummary);
-
-		lblFilePattern = sourceOptionsPanel.filePatternLabel;
-		txtFilePattern = sourceOptionsPanel.filePatternTextField;
-		cmbFilePatternSyntax = sourceOptionsPanel.filePatternSyntaxComboBox;
-		chkContainsSubs = sourceOptionsPanel.containsSubsCheckBox;
-		chkContainsHiddens = sourceOptionsPanel.containsHiddensCheckBox;
-		lblFileSizeRange = sourceOptionsPanel.fileSizeRangeLabel;
-		txtFileSizeRangeFrom = sourceOptionsPanel.fileSizeRangeFromTextField;
-		lblFileSizeRangeTo = sourceOptionsPanel.fileSizeRangeToLabel;
-		txtFileSizeRangeTo = sourceOptionsPanel.fileSizeRangeToTextField;
-		cmbFileSizeUnit = sourceOptionsPanel.fileSizeUnitComboBox;
-		lblCreationTimeRange = sourceOptionsPanel.creationTimeRangeLabel;
-		txtCreationTimeRangeFrom = sourceOptionsPanel.creationTimeRangeFromTextField;
-		lblCreationTimeRangeTo = sourceOptionsPanel.creationTimeRangeToLabel;
-		txtCreationTimeRangeTo = sourceOptionsPanel.creationTimeRangeToTextField;
-		lblModifiedTimeRange = sourceOptionsPanel.modifiedTimeRangeLabel;
-		txtModifiedTimeRangeFrom = sourceOptionsPanel.modifiedTimeRangeFromTextField;
-		lblModifiedTimeRangeTo = sourceOptionsPanel.modifiedTimeRangeToLabel;
-		txtModifiedTimeRangeTo = sourceOptionsPanel.modifiedTimeRangeToTextField;
 	}
 
 	private void buildOperationPanel() {
@@ -597,34 +529,33 @@ public class MainFrame extends JFrame {
 		gbl_pnlOperation.rowWeights = new double[]{0.0, Double.MIN_VALUE};
 		pnlOperation.setLayout(gbl_pnlOperation);
 
-		pnlOpeType = new JPanel();
-		pnlOpeType.setBorder(null);
-		GridBagConstraints gbc_pnlOpeType = new GridBagConstraints();
-		gbc_pnlOpeType.anchor = GridBagConstraints.WEST;
-		gbc_pnlOpeType.fill = GridBagConstraints.HORIZONTAL;
-		gbc_pnlOpeType.gridx = 0;
-		gbc_pnlOpeType.gridy = 0;
-		pnlOperation.add(pnlOpeType, gbc_pnlOpeType);
-		pnlOpeType.setLayout(new FlowLayout(FlowLayout.LEFT, INLINE_HGAP, 0));
+		pnlOperationType = new JPanel();
+		pnlOperationType.setBorder(null);
+		GridBagConstraints gbc_pnlOperationType = new GridBagConstraints();
+		gbc_pnlOperationType.anchor = GridBagConstraints.WEST;
+		gbc_pnlOperationType.fill = GridBagConstraints.HORIZONTAL;
+		gbc_pnlOperationType.gridx = 0;
+		gbc_pnlOperationType.gridy = 0;
+		pnlOperation.add(pnlOperationType, gbc_pnlOperationType);
+		pnlOperationType.setLayout(new FlowLayout(FlowLayout.LEFT, INLINE_HGAP, 0));
 
-		rdoOpeTypeCopy = new JRadioButton(Messages.getString("MainFrame.opeTypeCopy"));
-		rdoOpeTypeCopy.setMnemonic(KeyEvent.VK_C);
-		rdoOpeTypeCopy.setActionCommand(OperationType.Copy.name());
-		btngrpOpeType.add(rdoOpeTypeCopy);
-		pnlOpeType.add(rdoOpeTypeCopy);
+		rdoOperationTypeCopy = new JRadioButton(Messages.getString("MainFrame.opeTypeCopy"));
+		rdoOperationTypeCopy.setMnemonic(KeyEvent.VK_C);
+		rdoOperationTypeCopy.setActionCommand(OperationType.Copy.name());
+		btngrpOperationType.add(rdoOperationTypeCopy);
+		pnlOperationType.add(rdoOperationTypeCopy);
 
-		rdoOpeTypeMove = new JRadioButton(Messages.getString("MainFrame.opeTypeMove"));
-		rdoOpeTypeMove.setMnemonic(KeyEvent.VK_M);
-		rdoOpeTypeMove.setActionCommand(OperationType.Move.name());
-		btngrpOpeType.add(rdoOpeTypeMove);
-		pnlOpeType.add(rdoOpeTypeMove);
+		rdoOperationTypeMove = new JRadioButton(Messages.getString("MainFrame.opeTypeMove"));
+		rdoOperationTypeMove.setMnemonic(KeyEvent.VK_M);
+		rdoOperationTypeMove.setActionCommand(OperationType.Move.name());
+		btngrpOperationType.add(rdoOperationTypeMove);
+		pnlOperationType.add(rdoOperationTypeMove);
 
-		rdoOpeTypeOverwrite = new JRadioButton(Messages.getString("MainFrame.opeTypeOverwrite"));
-		rdoOpeTypeOverwrite.setMnemonic(KeyEvent.VK_O);
-		rdoOpeTypeOverwrite.setActionCommand(OperationType.Overwrite.name());
-		btngrpOpeType.add(rdoOpeTypeOverwrite);
-		pnlOpeType.add(rdoOpeTypeOverwrite);
-
+		rdoOperationTypeOverwrite = new JRadioButton(Messages.getString("MainFrame.opeTypeOverwrite"));
+		rdoOperationTypeOverwrite.setMnemonic(KeyEvent.VK_O);
+		rdoOperationTypeOverwrite.setActionCommand(OperationType.Overwrite.name());
+		btngrpOperationType.add(rdoOperationTypeOverwrite);
+		pnlOperationType.add(rdoOperationTypeOverwrite);
 	}
 
 	private void buildDestinationPanel() {
@@ -652,53 +583,53 @@ public class MainFrame extends JFrame {
 		gbc_lblDestConditionsTitle.gridy = 0;
 		pnlDestConditions.add(lblDestConditionsTitle, gbc_lblDestConditionsTitle);
 
-		pnlDestRootDirPath = new JPanel();
-		pnlDestRootDirPath.setBorder(null);
-		GridBagConstraints gbc_pnlDestRootDirPath = new GridBagConstraints();
-		gbc_pnlDestRootDirPath.insets = new Insets(0, 0, 5, 0);
-		gbc_pnlDestRootDirPath.fill = GridBagConstraints.BOTH;
-		gbc_pnlDestRootDirPath.gridx = 1;
-		gbc_pnlDestRootDirPath.gridy = 0;
-		pnlDestConditions.add(pnlDestRootDirPath, gbc_pnlDestRootDirPath);
-		pnlDestRootDirPath.setLayout(new BorderLayout(INLINE_HGAP, 0));
+		pnlDestFolder = new JPanel();
+		pnlDestFolder.setBorder(null);
+		GridBagConstraints gbc_pnlDestFolder = new GridBagConstraints();
+		gbc_pnlDestFolder.insets = new Insets(0, 0, 5, 0);
+		gbc_pnlDestFolder.fill = GridBagConstraints.BOTH;
+		gbc_pnlDestFolder.gridx = 1;
+		gbc_pnlDestFolder.gridy = 0;
+		pnlDestConditions.add(pnlDestFolder, gbc_pnlDestFolder);
+		pnlDestFolder.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
-		btnDestRootDirSelect = new JButton(Messages.getString("MainFrame.destRootDirSelect"));
-		configureFolderSelectButton(btnDestRootDirSelect);
+		btnDestFolderSelect = new JButton(Messages.getString("MainFrame.destRootDirSelect"));
+		configureFolderSelectButton(btnDestFolderSelect);
 		btnDestOptions = newOptionsToggleButton(Messages.getString("MainFrame.destOptionsTitle"));
-		JPanel pnlDestRootDirActions = new JPanel(new BorderLayout(0, 0));
-		pnlDestRootDirActions.add(btnDestOptions, BorderLayout.EAST);
-		pnlDestRootDirPath.add(pnlDestRootDirActions, BorderLayout.EAST);
+		JPanel pnlDestFolderActions = new JPanel(new BorderLayout(0, 0));
+		pnlDestFolderActions.add(btnDestOptions, BorderLayout.EAST);
+		pnlDestFolder.add(pnlDestFolderActions, BorderLayout.EAST);
 
-		txtDestRootDirPath = new JTextField();
-		txtDestRootDirPath.putClientProperty("JTextField.trailingComponent", btnDestRootDirSelect);
-		txtDestRootDirPath.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, UIManager.getIcon("FileView.directoryIcon"));
-		lblDestConditionsTitle.setLabelFor(txtDestRootDirPath);
-		txtDestRootDirPath.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.destRootDirPath"));
-		txtDestRootDirPath.setToolTipText(Messages.getString("MainFrame.destRootDirPath"));
-		pnlDestRootDirPath.add(txtDestRootDirPath, BorderLayout.CENTER);
-		txtDestRootDirPath.setColumns(10);
-		InputSupport.installLabelFocusAction(lblDestConditionsTitle, txtDestRootDirPath, LabelFocusBehavior.CARET_END);
-		InputSupport.installFolderDropTarget(txtDestRootDirPath);
-		new FolderHistoryPopup(txtDestRootDirPath, InputHistory.DEST_ROOT_DIR_KEY);
-		installFolderChooserButton(btnDestRootDirSelect, txtDestRootDirPath);
+		txtDestFolder = new JTextField();
+		txtDestFolder.putClientProperty("JTextField.trailingComponent", btnDestFolderSelect);
+		txtDestFolder.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, UIManager.getIcon("FileView.directoryIcon"));
+		lblDestConditionsTitle.setLabelFor(txtDestFolder);
+		txtDestFolder.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.destRootDirPath"));
+		txtDestFolder.setToolTipText(Messages.getString("MainFrame.destRootDirPath"));
+		pnlDestFolder.add(txtDestFolder, BorderLayout.CENTER);
+		txtDestFolder.setColumns(10);
+		InputSupport.installLabelFocusAction(lblDestConditionsTitle, txtDestFolder, LabelFocusBehavior.CARET_END);
+		InputSupport.installFolderDropTarget(txtDestFolder);
+		new FolderHistoryPopup(txtDestFolder, InputHistory.DEST_ROOT_DIR_KEY);
+		installFolderChooserButton(btnDestFolderSelect, txtDestFolder);
 
-		destinationOptionsPanel = new DestinationOptionsPanel();
-		stylizeOptionsBody(destinationOptionsPanel);
-		GridBagConstraints gbc_destinationOptionsPanel = new GridBagConstraints();
-		gbc_destinationOptionsPanel.fill = GridBagConstraints.BOTH;
-		gbc_destinationOptionsPanel.gridwidth = 2;
-		gbc_destinationOptionsPanel.insets = new Insets(0, 0, 5, 0);
-		gbc_destinationOptionsPanel.gridx = 1;
-		gbc_destinationOptionsPanel.gridy = 1;
-		pnlDestConditions.add(destinationOptionsPanel, gbc_destinationOptionsPanel);
-		setOptionsExpanded(btnDestOptions, destinationOptionsPanel, Messages.getString("MainFrame.destOptionsTitle"), false);
+		destOpt = new DestinationOptionsPanel();
+		stylizeOptionsBody(destOpt);
+		GridBagConstraints gbc_destOpt = new GridBagConstraints();
+		gbc_destOpt.fill = GridBagConstraints.BOTH;
+		gbc_destOpt.gridwidth = 2;
+		gbc_destOpt.insets = new Insets(0, 0, 5, 0);
+		gbc_destOpt.gridx = 1;
+		gbc_destOpt.gridy = 1;
+		pnlDestConditions.add(destOpt, gbc_destOpt);
+		setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.destOptionsTitle"), false);
 		btnDestOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setOptionsExpanded(btnDestOptions, destinationOptionsPanel, Messages.getString("MainFrame.destOptionsTitle"), btnDestOptions.isSelected());
+				setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.destOptionsTitle"), btnDestOptions.isSelected());
 			}
 		});
 
-		txtDestOptionsSummary = newOptionsSummaryText(btnDestOptions, destinationOptionsPanel, Messages.getString("MainFrame.destOptionsTitle"));
+		txtDestOptionsSummary = newOptionsSummaryText(btnDestOptions, destOpt, Messages.getString("MainFrame.destOptionsTitle"));
 		GridBagConstraints gbc_txtDestOptionsSummary = new GridBagConstraints();
 		gbc_txtDestOptionsSummary.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtDestOptionsSummary.gridwidth = 2;
@@ -706,13 +637,6 @@ public class MainFrame extends JFrame {
 		gbc_txtDestOptionsSummary.gridx = 1;
 		gbc_txtDestOptionsSummary.gridy = 1;
 		pnlDestConditions.add(txtDestOptionsSummary, gbc_txtDestOptionsSummary);
-
-		lblDestSubPathPattern = destinationOptionsPanel.destSubPathPatternLabel;
-		txtDestSubPathPattern = destinationOptionsPanel.destSubPathPatternTextField;
-		lblExistingFileMethod = destinationOptionsPanel.existingFileMethodLabel;
-		cmbExistingFileMethod = destinationOptionsPanel.existingFileMethodComboBox;
-		lblValidateFile = destinationOptionsPanel.validateFileLabel;
-		chkCheckFileDigest = destinationOptionsPanel.checkFileDigestCheckBox;
 
 	}
 
@@ -727,21 +651,20 @@ public class MainFrame extends JFrame {
 		gbc_btnChanges.gridy = 3;
 		contentPane.add(btnChanges, gbc_btnChanges);
 
-		ChangesPanel changesPanel = new ChangesPanel(
+		changes = new ChangesPanel(
 				SECTION_PADDING,
 				INLINE_HGAP,
 				INLINE_VGAP,
 				this::changeEnableFileDateModConditions,
 				this::fitWindowToContent);
-		tabModConditions = changesPanel;
-		GridBagConstraints gbc_tabModConditions = new GridBagConstraints();
-		gbc_tabModConditions.insets = new Insets(0, 0, SECTION_GAP, 0);
-		gbc_tabModConditions.fill = GridBagConstraints.BOTH;
-		gbc_tabModConditions.gridx = 0;
-		gbc_tabModConditions.gridy = 5;
-		contentPane.add(tabModConditions, gbc_tabModConditions);
+		GridBagConstraints gbc_changes = new GridBagConstraints();
+		gbc_changes.insets = new Insets(0, 0, SECTION_GAP, 0);
+		gbc_changes.fill = GridBagConstraints.BOTH;
+		gbc_changes.gridx = 0;
+		gbc_changes.gridy = 5;
+		contentPane.add(changes, gbc_changes);
 
-		txtChangesSummary = newOptionsSummaryText(btnChanges, tabModConditions, Messages.getString("MainFrame.changesTitle"));
+		txtChangesSummary = newOptionsSummaryText(btnChanges, changes, Messages.getString("MainFrame.changesTitle"));
 		GridBagConstraints gbc_txtChangesSummary = new GridBagConstraints();
 		gbc_txtChangesSummary.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtChangesSummary.insets = new Insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0);
@@ -749,34 +672,10 @@ public class MainFrame extends JFrame {
 		gbc_txtChangesSummary.gridy = 4;
 		contentPane.add(txtChangesSummary, gbc_txtChangesSummary);
 
-		lblTargetDate = changesPanel.targetDateLabel;
-		chkChangeFileCreationDate = changesPanel.changeFileCreationDateCheckBox;
-		chkChangeFileModifiedDate = changesPanel.changeFileModifiedDateCheckBox;
-		chkChangeFileAccessDate = changesPanel.changeFileAccessDateCheckBox;
-		chkChangeExifDate = changesPanel.changeExifDateCheckBox;
-		lblBaseDateType = changesPanel.baseDateTypeLabel;
-		cmbBaseDateType = changesPanel.baseDateTypeComboBox;
-		txtCustomBaseDate = changesPanel.customBaseDateTextField;
-		lblEditBaseDate = changesPanel.editBaseDateLabel;
-		cmbDateModType = changesPanel.dateModTypeComboBox;
-		txtDateModYears = changesPanel.dateModYearsTextField;
-		lblSepYM = changesPanel.yearMonthSeparatorLabel;
-		txtDateModMonths = changesPanel.dateModMonthsTextField;
-		lblSepMD = changesPanel.monthDaySeparatorLabel;
-		txtDateModDays = changesPanel.dateModDaysTextField;
-		lblSepDH = changesPanel.dayHourSeparatorLabel;
-		txtDateModHours = changesPanel.dateModHoursTextField;
-		lblSepHM = changesPanel.hourMinuteSeparatorLabel;
-		txtDateModMinutes = changesPanel.dateModMinutesTextField;
-		lblSepMS = changesPanel.minuteSecondSeparatorLabel;
-		txtDateModSeconds = changesPanel.dateModSecondsTextField;
-		chkRemoveExifTagsGps = changesPanel.removeExifTagsGpsCheckBox;
-		chkRemoveExifTagsAll = changesPanel.removeExifTagsAllCheckBox;
-
-		setOptionsExpanded(btnChanges, tabModConditions, Messages.getString("MainFrame.changesTitle"), false);
+		setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changesTitle"), false);
 		btnChanges.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setOptionsExpanded(btnChanges, tabModConditions, Messages.getString("MainFrame.changesTitle"), btnChanges.isSelected());
+				setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changesTitle"), btnChanges.isSelected());
 			}
 		});
 
@@ -907,17 +806,17 @@ public class MainFrame extends JFrame {
 	}
 
 	private void installOperationListeners() {
-		rdoOpeTypeCopy.addChangeListener(new ChangeListener() {
+		rdoOperationTypeCopy.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				changeEnableDestConditions();
 			}
 		});
-		rdoOpeTypeMove.addChangeListener(new ChangeListener() {
+		rdoOperationTypeMove.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				changeEnableDestConditions();
 			}
 		});
-		rdoOpeTypeOverwrite.addChangeListener(new ChangeListener() {
+		rdoOperationTypeOverwrite.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				changeEnableDestConditions();
 			}
@@ -996,42 +895,42 @@ public class MainFrame extends JFrame {
 
 	private List<SettingBinding> settingBindings() {
 		return List.of(
-				SettingBinding.text(txtSrcRootDirPath, "src.root.dir", ""),
-				SettingBinding.text(txtFilePattern, "file.pattern", ""),
-				SettingBinding.choice(cmbFilePatternSyntax, "file.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.Glob),
-				SettingBinding.flag(chkContainsSubs, "contains.subs", true),
-				SettingBinding.flag(chkContainsHiddens, "contains.hiddens", false),
+				SettingBinding.text(txtSrcFolder, "src.root.dir", ""),
+				SettingBinding.text(srcOpt.txtFileNamePattern, "file.pattern", ""),
+				SettingBinding.choice(srcOpt.cmbFileNamePatternSyntax, "file.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.Glob),
+				SettingBinding.flag(srcOpt.chkIncludeSubfolders, "contains.subs", true),
+				SettingBinding.flag(srcOpt.chkIncludeHiddenFiles, "contains.hiddens", false),
 
-				SettingBinding.text(txtFileSizeRangeFrom, "file.size.range.from", ""),
-				SettingBinding.text(txtFileSizeRangeTo, "file.size.range.to", ""),
-				SettingBinding.choice(cmbFileSizeUnit, "file.size.unit", FileSizeUnit.class, FileSizeUnit.MB),
-				SettingBinding.text(txtCreationTimeRangeFrom, "creation.time.range.from", ""),
-				SettingBinding.text(txtCreationTimeRangeTo, "creation.time.range.to", ""),
-				SettingBinding.text(txtModifiedTimeRangeFrom, "modified.time.range.from", ""),
-				SettingBinding.text(txtModifiedTimeRangeTo, "modified.time.range.to", ""),
+				SettingBinding.text(srcOpt.txtFileSizeFrom, "file.size.range.from", ""),
+				SettingBinding.text(srcOpt.txtFileSizeTo, "file.size.range.to", ""),
+				SettingBinding.choice(srcOpt.cmbFileSizeUnit, "file.size.unit", FileSizeUnit.class, FileSizeUnit.MB),
+				SettingBinding.text(srcOpt.txtCreatedFrom, "creation.time.range.from", ""),
+				SettingBinding.text(srcOpt.txtCreatedTo, "creation.time.range.to", ""),
+				SettingBinding.text(srcOpt.txtModifiedFrom, "modified.time.range.from", ""),
+				SettingBinding.text(srcOpt.txtModifiedTo, "modified.time.range.to", ""),
 
-				SettingBinding.radioChoice(btngrpOpeType, "operation.type", OperationType.class, OperationType.Copy),
+				SettingBinding.radioChoice(btngrpOperationType, "operation.type", OperationType.class, OperationType.Copy),
 
-				SettingBinding.text(txtDestRootDirPath, "dest.root.dir", ""),
-				SettingBinding.text(txtDestSubPathPattern, "dest.sub.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN),
-				SettingBinding.choice(cmbExistingFileMethod, "existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm),
-				SettingBinding.flag(chkCheckFileDigest, "check.file.digest", false),
+				SettingBinding.text(txtDestFolder, "dest.root.dir", ""),
+				SettingBinding.text(destOpt.txtSubFilePathPattern, "dest.sub.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN),
+				SettingBinding.choice(destOpt.cmbExistingFileMethod, "existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm),
+				SettingBinding.flag(destOpt.chkCompareFileDigest, "check.file.digest", false),
 
-				SettingBinding.flag(chkChangeFileCreationDate, "change.file.creation.date", false),
-				SettingBinding.flag(chkChangeFileModifiedDate, "change.file.modified.date", false),
-				SettingBinding.flag(chkChangeFileAccessDate, "change.file.access.date", false),
-				SettingBinding.flag(chkChangeExifDate, "change.file.exif.date", false),
-				SettingBinding.choice(cmbBaseDateType, "base.date.type", DateType.class, DateType.FileModifiedDate),
-				SettingBinding.text(txtCustomBaseDate, "custom.base.date", ""),
-				SettingBinding.choice(cmbDateModType, "date.mod.type", DateModType.class, DateModType.None),
-				SettingBinding.text(txtDateModYears, "date.mod.year", ""),
-				SettingBinding.text(txtDateModMonths, "date.mod.month", ""),
-				SettingBinding.text(txtDateModDays, "date.mod.day", ""),
-				SettingBinding.text(txtDateModHours, "date.mod.hour", ""),
-				SettingBinding.text(txtDateModMinutes, "date.mod.minute", ""),
-				SettingBinding.text(txtDateModSeconds, "date.mod.second", ""),
-				SettingBinding.flag(chkRemoveExifTagsGps, "remove.exif.tags.gps", false),
-				SettingBinding.flag(chkRemoveExifTagsAll, "remove.exif.tags.all", false));
+				SettingBinding.flag(changes.filedate.chkCreationDate, "change.file.creation.date", false),
+				SettingBinding.flag(changes.filedate.chkModifiedDate, "change.file.modified.date", false),
+				SettingBinding.flag(changes.filedate.chkAccessDate, "change.file.access.date", false),
+				SettingBinding.flag(changes.filedate.chkExifDate, "change.file.exif.date", false),
+				SettingBinding.choice(changes.filedate.cmbBaseDate, "base.date.type", DateType.class, DateType.FileModifiedDate),
+				SettingBinding.text(changes.filedate.txtCustomBaseDate, "custom.base.date", ""),
+				SettingBinding.choice(changes.filedate.cmbAdjustmentType, "date.mod.type", DateModType.class, DateModType.None),
+				SettingBinding.text(changes.filedate.txtAdjustmentYear, "date.mod.year", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentMonth, "date.mod.month", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentDay, "date.mod.day", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentHour, "date.mod.hour", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentMinute, "date.mod.minute", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentSecond, "date.mod.second", ""),
+				SettingBinding.flag(changes.exif.chkRemoveGps, "remove.exif.tags.gps", false),
+				SettingBinding.flag(changes.exif.chkRemoveAll, "remove.exif.tags.all", false));
 	}
 
 	private void applySettingsFrom(AppSettings conf) {
@@ -1699,7 +1598,7 @@ public class MainFrame extends JFrame {
 				btnSrcOptions.isSelected(),
 				btnDestOptions.isSelected(),
 				btnChanges.isSelected(),
-				tabModConditions.getSelectedIndex());
+				changes.getSelectedIndex());
 	}
 
 	private void restoreFrameState(MainFrameState state) {
@@ -1709,11 +1608,11 @@ public class MainFrame extends JFrame {
 		if (state.bounds != null) {
 			setBounds(state.bounds);
 		}
-		setOptionsExpanded(btnSrcOptions, sourceOptionsPanel, Messages.getString("MainFrame.srcOptionsTitle"), state.srcOptionsExpanded);
-		setOptionsExpanded(btnDestOptions, destinationOptionsPanel, Messages.getString("MainFrame.destOptionsTitle"), state.destOptionsExpanded);
-		setOptionsExpanded(btnChanges, tabModConditions, Messages.getString("MainFrame.changesTitle"), state.changesExpanded);
-		if (state.changesTabIndex >= 0 && state.changesTabIndex < tabModConditions.getTabCount()) {
-			tabModConditions.setSelectedIndex(state.changesTabIndex);
+		setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.srcOptionsTitle"), state.srcOptionsExpanded);
+		setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.destOptionsTitle"), state.destOptionsExpanded);
+		setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changesTitle"), state.changesExpanded);
+		if (state.changesTabIndex >= 0 && state.changesTabIndex < changes.getTabCount()) {
+			changes.setSelectedIndex(state.changesTabIndex);
 		}
 		if (state.extendedState != Frame.NORMAL) {
 			setExtendedState(state.extendedState);
@@ -1943,41 +1842,41 @@ public class MainFrame extends JFrame {
 		};
 
 		addDocumentListener(documentListener,
-				txtFilePattern,
-				txtFileSizeRangeFrom,
-				txtFileSizeRangeTo,
-				txtCreationTimeRangeFrom,
-				txtCreationTimeRangeTo,
-				txtModifiedTimeRangeFrom,
-				txtModifiedTimeRangeTo,
-				txtSrcRootDirPath,
-				txtDestRootDirPath,
-				txtDestSubPathPattern,
-				txtCustomBaseDate,
-				txtDateModYears,
-				txtDateModMonths,
-				txtDateModDays,
-				txtDateModHours,
-				txtDateModMinutes,
-				txtDateModSeconds);
+				srcOpt.txtFileNamePattern,
+				srcOpt.txtFileSizeFrom,
+				srcOpt.txtFileSizeTo,
+				srcOpt.txtCreatedFrom,
+				srcOpt.txtCreatedTo,
+				srcOpt.txtModifiedFrom,
+				srcOpt.txtModifiedTo,
+				txtSrcFolder,
+				txtDestFolder,
+				destOpt.txtSubFilePathPattern,
+				changes.filedate.txtCustomBaseDate,
+				changes.filedate.txtAdjustmentYear,
+				changes.filedate.txtAdjustmentMonth,
+				changes.filedate.txtAdjustmentDay,
+				changes.filedate.txtAdjustmentHour,
+				changes.filedate.txtAdjustmentMinute,
+				changes.filedate.txtAdjustmentSecond);
 		addChangeListener(changeListener,
-				chkContainsSubs,
-				chkContainsHiddens,
-				chkCheckFileDigest,
-				chkChangeFileCreationDate,
-				chkChangeFileModifiedDate,
-				chkChangeFileAccessDate,
-				chkChangeExifDate,
-				chkRemoveExifTagsGps,
-				chkRemoveExifTagsAll,
-				rdoOpeTypeCopy,
-				rdoOpeTypeMove,
-				rdoOpeTypeOverwrite);
-		cmbFilePatternSyntax.addItemListener(itemListener);
-		cmbFileSizeUnit.addItemListener(itemListener);
-		cmbExistingFileMethod.addItemListener(itemListener);
-		cmbBaseDateType.addItemListener(itemListener);
-		cmbDateModType.addItemListener(itemListener);
+				srcOpt.chkIncludeSubfolders,
+				srcOpt.chkIncludeHiddenFiles,
+				destOpt.chkCompareFileDigest,
+				changes.filedate.chkCreationDate,
+				changes.filedate.chkModifiedDate,
+				changes.filedate.chkAccessDate,
+				changes.filedate.chkExifDate,
+				changes.exif.chkRemoveGps,
+				changes.exif.chkRemoveAll,
+				rdoOperationTypeCopy,
+				rdoOperationTypeMove,
+				rdoOperationTypeOverwrite);
+		srcOpt.cmbFileNamePatternSyntax.addItemListener(itemListener);
+		srcOpt.cmbFileSizeUnit.addItemListener(itemListener);
+		destOpt.cmbExistingFileMethod.addItemListener(itemListener);
+		changes.filedate.cmbBaseDate.addItemListener(itemListener);
+		changes.filedate.cmbAdjustmentType.addItemListener(itemListener);
 	}
 
 	private static void addDocumentListener(DocumentListener listener, JTextField... fields) {
@@ -2004,9 +1903,9 @@ public class MainFrame extends JFrame {
 		if (txtSrcOptionsSummary == null || txtDestOptionsSummary == null || txtChangesSummary == null || btnStart == null || btnStartMenu == null || lblRunSummary == null) {
 			return;
 		}
-		updateOptionsSummary(txtSrcOptionsSummary, sourceOptionsPanel, sourceOptionsSummary());
-		updateOptionsSummary(txtDestOptionsSummary, destinationOptionsPanel, destinationOptionsSummary());
-		updateOptionsSummary(txtChangesSummary, tabModConditions, changesSummary());
+		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, sourceOptionsSummary());
+		updateOptionsSummary(txtDestOptionsSummary, destOpt, destinationOptionsSummary());
+		updateOptionsSummary(txtChangesSummary, changes, changesSummary());
 		updateRunSummary();
 	}
 
@@ -2032,13 +1931,13 @@ public class MainFrame extends JFrame {
 		ProcessConditionValues values = collectProcessConditionValues();
 		String summary = values.operationType + ": "
 				+ Messages.getString("MainFrame.srcConditionsTitle") + " "
-				+ PathTextSupport.shortPathText(fieldText(txtSrcRootDirPath), Messages.getString("MainFrame.srcRootDirPath"));
+				+ PathTextSupport.shortPathText(fieldText(txtSrcFolder), Messages.getString("MainFrame.srcRootDirPath"));
 		if (values.operationType == OperationType.Overwrite) {
 			return summary;
 		}
 		return summary + " -> "
 				+ Messages.getString("MainFrame.destConditionsTitle") + " "
-				+ PathTextSupport.shortPathText(fieldText(txtDestRootDirPath), Messages.getString("MainFrame.destRootDirPath"));
+				+ PathTextSupport.shortPathText(fieldText(txtDestFolder), Messages.getString("MainFrame.destRootDirPath"));
 	}
 
 	private static void updateOptionsSummary(JTextArea summary, JComponent optionsBody, String text) {
@@ -2063,16 +1962,16 @@ public class MainFrame extends JFrame {
 			items.add(checkedItem(Messages.getString("MainFrame.containsHiddens")));
 		}
 		if (values.sizeRangeFrom != null || values.sizeRangeTo != null) {
-			String range = rangeText(fieldText(txtFileSizeRangeFrom), fieldText(txtFileSizeRangeTo));
-			items.add(summaryItem(Messages.getString("MainFrame.fileSizeRange"), range + " " + cmbFileSizeUnit.getSelectedItem()));
+			String range = rangeText(fieldText(srcOpt.txtFileSizeFrom), fieldText(srcOpt.txtFileSizeTo));
+			items.add(summaryItem(Messages.getString("MainFrame.fileSizeRange"), range + " " + srcOpt.cmbFileSizeUnit.getSelectedItem()));
 		}
 		if (values.creationTimeRangeFrom != null || values.creationTimeRangeTo != null) {
 			items.add(summaryItem(Messages.getString("MainFrame.creationTimeRange"),
-					rangeText(dateFieldText(txtCreationTimeRangeFrom), dateFieldText(txtCreationTimeRangeTo))));
+					rangeText(dateFieldText(srcOpt.txtCreatedFrom), dateFieldText(srcOpt.txtCreatedTo))));
 		}
 		if (values.modifiedTimeRangeFrom != null || values.modifiedTimeRangeTo != null) {
 			items.add(summaryItem(Messages.getString("MainFrame.modifiedTimeRange"),
-					rangeText(dateFieldText(txtModifiedTimeRangeFrom), dateFieldText(txtModifiedTimeRangeTo))));
+					rangeText(dateFieldText(srcOpt.txtModifiedFrom), dateFieldText(srcOpt.txtModifiedTo))));
 		}
 		return joinOptionsSummary(items);
 	}
@@ -2138,7 +2037,7 @@ public class MainFrame extends JFrame {
 
 	private String baseDateTypeSummary(ProcessConditionValues values) {
 		String value = String.valueOf(values.baseDateType);
-		String customDate = dateFieldText(txtCustomBaseDate);
+		String customDate = dateFieldText(changes.filedate.txtCustomBaseDate);
 		if (values.baseDateType == DateType.CustomDate && values.customBaseDate != null && !customDate.isEmpty()) {
 			value += " " + customDate;
 		}
@@ -2209,30 +2108,30 @@ public class MainFrame extends JFrame {
 	}
 
 	private void changeEnableDestConditions() {
-		setEnableDestConditions(!rdoOpeTypeOverwrite.isSelected());
+		setEnableDestConditions(!rdoOperationTypeOverwrite.isSelected());
 	}
 
 	private void setEnableDestConditions(boolean enabled) {
 		lblDestConditionsTitle.setEnabled(enabled);
-		txtDestRootDirPath.setEnabled(enabled);
-		btnDestRootDirSelect.setEnabled(enabled);
+		txtDestFolder.setEnabled(enabled);
+		btnDestFolderSelect.setEnabled(enabled);
 		btnDestOptions.setEnabled(enabled);
 		if (txtDestOptionsSummary != null) {
 			txtDestOptionsSummary.setEnabled(enabled);
 		}
-		lblDestSubPathPattern.setEnabled(enabled);
-		txtDestSubPathPattern.setEnabled(enabled);
-		lblExistingFileMethod.setEnabled(enabled);
-		cmbExistingFileMethod.setEnabled(enabled);
-		lblValidateFile.setEnabled(enabled);
-		chkCheckFileDigest.setEnabled(enabled);
+		destOpt.lblSubFilePathPattern.setEnabled(enabled);
+		destOpt.txtSubFilePathPattern.setEnabled(enabled);
+		destOpt.lblExistingFileMethod.setEnabled(enabled);
+		destOpt.cmbExistingFileMethod.setEnabled(enabled);
+		destOpt.lblValidateFile.setEnabled(enabled);
+		destOpt.chkCompareFileDigest.setEnabled(enabled);
 	}
 
 	private void changeEnableFileDateModConditions() {
-		if (chkChangeFileCreationDate.isSelected()
-				|| chkChangeFileModifiedDate.isSelected()
-				|| chkChangeFileAccessDate.isSelected()
-				|| chkChangeExifDate.isSelected()) {
+		if (changes.filedate.chkCreationDate.isSelected()
+				|| changes.filedate.chkModifiedDate.isSelected()
+				|| changes.filedate.chkAccessDate.isSelected()
+				|| changes.filedate.chkExifDate.isSelected()) {
 			setEnableFileDateModConditions(true);
 		} else {
 			setEnableFileDateModConditions(false);
@@ -2240,24 +2139,24 @@ public class MainFrame extends JFrame {
 	}
 
 	private void setEnableFileDateModConditions(boolean enabled) {
-		lblBaseDateType.setEnabled(enabled);
-		cmbBaseDateType.setEnabled(enabled);
-		InputSupport.setTextFieldEnabled(txtCustomBaseDate, enabled);
-		lblEditBaseDate.setEnabled(enabled);
-		cmbDateModType.setEnabled(enabled);
+		changes.filedate.lblBaseDate.setEnabled(enabled);
+		changes.filedate.cmbBaseDate.setEnabled(enabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtCustomBaseDate, enabled);
+		changes.filedate.lblAdjustment.setEnabled(enabled);
+		changes.filedate.cmbAdjustmentType.setEnabled(enabled);
 
-		boolean adjustmentEnabled = enabled && cmbDateModType.getSelectedItem() != DateModType.None;
-		InputSupport.setTextFieldEnabled(txtDateModYears, adjustmentEnabled);
-		lblSepYM.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(txtDateModMonths, adjustmentEnabled);
-		lblSepMD.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(txtDateModDays, adjustmentEnabled);
-		lblSepDH.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(txtDateModHours, adjustmentEnabled);
-		lblSepHM.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(txtDateModMinutes, adjustmentEnabled);
-		lblSepMS.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(txtDateModSeconds, adjustmentEnabled);
+		boolean adjustmentEnabled = enabled && changes.filedate.cmbAdjustmentType.getSelectedItem() != DateModType.None;
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentYear, adjustmentEnabled);
+		changes.filedate.lblYearMonthSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMonth, adjustmentEnabled);
+		changes.filedate.lblMonthDaySeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentDay, adjustmentEnabled);
+		changes.filedate.lblDayHourSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentHour, adjustmentEnabled);
+		changes.filedate.lblHourMinuteSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMinute, adjustmentEnabled);
+		changes.filedate.lblMinuteSecondSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentSecond, adjustmentEnabled);
 	}
 
 	private void runProcess(boolean dryRun) {
@@ -2280,8 +2179,8 @@ public class MainFrame extends JFrame {
 			if (processCondition.getOperationType() != OperationType.Overwrite) {
 				InputHistory.record(InputHistory.DEST_ROOT_DIR_KEY, processCondition.getDestRootPath());
 			}
-			InputHistory.record(InputHistory.FILE_PATTERN_KEY, fieldText(txtFilePattern));
-			InputHistory.record(InputHistory.DEST_SUB_PATH_PATTERN_KEY, fieldText(txtDestSubPathPattern));
+			InputHistory.record(InputHistory.FILE_PATTERN_KEY, fieldText(srcOpt.txtFileNamePattern));
+			InputHistory.record(InputHistory.DEST_SUB_PATH_PATTERN_KEY, fieldText(destOpt.txtSubFilePathPattern));
 		}
 
 		if (lastProcessDialog != null) {
@@ -2337,45 +2236,45 @@ public class MainFrame extends JFrame {
 	private ProcessConditionValues collectProcessConditionValues() {
 		ProcessConditionValues values = new ProcessConditionValues();
 
-		values.srcRootDirPath = Paths.get(txtSrcRootDirPath.getText()).normalize();
-		values.filePattern = fieldText(txtFilePattern);
-		values.filePatternSyntax = sourceOptionsPanel.selectedFilePatternSyntax();
-		values.containsHiddens = chkContainsHiddens.isEnabled() && chkContainsHiddens.isSelected();
+		values.srcRootDirPath = Paths.get(txtSrcFolder.getText()).normalize();
+		values.filePattern = fieldText(srcOpt.txtFileNamePattern);
+		values.filePatternSyntax = srcOpt.selectedFilePatternSyntax();
+		values.containsHiddens = srcOpt.chkIncludeHiddenFiles.isEnabled() && srcOpt.chkIncludeHiddenFiles.isSelected();
 		values.followLinks = false;
-		values.depth = (chkContainsSubs.isEnabled() && chkContainsSubs.isSelected()) ? Integer.MAX_VALUE : 1;
+		values.depth = (srcOpt.chkIncludeSubfolders.isEnabled() && srcOpt.chkIncludeSubfolders.isSelected()) ? Integer.MAX_VALUE : 1;
 
-		values.operationType = selectedEnumValue(btngrpOpeType, OperationType.class, OperationType.Copy);
+		values.operationType = selectedEnumValue(btngrpOperationType, OperationType.class, OperationType.Copy);
 
-		values.destRootDirPath = Paths.get(txtDestRootDirPath.getText()).normalize();
-		values.destSubPathPattern = fieldText(txtDestSubPathPattern);
-		values.existingFileMethod = (ExistingFileMethod)cmbExistingFileMethod.getSelectedItem();
-		values.checkDigest = chkCheckFileDigest.isEnabled() && chkCheckFileDigest.isSelected();
+		values.destRootDirPath = Paths.get(txtDestFolder.getText()).normalize();
+		values.destSubPathPattern = fieldText(destOpt.txtSubFilePathPattern);
+		values.existingFileMethod = (ExistingFileMethod)destOpt.cmbExistingFileMethod.getSelectedItem();
+		values.checkDigest = destOpt.chkCompareFileDigest.isEnabled() && destOpt.chkCompareFileDigest.isSelected();
 
-		values.changeFileCreationDate = chkChangeFileCreationDate.isEnabled() && chkChangeFileCreationDate.isSelected();
-		values.changeFileModifiedDate = chkChangeFileModifiedDate.isEnabled() && chkChangeFileModifiedDate.isSelected();
-		values.changeFileAccessDate = chkChangeFileAccessDate.isEnabled() && chkChangeFileAccessDate.isSelected();
-		values.changeExifDate = chkChangeExifDate.isEnabled() && chkChangeExifDate.isSelected();
-		values.baseDateType = (DateType)cmbBaseDateType.getSelectedItem();
-		values.customBaseDate = DateTimeText.parseDate(txtCustomBaseDate.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.baseDateModType = (DateModType)cmbDateModType.getSelectedItem();
-		values.baseDateModYears = parseInteger(txtDateModYears.getText());
-		values.baseDateModMonths = parseInteger(txtDateModMonths.getText());
-		values.baseDateModDays = parseInteger(txtDateModDays.getText());
-		values.baseDateModHours = parseInteger(txtDateModHours.getText());
-		values.baseDateModMinutes = parseInteger(txtDateModMinutes.getText());
-		values.baseDateModSeconds = parseInteger(txtDateModSeconds.getText());
+		values.changeFileCreationDate = changes.filedate.chkCreationDate.isEnabled() && changes.filedate.chkCreationDate.isSelected();
+		values.changeFileModifiedDate = changes.filedate.chkModifiedDate.isEnabled() && changes.filedate.chkModifiedDate.isSelected();
+		values.changeFileAccessDate = changes.filedate.chkAccessDate.isEnabled() && changes.filedate.chkAccessDate.isSelected();
+		values.changeExifDate = changes.filedate.chkExifDate.isEnabled() && changes.filedate.chkExifDate.isSelected();
+		values.baseDateType = (DateType)changes.filedate.cmbBaseDate.getSelectedItem();
+		values.customBaseDate = DateTimeText.parseDate(changes.filedate.txtCustomBaseDate.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.baseDateModType = (DateModType)changes.filedate.cmbAdjustmentType.getSelectedItem();
+		values.baseDateModYears = parseInteger(changes.filedate.txtAdjustmentYear.getText());
+		values.baseDateModMonths = parseInteger(changes.filedate.txtAdjustmentMonth.getText());
+		values.baseDateModDays = parseInteger(changes.filedate.txtAdjustmentDay.getText());
+		values.baseDateModHours = parseInteger(changes.filedate.txtAdjustmentHour.getText());
+		values.baseDateModMinutes = parseInteger(changes.filedate.txtAdjustmentMinute.getText());
+		values.baseDateModSeconds = parseInteger(changes.filedate.txtAdjustmentSecond.getText());
 
-		values.removeExifTagsGps = chkRemoveExifTagsGps.isEnabled() && chkRemoveExifTagsGps.isSelected();
-		values.removeExifTagsAll = chkRemoveExifTagsAll.isEnabled() && chkRemoveExifTagsAll.isSelected();
+		values.removeExifTagsGps = changes.exif.chkRemoveGps.isEnabled() && changes.exif.chkRemoveGps.isSelected();
+		values.removeExifTagsAll = changes.exif.chkRemoveAll.isEnabled() && changes.exif.chkRemoveAll.isSelected();
 
-		FileSizeUnit fileSizeUnit = (FileSizeUnit)cmbFileSizeUnit.getSelectedItem();
-		values.sizeRangeFrom = convertSize(parseLong(txtFileSizeRangeFrom.getText()), fileSizeUnit);
-		values.sizeRangeTo = convertSize(parseLong(txtFileSizeRangeTo.getText()), fileSizeUnit);
+		FileSizeUnit fileSizeUnit = (FileSizeUnit)srcOpt.cmbFileSizeUnit.getSelectedItem();
+		values.sizeRangeFrom = convertSize(parseLong(srcOpt.txtFileSizeFrom.getText()), fileSizeUnit);
+		values.sizeRangeTo = convertSize(parseLong(srcOpt.txtFileSizeTo.getText()), fileSizeUnit);
 
-		values.creationTimeRangeFrom = DateTimeText.parseDate(txtCreationTimeRangeFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.creationTimeRangeTo = DateTimeText.parseDate(txtCreationTimeRangeTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
-		values.modifiedTimeRangeFrom = DateTimeText.parseDate(txtModifiedTimeRangeFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.modifiedTimeRangeTo = DateTimeText.parseDate(txtModifiedTimeRangeTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+		values.creationTimeRangeFrom = DateTimeText.parseDate(srcOpt.txtCreatedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.creationTimeRangeTo = DateTimeText.parseDate(srcOpt.txtCreatedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+		values.modifiedTimeRangeFrom = DateTimeText.parseDate(srcOpt.txtModifiedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.modifiedTimeRangeTo = DateTimeText.parseDate(srcOpt.txtModifiedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
 
 		return values;
 	}
@@ -2383,13 +2282,13 @@ public class MainFrame extends JFrame {
 	private ProcessCondition createProcessCondition(boolean dryRun) {
 
 		if (!showValidationResult(ProcessConditionValidator.validateSourceFolder(
-				fieldText(txtSrcRootDirPath),
+				fieldText(txtSrcFolder),
 				Messages.getString("MainFrame.srcRootDirPath")))) {
 			return null;
 		}
-		if (!rdoOpeTypeOverwrite.isSelected()
+		if (!rdoOperationTypeOverwrite.isSelected()
 				&& !showValidationResult(ProcessConditionValidator.validateDestinationFolder(
-						fieldText(txtDestRootDirPath),
+						fieldText(txtDestFolder),
 						Messages.getString("MainFrame.destRootDirPath")))) {
 			return null;
 		}
@@ -2506,8 +2405,8 @@ public class MainFrame extends JFrame {
 			}
 			matchCountEnabled = false;
 			lastMatchCountStatus = null;
-			sourceOptionsPanel.matchCountLabel.setText(Messages.getString("MainFrame.matchCount.prompt"));
-			sourceOptionsPanel.setMatchCountScanning(false);
+			srcOpt.lblMatchCount.setText(Messages.getString("MainFrame.matchCount.prompt"));
+			srcOpt.setMatchCountScanning(false);
 			return;
 		}
 
@@ -2516,8 +2415,8 @@ public class MainFrame extends JFrame {
 		try {
 			pathFilter = buildPathFilter(values);
 		} catch (Exception e) {
-			sourceOptionsPanel.matchCountLabel.setText("");
-			sourceOptionsPanel.setMatchCountScanning(false);
+			srcOpt.lblMatchCount.setText("");
+			srcOpt.setMatchCountScanning(false);
 			return;
 		}
 
@@ -2528,8 +2427,8 @@ public class MainFrame extends JFrame {
 			sourceFileScanner = null;
 			matchCountEnabled = false;
 			lastMatchCountStatus = null;
-			sourceOptionsPanel.matchCountLabel.setText(Messages.getString("MainFrame.matchCount.prompt"));
-			sourceOptionsPanel.setMatchCountScanning(false);
+			srcOpt.lblMatchCount.setText(Messages.getString("MainFrame.matchCount.prompt"));
+			srcOpt.setMatchCountScanning(false);
 			return;
 		}
 
@@ -2550,8 +2449,8 @@ public class MainFrame extends JFrame {
 						}));
 			} catch (IOException e) {
 				sourceFileScanner = null;
-				sourceOptionsPanel.matchCountLabel.setText("");
-				sourceOptionsPanel.setMatchCountScanning(false);
+				srcOpt.lblMatchCount.setText("");
+				srcOpt.setMatchCountScanning(false);
 				return;
 			}
 			holder[0] = sourceFileScanner;
@@ -2568,10 +2467,10 @@ public class MainFrame extends JFrame {
 		case PAUSED -> Messages.getString("MainFrame.matchCount.paused", status.count());
 		case EXACT -> Messages.getString("MainFrame.matchCount", status.count());
 		};
-		sourceOptionsPanel.matchCountLabel.setText(text);
-		sourceOptionsPanel.setMatchCountScanning(status.state() == SourceFileScanner.MatchCountStatus.State.SCANNING);
+		srcOpt.lblMatchCount.setText(text);
+		srcOpt.setMatchCountScanning(status.state() == SourceFileScanner.MatchCountStatus.State.SCANNING);
 		if (status.state() == SourceFileScanner.MatchCountStatus.State.PAUSED) {
-			sourceOptionsPanel.matchCountLabel.setToolTipText(Messages.getString("MainFrame.matchCount.resume"));
+			srcOpt.lblMatchCount.setToolTipText(Messages.getString("MainFrame.matchCount.resume"));
 		}
 	}
 
@@ -2614,10 +2513,10 @@ public class MainFrame extends JFrame {
 
 	private void focusValidationField(ProcessConditionValidator.Field field) {
 		JTextField textField = switch (field) {
-		case SOURCE_FOLDER -> txtSrcRootDirPath;
-		case DESTINATION_FOLDER -> txtDestRootDirPath;
-		case FILE_PATTERN -> txtFilePattern;
-		case DESTINATION_SUBFOLDER -> txtDestSubPathPattern;
+		case SOURCE_FOLDER -> txtSrcFolder;
+		case DESTINATION_FOLDER -> txtDestFolder;
+		case FILE_PATTERN -> srcOpt.txtFileNamePattern;
+		case DESTINATION_SUBFOLDER -> destOpt.txtSubFilePathPattern;
 		case NONE -> null;
 		};
 		if (textField != null) {
