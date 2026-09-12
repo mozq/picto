@@ -42,6 +42,7 @@ import javax.swing.UIManager;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
+import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.FileSizeUnit;
 
 class SourceOptionsPanel extends JPanel {
@@ -186,7 +187,7 @@ class SourceOptionsPanel extends JPanel {
 
 		filePatternSyntaxComboBox = new JComboBox<>();
 		filePatternSyntaxComboBox.setModel(new DefaultComboBoxModel<>(FilePatternSyntax.values()));
-		FileNamePatternPopup fileNamePatternPopup = new FileNamePatternPopup(filePatternTextField, () -> selectedFilePatternSyntax().isRegex());
+		FileNamePatternPopup fileNamePatternPopup = new FileNamePatternPopup(filePatternTextField, this::selectedFilePatternSyntax);
 		filePatternSyntaxComboBox.addItemListener(e -> {
 			if (e.getStateChange() == ItemEvent.SELECTED) {
 				fileNamePatternPopup.refresh();
@@ -313,7 +314,7 @@ class SourceOptionsPanel extends JPanel {
 
 	FilePatternSyntax selectedFilePatternSyntax() {
 		Object selectedItem = filePatternSyntaxComboBox.getSelectedItem();
-		return selectedItem instanceof FilePatternSyntax ? (FilePatternSyntax)selectedItem : FilePatternSyntax.GLOB;
+		return selectedItem instanceof FilePatternSyntax ? (FilePatternSyntax)selectedItem : FilePatternSyntax.Glob;
 	}
 
 	/** Shows the spinning indicator/stop control while a background match count is running; hides it otherwise. */

@@ -19,10 +19,11 @@ package net.mozq.picto.view;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 import javax.swing.text.JTextComponent;
 
+import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.view.SuggestionPopup.SuggestionItem;
 import net.mozq.picto.view.SuggestionPopup.SuggestionSection;
 
@@ -33,10 +34,10 @@ class FileNamePatternPopup {
 
 	private final SuggestionPopup popup;
 
-	FileNamePatternPopup(JTextComponent field, BooleanSupplier regexSelected, Component... relatedFocusComponents) {
+	FileNamePatternPopup(JTextComponent field, Supplier<FilePatternSyntax> filePatternSyntax, Component... relatedFocusComponents) {
 		this.popup = new SuggestionPopup(
 				field,
-				() -> sections(regexSelected.getAsBoolean()),
+				() -> sections(filePatternSyntax.get()),
 				value -> {
 					field.setText(value);
 					field.selectAll();
@@ -52,13 +53,16 @@ class FileNamePatternPopup {
 		popup.refresh();
 	}
 
-	private static List<SuggestionSection> sections(boolean regex) {
+	private static List<SuggestionSection> sections(FilePatternSyntax syntax) {
 		List<SuggestionSection> sections = new ArrayList<>(SuggestionPopup.historySection(InputHistory.FILE_PATTERN_KEY));
-		sections.addAll(regex ? regexSections() : wildcardSections());
+		sections.addAll(switch (syntax) {
+			case Glob -> globSections();
+			case Regex -> regexSections();
+		});
 		return sections;
 	}
 
-	private static List<SuggestionSection> wildcardSections() {
+	private static List<SuggestionSection> globSections() {
 		return List.of(
 				section("images",
 						item("allImages", "*.{jpg,jpeg,png,gif,webp,heic,heif}"),

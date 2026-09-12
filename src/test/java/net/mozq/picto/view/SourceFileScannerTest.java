@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import net.mozq.picto.core.PictoPathFilter;
+import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.view.SourceFileScanner.MatchCountStatus;
 import net.mozq.picto.view.SourceFileScanner.MatchCountStatus.State;
 
@@ -189,7 +190,7 @@ class SourceFileScannerTest {
 	}
 
 	private PictoPathFilter patternFilter(String globPattern) {
-		return new PictoPathFilter().setPathPattern(globPattern, tempDir, false);
+		return new PictoPathFilter().setPathPattern(globPattern, tempDir, FilePatternSyntax.Glob);
 	}
 
 	/** Collects status callbacks off the scanner's background thread and lets a test wait for a specific one. */

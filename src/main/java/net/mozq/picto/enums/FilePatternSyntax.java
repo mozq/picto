@@ -14,26 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.mozq.picto.view;
+package net.mozq.picto.enums;
 
-enum FilePatternSyntax {
-	GLOB(false, "MainFrame.filePatternSyntax.glob"),
-	REGEX(true, "MainFrame.filePatternSyntax.regex");
+import net.mozq.picto.view.Messages;
 
-	private final boolean regex;
-	private final String labelKey;
-
-	FilePatternSyntax(boolean regex, String labelKey) {
-		this.regex = regex;
-		this.labelKey = labelKey;
-	}
-
-	boolean isRegex() {
-		return regex;
-	}
+public enum FilePatternSyntax {
+	Glob,
+	Regex,
+	;
 
 	@Override
 	public String toString() {
-		return Messages.getString(labelKey);
+		return Messages.getString(this);
 	}
 }

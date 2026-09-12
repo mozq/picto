@@ -107,6 +107,7 @@ import net.mozq.picto.core.ProcessCondition;
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
 import net.mozq.picto.enums.ExistingFileMethod;
+import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.FileSizeUnit;
 import net.mozq.picto.enums.OperationType;
 import net.mozq.picto.util.FileNameSupport;
@@ -997,7 +998,7 @@ public class MainFrame extends JFrame {
 		return List.of(
 				SettingBinding.text(txtSrcRootDirPath, "src.root.dir", ""),
 				SettingBinding.text(txtFilePattern, "file.pattern", ""),
-				SettingBinding.choice(cmbFilePatternSyntax, "file.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.GLOB),
+				SettingBinding.choice(cmbFilePatternSyntax, "file.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.Glob),
 				SettingBinding.flag(chkContainsSubs, "contains.subs", true),
 				SettingBinding.flag(chkContainsHiddens, "contains.hiddens", false),
 
@@ -2050,8 +2051,8 @@ public class MainFrame extends JFrame {
 		List<String> items = new ArrayList<>();
 		if (!values.filePattern.isEmpty()) {
 			String pattern = values.filePattern;
-			if (values.filePatternRegex) {
-				pattern += " (" + FilePatternSyntax.REGEX + ")";
+			if (values.filePatternSyntax == FilePatternSyntax.Regex) {
+				pattern += " (" + FilePatternSyntax.Regex + ")";
 			}
 			items.add(summaryItem(Messages.getString("MainFrame.filePattern"), pattern));
 		}
@@ -2338,7 +2339,7 @@ public class MainFrame extends JFrame {
 
 		values.srcRootDirPath = Paths.get(txtSrcRootDirPath.getText()).normalize();
 		values.filePattern = fieldText(txtFilePattern);
-		values.filePatternRegex = getSelectedFilePatternSyntax().isRegex();
+		values.filePatternSyntax = sourceOptionsPanel.selectedFilePatternSyntax();
 		values.containsHiddens = chkContainsHiddens.isEnabled() && chkContainsHiddens.isSelected();
 		values.followLinks = false;
 		values.depth = (chkContainsSubs.isEnabled() && chkContainsSubs.isSelected()) ? Integer.MAX_VALUE : 1;
@@ -2459,7 +2460,7 @@ public class MainFrame extends JFrame {
 
 	private static PictoPathFilter buildPathFilter(ProcessConditionValues values) {
 		PictoPathFilter pathFilter = new PictoPathFilter();
-		pathFilter.setPathPattern(values.filePattern, values.srcRootDirPath, values.filePatternRegex);
+		pathFilter.setPathPattern(values.filePattern, values.srcRootDirPath, values.filePatternSyntax);
 		pathFilter.setContainsHiddens(values.containsHiddens);
 		pathFilter.setSizeRange(values.sizeRangeFrom, values.sizeRangeTo);
 		pathFilter.setCreationTimeRange(values.creationTimeRangeFrom, values.creationTimeRangeTo);
@@ -2652,11 +2653,6 @@ public class MainFrame extends JFrame {
 		} catch (NumberFormatException _) {
 			return null;
 		}
-	}
-
-	private FilePatternSyntax getSelectedFilePatternSyntax() {
-		Object selectedItem = cmbFilePatternSyntax.getSelectedItem();
-		return selectedItem instanceof FilePatternSyntax ? (FilePatternSyntax)selectedItem : FilePatternSyntax.GLOB;
 	}
 
 }

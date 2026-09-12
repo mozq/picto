@@ -27,6 +27,7 @@ import java.util.Date;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.OperationType;
 
 class ProcessConditionValidatorTest {
@@ -118,6 +119,7 @@ class ProcessConditionValidatorTest {
 		values.destRootDirPath = dest;
 		values.operationType = OperationType.Copy;
 		values.filePattern = "*";
+		values.filePatternSyntax = FilePatternSyntax.Glob;
 		values.destSubPathPattern = "${FileName}";
 		values.creationTimeRangeFrom = new Date(0);
 		values.creationTimeRangeTo = new Date(1);

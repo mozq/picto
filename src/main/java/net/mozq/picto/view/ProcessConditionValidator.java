@@ -17,7 +17,6 @@
 package net.mozq.picto.view;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -26,6 +25,7 @@ import java.util.Map;
 
 import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.nanotemplate.NanoTemplateException;
+import net.mozq.picto.core.PictoPathFilter;
 import net.mozq.picto.enums.OperationType;
 
 final class ProcessConditionValidator {
@@ -116,7 +116,7 @@ final class ProcessConditionValidator {
 
 	private static Result validateFilePattern(ProcessConditionValues values) {
 		try {
-			FileSystems.getDefault().getPathMatcher(((values.filePatternRegex) ? "regex:" : "glob:") + values.filePattern);
+			PictoPathFilter.buildPathMatcher(values.filePattern, values.filePatternSyntax);
 			return null;
 		} catch (Exception e) {
 			return new Result(Messages.getString("message.warn.invalid.filePattern", e.getLocalizedMessage()), Field.FILE_PATTERN);

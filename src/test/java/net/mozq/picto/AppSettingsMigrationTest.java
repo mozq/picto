@@ -52,7 +52,7 @@ class AppSettingsMigrationTest {
 				List.of("src.root.dir", "file.pattern.syntax", "dest.sub.path.pattern", "contains.subs"),
 				List.copyOf(settings.keySet()));
 		assertEquals("/photos", settings.getString("src.root.dir", ""));
-		assertEquals("REGEX", settings.getString("file.pattern.syntax", ""));
+		assertEquals("Regex", settings.getString("file.pattern.syntax", ""));
 		assertEquals("${FNumber:0.0}/${WhiteBalance?{0:'Auto',1:'Manual',default:'Others'}}",
 				settings.getString("dest.sub.path.pattern", ""));
 		assertEquals("true", settings.getString("contains.subs", ""));
@@ -106,7 +106,7 @@ class AppSettingsMigrationTest {
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		assertEquals("REGEX", settings.getString("file.pattern.syntax", ""));
+		assertEquals("Regex", settings.getString("file.pattern.syntax", ""));
 		assertFalse(settings.keySet().contains("file.pattern.regex"));
 	}
 
@@ -119,7 +119,7 @@ class AppSettingsMigrationTest {
 
 		AppSettingsMigration.migrate(settings, legacySettings);
 
-		assertEquals("GLOB", settings.getString("file.pattern.syntax", ""));
+		assertEquals("Glob", settings.getString("file.pattern.syntax", ""));
 	}
 
 	@Test

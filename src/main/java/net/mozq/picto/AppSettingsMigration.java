@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import net.mozq.appsettings.AppSettings;
+import net.mozq.picto.enums.FilePatternSyntax;
 
 final class AppSettingsMigration {
 	private static final String LEGACY_GROUP_NAME = "Mozq";
@@ -252,13 +253,12 @@ final class AppSettingsMigration {
 	}
 
 	/**
-	 * The legacy setting was a plain boolean; the current one is backed by the (view-package-private, so
-	 * not referenceable from here) {@code FilePatternSyntax} enum instead, consistent with this app's other
-	 * combo-box settings. Settings values round-trip enums via {@code Enum.name()}, so this only needs to
-	 * produce the matching constant name, not the enum type itself.
+	 * The legacy setting was a plain boolean; the current one is backed by {@link FilePatternSyntax} instead,
+	 * consistent with this app's other combo-box settings. Settings values round-trip enums via
+	 * {@code Enum.name()}, so this only needs to produce the matching constant name, not the enum type itself.
 	 */
 	private static String migrateFilePatternSyntax(String legacyRegexFlag) {
-		return Boolean.parseBoolean(legacyRegexFlag) ? "REGEX" : "GLOB";
+		return (Boolean.parseBoolean(legacyRegexFlag) ? FilePatternSyntax.Regex : FilePatternSyntax.Glob).name();
 	}
 
 	private static String migrateVarName(String varName) {

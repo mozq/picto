@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import net.mozq.picto.enums.FilePatternSyntax;
+
 class PictoPathFilterTest {
 
 	@TempDir
@@ -37,7 +39,7 @@ class PictoPathFilterTest {
 		Path jpg = Files.write(tempDir.resolve("photo.jpg"), new byte[] { 1 });
 		Path txt = Files.write(tempDir.resolve("photo.txt"), new byte[] { 1 });
 
-		PictoPathFilter filter = new PictoPathFilter().setPathPattern("*.jpg", tempDir, false);
+		PictoPathFilter filter = new PictoPathFilter().setPathPattern("*.jpg", tempDir, FilePatternSyntax.Glob);
 
 		assertTrue(filter.accept(jpg));
 		assertFalse(filter.accept(txt));
@@ -50,7 +52,7 @@ class PictoPathFilterTest {
 		Path matching = Files.write(matchingDir.resolve("photo.jpg"), new byte[] { 1 });
 		Path other = Files.write(otherDir.resolve("photo.jpg"), new byte[] { 1 });
 
-		PictoPathFilter filter = new PictoPathFilter().setPathPattern("2026/*.jpg", tempDir, false);
+		PictoPathFilter filter = new PictoPathFilter().setPathPattern("2026/*.jpg", tempDir, FilePatternSyntax.Glob);
 
 		assertTrue(filter.accept(matching));
 		assertFalse(filter.accept(other));
@@ -92,7 +94,7 @@ class PictoPathFilterTest {
 		Path matching = Files.write(tempDir.resolve("IMG_0001.JPG"), new byte[] { 1 });
 		Path other = Files.write(tempDir.resolve("DSC_0001.JPG"), new byte[] { 1 });
 
-		PictoPathFilter filter = new PictoPathFilter().setPathPattern("IMG_[0-9]{4}\\.JPG", tempDir, true);
+		PictoPathFilter filter = new PictoPathFilter().setPathPattern("IMG_[0-9]{4}\\.JPG", tempDir, FilePatternSyntax.Regex);
 
 		assertTrue(filter.accept(matching));
 		assertFalse(filter.accept(other));

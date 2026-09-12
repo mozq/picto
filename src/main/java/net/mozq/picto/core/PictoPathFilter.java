@@ -29,6 +29,8 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.util.Date;
 
+import net.mozq.picto.enums.FilePatternSyntax;
+
 public class PictoPathFilter implements Filter<Path> {
 
 	private PathMatcher pathMatcher = null;
@@ -44,16 +46,20 @@ public class PictoPathFilter implements Filter<Path> {
 	public PictoPathFilter() {
 	}
 
-	public PictoPathFilter setPathPattern(String pathPattern, Path rootPath, boolean regex) {
+	public PictoPathFilter setPathPattern(String pathPattern, Path rootPath, FilePatternSyntax syntax) {
 		if (pathPattern == null || pathPattern.isEmpty()) {
 			return this;
 		}
 
-		FileSystem fileSystem = FileSystems.getDefault();
-		this.pathMatcher = fileSystem.getPathMatcher(((regex) ? "regex:" : "glob:") + pathPattern);
+		this.pathMatcher = buildPathMatcher(pathPattern, syntax);
 		this.rootPath = rootPath;
 		this.filenameMatch = !(pathPattern.contains(File.separator) || pathPattern.contains("/") || pathPattern.contains("\\"));
 		return this;
+	}
+
+	public static PathMatcher buildPathMatcher(String pathPattern, FilePatternSyntax syntax) {
+		FileSystem fileSystem = FileSystems.getDefault();
+		return fileSystem.getPathMatcher((syntax == FilePatternSyntax.Regex ? "regex:" : "glob:") + pathPattern);
 	}
 
 	public PictoPathFilter setContainsHiddens(boolean containsHiddens) {

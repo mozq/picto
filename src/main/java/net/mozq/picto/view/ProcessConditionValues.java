@@ -22,12 +22,13 @@ import java.util.Date;
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
 import net.mozq.picto.enums.ExistingFileMethod;
+import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.OperationType;
 
 class ProcessConditionValues {
 	Path srcRootDirPath;
 	String filePattern;
-	boolean filePatternRegex;
+	FilePatternSyntax filePatternSyntax;
 	boolean containsHiddens;
 	boolean followLinks;
 	int depth;
