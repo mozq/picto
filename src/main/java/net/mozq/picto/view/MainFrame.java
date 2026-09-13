@@ -101,6 +101,7 @@ import net.mozq.appsettings.AppSettingsDirectory;
 import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
 import net.mozq.picto.AppMain;
+import net.mozq.picto.LegacyPictoFileImport;
 import net.mozq.picto.core.PictoPathFilter;
 import net.mozq.picto.core.ProcessCondition;
 import net.mozq.picto.enums.DateModType;
@@ -1287,6 +1288,14 @@ public class MainFrame extends JFrame {
 		}
 		Path zipPath = filechooser.getSelectedFile().toPath();
 
+		// Backward compatibility: a *.picto file from before the ZIP-based archive format was a plain
+		// key=value settings.properties dump, sharing the same extension as the current format. Remove
+		// this branch and LegacyPictoFileImport once nobody plausibly still has one of those old exports.
+		if (!LegacyPictoFileImport.isZip(zipPath)) {
+			importLegacySettingsFile(zipPath);
+			return;
+		}
+
 		DataArchiveSupport.DataCategories available;
 		try {
 			available = DataArchiveSupport.readAvailableCategories(zipPath);
@@ -1325,6 +1334,31 @@ public class MainFrame extends JFrame {
 			if (selection.settings()) {
 				loadSettings();
 			}
+
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.info.import.data"),
+					null,
+					JOptionPane.INFORMATION_MESSAGE
+					);
+		} catch (Exception e1) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
+					null,
+					JOptionPane.ERROR_MESSAGE
+					);
+
+			App.handleError(e1.getMessage(), e1);
+		}
+	}
+
+	// Backward compatibility: see the comment at LegacyPictoFileImport's one call site above. Remove
+	// this method alongside that branch and the LegacyPictoFileImport class.
+	private void importLegacySettingsFile(Path legacyFile) {
+		try {
+			LegacyPictoFileImport.importInto(App.settings(), legacyFile);
+			loadSettings();
 
 			JOptionPane.showMessageDialog(
 					frame,
