@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -184,6 +185,76 @@ class AppSettingsMigrationTest {
 		assertEquals(
 				List.of("src.folder", "operation.type", "src.include.subfolders"),
 				List.copyOf(settings.keySet()));
+	}
+
+	/**
+	 * Every legacy key this class knows how to migrate (the whole {@code RENAMED_KEYS} table plus the
+	 * three specially-handled ones) must land on a key {@code MainFrame.settingBindings()} actually binds
+	 * to a Swing field - otherwise a real 2016/2017 user's setting silently reverts to its default with no
+	 * error anywhere. {@code MainFrame.settingBindings()} isn't reachable from here (private, different
+	 * package), so this pins the current 32-key set as a regression baseline instead: if a future rename
+	 * changes either side (a settingBindings() key, or a RENAMED_KEYS/special-cased target) without
+	 * updating the other, this test's expected set stops matching and fails.
+	 */
+	@Test
+	void migratesEveryLegacyKeyToACurrentlyBoundSettingsKey() throws IOException {
+		Path legacySettings = tempDir.resolve("settings.properties");
+		Files.writeString(legacySettings, String.join(System.lineSeparator(),
+				"src.root.dir=/photos",
+				"file.pattern=*.jpg",
+				"file.pattern.regex=false",
+				"contains.subs=true",
+				"contains.hiddens=false",
+				"file.size.range.from=100",
+				"file.size.range.to=200",
+				"file.size.unit=MB",
+				"creation.time.range.from=2020-01-01",
+				"creation.time.range.to=2020-12-31",
+				"modified.time.range.from=2020-01-01",
+				"modified.time.range.to=2020-12-31",
+				"ope.type.copy=true",
+				"ope.type.move=false",
+				"ope.type.overwrite=false",
+				"dest.root.dir=/backup",
+				"dest.sub.path.pattern=${FileName}",
+				"existing.file.method=Confirm",
+				"check.file.digest=false",
+				"change.file.creation.date=false",
+				"change.file.modified.date=false",
+				"change.file.access.date=false",
+				"change.file.exif.date=false",
+				"base.date.type=FileModifiedDate",
+				"custom.base.date=",
+				"date.mod.type=None",
+				"date.mod.year=",
+				"date.mod.month=",
+				"date.mod.day=",
+				"date.mod.hour=",
+				"date.mod.minute=",
+				"date.mod.second=",
+				"remove.exif.tags.gps=false",
+				"remove.exif.tags.all=false"));
+		AppSettings settings = AppSettings.of(null, "picto-test", "settings.conf");
+
+		AppSettingsMigration.migrate(settings, legacySettings);
+
+		assertEquals(
+				Set.of(
+						"src.folder", "src.file.name.pattern", "src.file.name.pattern.syntax",
+						"src.include.subfolders", "src.include.hidden.files",
+						"src.file.size.from", "src.file.size.to", "src.file.size.unit",
+						"src.created.from", "src.created.to", "src.modified.from", "src.modified.to",
+						"operation.type",
+						"dest.folder", "dest.sub.file.path.pattern", "dest.existing.file.method", "dest.check.file.digest",
+						"changes.filedate.creation.date", "changes.filedate.modified.date",
+						"changes.filedate.access.date", "changes.filedate.exif.date",
+						"changes.filedate.base.date.type", "changes.filedate.custom.base.date",
+						"changes.filedate.adjustment.type",
+						"changes.filedate.adjustment.years", "changes.filedate.adjustment.months",
+						"changes.filedate.adjustment.days", "changes.filedate.adjustment.hours",
+						"changes.filedate.adjustment.minutes", "changes.filedate.adjustment.seconds",
+						"changes.exif.remove.gps", "changes.exif.remove.all"),
+				settings.keySet());
 	}
 
 	@Test
