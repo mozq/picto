@@ -993,6 +993,17 @@ public class MainFrame extends JFrame {
 
 		mnPresets.addSeparator();
 
+		JMenuItem mntmDefaultSettings = new JMenuItem(Messages.getString("MainFrame.menu.presets.default"));
+		mntmDefaultSettings.setMnemonic(KeyEvent.VK_D);
+		mntmDefaultSettings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				confirmAndResetToDefaultSettings();
+			}
+		});
+		mnPresets.add(mntmDefaultSettings);
+
+		mnPresets.addSeparator();
+
 		JMenuItem mntmSavePreset = new JMenuItem(Messages.getString("MainFrame.menu.presets.save"));
 		mntmSavePreset.setMnemonic(KeyEvent.VK_S);
 		mntmSavePreset.addActionListener(new ActionListener() {
@@ -1141,10 +1152,31 @@ public class MainFrame extends JFrame {
 	private void loadPreset(String fileName) throws IOException {
 		AppSettings presetSettings = AppSettings.of(presetsDirectory(), fileName);
 		presetSettings.load();
+		applySettingsSource(presetSettings);
+	}
 
+	private void confirmAndResetToDefaultSettings() {
+		int result = JOptionPane.showConfirmDialog(
+				frame,
+				Messages.getString("message.confirm.settings.default"),
+				null,
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE
+				);
+		if (result != JOptionPane.YES_OPTION) {
+			return;
+		}
+
+		AppSettings defaults = AppSettings.of(App.settings().path());
+		applyDefaultSettings(defaults);
+		applySettingsSource(defaults);
+	}
+
+	/** Copies every key from {@code source} into the live settings, then refreshes the UI from it. */
+	private void applySettingsSource(AppSettings source) {
 		AppSettings conf = App.settings();
-		for (String key : presetSettings.keySet()) {
-			conf.set(key, presetSettings.get(key));
+		for (String key : source.keySet()) {
+			conf.set(key, source.get(key));
 		}
 
 		loadSettings();
