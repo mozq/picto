@@ -110,7 +110,7 @@ final class TemplateVariables {
 		case "GPSAltRef": return ExifMetadataSupport.intValue(imageMetadata(), GpsTagConstants.GPS_TAG_GPS_ALTITUDE_REF);
 		default:
 			throw new PictoInvalidDestinationPathException(
-					Messages.getString("message.warn.invalid.destSubPath.varName", varName)
+					Messages.getString("message.warn.invalid.destSubFilePath.varName", varName)
 					);
 		}
 	}

@@ -109,7 +109,7 @@ class ProcessConditionValidatorTest {
 		ProcessConditionValues values = values(src, dest);
 		values.srcFileNamePattern = "[";
 
-		assertEquals(ProcessConditionValidator.Field.FILE_PATTERN,
+		assertEquals(ProcessConditionValidator.Field.FILE_NAME_PATTERN,
 				ProcessConditionValidator.validate(values).field());
 	}
 

@@ -36,7 +36,7 @@ class ProcessConditionValues {
 	Path destFolder;
 	String destSubFilePathPattern;
 	ExistingFileMethod existingFileMethod;
-	boolean compareFileDigest;
+	boolean checkFileDigest;
 	boolean changeFileCreationDate;
 	boolean changeFileModifiedDate;
 	boolean changeFileAccessDate;

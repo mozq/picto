@@ -149,7 +149,7 @@ public final class ProcessCore {
 									throw e;
 								} catch (Exception e) {
 									throw new PictoInvalidDestinationPathException(
-											Messages.getString("message.warn.invalid.destSubPath.pattern"),
+											Messages.getString("message.warn.invalid.destSubFilePath.pattern"),
 											e
 											);
 								}
@@ -160,7 +160,7 @@ public final class ProcessCore {
 								throw (PictoException)cause;
 							}
 							throw new PictoInvalidDestinationPathException(
-									Messages.getString("message.warn.invalid.destSubPath.pattern"),
+									Messages.getString("message.warn.invalid.destSubFilePath.pattern"),
 									e
 									);
 						}
@@ -176,7 +176,7 @@ public final class ProcessCore {
 							processData.setSrcRelativePath(processCondition.getSrcFolder().relativize(file).toString());
 							processData.setDestRelativePath("");
 							processData.setStatus(ProcessDataStatus.Error);
-							processData.setMessage(Messages.getString("message.warn.destSubPath.empty"));
+							processData.setMessage(Messages.getString("message.warn.destSubFilePath.empty"));
 
 							processDataSetter.accept(processData);
 
@@ -281,7 +281,7 @@ public final class ProcessCore {
 			Files.createDirectories(outputParentPath);
 		}
 
-		if (processCondition.isCompareFileDigest()
+		if (processCondition.isCheckFileDigest()
 				|| (processCondition.isChangeFileExifDate() && processData.getBaseDate() != null)
 				|| processCondition.isRemoveExifGps()
 				|| processCondition.isRemoveExifAll()
@@ -290,7 +290,7 @@ public final class ProcessCore {
 			try {
 				destTempPath = createTempFile(outputPath);
 
-				if (processCondition.isCompareFileDigest()) {
+				if (processCondition.isCheckFileDigest()) {
 					FileDigestSupport.copyAndVerify(processData.getSrcPath(), destTempPath);
 				} else if (processCondition.isRemoveExifAll()) {
 					ExifMetadataSupport.removeAll(processData.getSrcPath(), destTempPath);

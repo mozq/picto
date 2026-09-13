@@ -33,7 +33,7 @@ final class ProcessConditionValidator {
 		NONE,
 		SOURCE_FOLDER,
 		DESTINATION_FOLDER,
-		FILE_PATTERN,
+		FILE_NAME_PATTERN,
 		DESTINATION_SUBFOLDER
 	}
 
@@ -110,7 +110,7 @@ final class ProcessConditionValidator {
 			new NanoTemplate(values.destSubFilePathPattern).render(Map.of());
 			return null;
 		} catch (NanoTemplateException _) {
-			return new Result(Messages.getString("message.warn.invalid.destSubPath.pattern"), Field.DESTINATION_SUBFOLDER);
+			return new Result(Messages.getString("message.warn.invalid.destSubFilePath.pattern"), Field.DESTINATION_SUBFOLDER);
 		}
 	}
 
@@ -119,20 +119,20 @@ final class ProcessConditionValidator {
 			PictoPathFilter.buildPathMatcher(values.srcFileNamePattern, values.srcFileNamePatternSyntax);
 			return null;
 		} catch (Exception e) {
-			return new Result(Messages.getString("message.warn.invalid.filePattern", e.getLocalizedMessage()), Field.FILE_PATTERN);
+			return new Result(Messages.getString("message.warn.invalid.fileNamePattern", e.getLocalizedMessage()), Field.FILE_NAME_PATTERN);
 		}
 	}
 
 	private static Result validateRanges(ProcessConditionValues values) {
-		Result result = validateRange(values.fileSizeFrom, values.fileSizeTo, "message.warn.sizeRange.is.invalid.range");
+		Result result = validateRange(values.fileSizeFrom, values.fileSizeTo, "message.warn.fileSize.is.invalid.range");
 		if (result != null) {
 			return result;
 		}
-		result = validateRange(values.createdFrom, values.createdTo, "message.warn.creationTimeRange.is.invalid.range");
+		result = validateRange(values.createdFrom, values.createdTo, "message.warn.created.is.invalid.range");
 		if (result != null) {
 			return result;
 		}
-		return validateRange(values.modifiedFrom, values.modifiedTo, "message.warn.modifiedTimeRange.is.invalid.range");
+		return validateRange(values.modifiedFrom, values.modifiedTo, "message.warn.modified.is.invalid.range");
 	}
 
 	private static <T extends Comparable<T>> Result validateRange(T from, T to, String messageKey) {

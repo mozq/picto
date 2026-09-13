@@ -246,7 +246,7 @@ Specify processing when file of the same name exists.
 - Skip -- Skip processing for a file
 - Terminate -- Terminate processing
 
-#### Validation - Compare file digest
+#### Validation - Check file digest
 It checks whether the contents of the file were correctly copied.
 If you set an option to change the file, such as removing the EXIF of the file, it will not be checked.
 

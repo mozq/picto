@@ -227,7 +227,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.txt");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setCompareFileDigest(true);
+		condition.setCheckFileDigest(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -241,7 +241,7 @@ class ProcessCoreTest {
 		Path unusedDest = tempDir.resolve("unused/dest.txt");
 		ProcessData data = processData(src, unusedDest);
 		ProcessCondition condition = condition(OperationType.Overwrite);
-		condition.setCompareFileDigest(true);
+		condition.setCheckFileDigest(true);
 		AtomicBoolean confirmed = new AtomicBoolean(false);
 
 		runSingle(condition, data, ignored -> {

@@ -39,7 +39,7 @@ public class ProcessCondition {
 	private OperationType operationType;
 	private ExistingFileMethod existingFileMethod;
 
-	private boolean compareFileDigest;
+	private boolean checkFileDigest;
 
 	private boolean changeFileCreationDate = false;
 	private boolean changeFileModifiedDate = false;
@@ -130,12 +130,12 @@ public class ProcessCondition {
 		this.existingFileMethod = existingFileMethod;
 	}
 
-	public boolean isCompareFileDigest() {
-		return compareFileDigest;
+	public boolean isCheckFileDigest() {
+		return checkFileDigest;
 	}
 
-	public void setCompareFileDigest(boolean compareFileDigest) {
-		this.compareFileDigest = compareFileDigest;
+	public void setCheckFileDigest(boolean checkFileDigest) {
+		this.checkFileDigest = checkFileDigest;
 	}
 
 	public boolean isChangeFileCreationDate() {

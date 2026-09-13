@@ -40,7 +40,7 @@ class DestinationOptionsPanel extends JPanel {
 	final JLabel lblExistingFileMethod;
 	final JComboBox<ExistingFileMethod> cmbExistingFileMethod;
 	final JLabel lblValidateFile;
-	final JCheckBox chkCompareFileDigest;
+	final JCheckBox chkCheckFileDigest;
 
 	DestinationOptionsPanel() {
 		GridBagLayout layout = new GridBagLayout();
@@ -101,13 +101,13 @@ class DestinationOptionsPanel extends JPanel {
 		lblValidateFileConstraints.gridy = 2;
 		add(lblValidateFile, lblValidateFileConstraints);
 
-		chkCompareFileDigest = new JCheckBox(Messages.getString("MainFrame.dest.compareFileDigest"));
-		lblValidateFile.setLabelFor(chkCompareFileDigest);
-		InputSupport.installLabelFocusAction(lblValidateFile, chkCompareFileDigest, LabelFocusBehavior.FOCUS_ONLY);
-		GridBagConstraints chkCompareFileDigestConstraints = new GridBagConstraints();
-		chkCompareFileDigestConstraints.anchor = GridBagConstraints.WEST;
-		chkCompareFileDigestConstraints.gridx = 1;
-		chkCompareFileDigestConstraints.gridy = 2;
-		add(chkCompareFileDigest, chkCompareFileDigestConstraints);
+		chkCheckFileDigest = new JCheckBox(Messages.getString("MainFrame.dest.checkFileDigest"));
+		lblValidateFile.setLabelFor(chkCheckFileDigest);
+		InputSupport.installLabelFocusAction(lblValidateFile, chkCheckFileDigest, LabelFocusBehavior.FOCUS_ONLY);
+		GridBagConstraints chkCheckFileDigestConstraints = new GridBagConstraints();
+		chkCheckFileDigestConstraints.anchor = GridBagConstraints.WEST;
+		chkCheckFileDigestConstraints.gridx = 1;
+		chkCheckFileDigestConstraints.gridy = 2;
+		add(chkCheckFileDigest, chkCheckFileDigestConstraints);
 	}
 }

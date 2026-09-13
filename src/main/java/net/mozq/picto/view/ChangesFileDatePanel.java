@@ -49,17 +49,17 @@ class ChangesFileDatePanel extends JPanel {
 	final JFormattedTextField txtCustomBaseDate;
 	final JLabel lblAdjustment;
 	final JComboBox<DateModType> cmbAdjustmentType;
-	final JTextField txtAdjustmentYear;
+	final JTextField txtAdjustmentYears;
 	final JLabel lblYearMonthSeparator;
-	final JTextField txtAdjustmentMonth;
+	final JTextField txtAdjustmentMonths;
 	final JLabel lblMonthDaySeparator;
-	final JTextField txtAdjustmentDay;
+	final JTextField txtAdjustmentDays;
 	final JLabel lblDayHourSeparator;
-	final JTextField txtAdjustmentHour;
+	final JTextField txtAdjustmentHours;
 	final JLabel lblHourMinuteSeparator;
-	final JTextField txtAdjustmentMinute;
+	final JTextField txtAdjustmentMinutes;
 	final JLabel lblMinuteSecondSeparator;
-	final JTextField txtAdjustmentSecond;
+	final JTextField txtAdjustmentSeconds;
 
 	ChangesFileDatePanel(int sectionPadding, int inlineHgap, int inlineVgap, Runnable enableChanged, Runnable layoutChanged) {
 		setBorder(new EmptyBorder(sectionPadding, sectionPadding, sectionPadding, sectionPadding));
@@ -113,7 +113,7 @@ class ChangesFileDatePanel extends JPanel {
 		chkExifDate.addChangeListener(changeListener);
 		pnlTargetDate.add(chkExifDate);
 
-		lblBaseDate = new JLabel(Messages.getString("MainFrame.changes.filedate.baseDate"));
+		lblBaseDate = new JLabel(Messages.getString("MainFrame.changes.filedate.baseDateType"));
 		GridBagConstraints lblBaseDateConstraints = new GridBagConstraints();
 		lblBaseDateConstraints.anchor = GridBagConstraints.WEST;
 		lblBaseDateConstraints.insets = new Insets(0, 0, 5, 5);
@@ -178,28 +178,28 @@ class ChangesFileDatePanel extends JPanel {
 		cmbAdjustmentType.addItemListener(_ -> enableChanged.run());
 		pnlAdjustmentType.add(cmbAdjustmentType);
 
-		txtAdjustmentYear = newAdjustmentField(4);
-		pnlAdjustmentType.add(txtAdjustmentYear);
+		txtAdjustmentYears = newAdjustmentField(4);
+		pnlAdjustmentType.add(txtAdjustmentYears);
 		lblYearMonthSeparator = new JLabel("/");
 		pnlAdjustmentType.add(lblYearMonthSeparator);
-		txtAdjustmentMonth = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentMonth);
+		txtAdjustmentMonths = newAdjustmentField(2);
+		pnlAdjustmentType.add(txtAdjustmentMonths);
 		lblMonthDaySeparator = new JLabel("/");
 		pnlAdjustmentType.add(lblMonthDaySeparator);
-		txtAdjustmentDay = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentDay);
+		txtAdjustmentDays = newAdjustmentField(2);
+		pnlAdjustmentType.add(txtAdjustmentDays);
 		lblDayHourSeparator = new JLabel(" ");
 		pnlAdjustmentType.add(lblDayHourSeparator);
-		txtAdjustmentHour = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentHour);
+		txtAdjustmentHours = newAdjustmentField(2);
+		pnlAdjustmentType.add(txtAdjustmentHours);
 		lblHourMinuteSeparator = new JLabel(":");
 		pnlAdjustmentType.add(lblHourMinuteSeparator);
-		txtAdjustmentMinute = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentMinute);
+		txtAdjustmentMinutes = newAdjustmentField(2);
+		pnlAdjustmentType.add(txtAdjustmentMinutes);
 		lblMinuteSecondSeparator = new JLabel(":");
 		pnlAdjustmentType.add(lblMinuteSecondSeparator);
-		txtAdjustmentSecond = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentSecond);
+		txtAdjustmentSeconds = newAdjustmentField(2);
+		pnlAdjustmentType.add(txtAdjustmentSeconds);
 	}
 
 	private static JTextField newAdjustmentField(int columns) {

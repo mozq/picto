@@ -120,8 +120,8 @@ import javax.swing.JMenuItem;
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 
-	private static final String DEFAULT_DEST_SUB_PATH_PATTERN = "${FileName}";
-	private static final String EMPTY_DEST_SUB_PATH_PATTERN = "${SubFilePath}";
+	private static final String DEFAULT_DEST_SUB_FILE_PATH_PATTERN = "${FileName}";
+	private static final String EMPTY_DEST_SUB_FILE_PATH_PATTERN = "${SubFilePath}";
 	private static final int WINDOW_PADDING = 10;
 	private static final int MAIN_LABEL_WIDTH = 52;
 	private static final int SECTION_PADDING = 8;
@@ -912,23 +912,23 @@ public class MainFrame extends JFrame {
 				SettingBinding.radioChoice(btngrpOperationType, "operation.type", OperationType.class, OperationType.Copy),
 
 				SettingBinding.text(txtDestFolder, "dest.folder", ""),
-				SettingBinding.text(destOpt.txtSubFilePathPattern, "dest.sub.file.path.pattern", DEFAULT_DEST_SUB_PATH_PATTERN),
+				SettingBinding.text(destOpt.txtSubFilePathPattern, "dest.sub.file.path.pattern", DEFAULT_DEST_SUB_FILE_PATH_PATTERN),
 				SettingBinding.choice(destOpt.cmbExistingFileMethod, "dest.existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm),
-				SettingBinding.flag(destOpt.chkCompareFileDigest, "dest.compare.file.digest", false),
+				SettingBinding.flag(destOpt.chkCheckFileDigest, "dest.check.file.digest", false),
 
 				SettingBinding.flag(changes.filedate.chkCreationDate, "changes.filedate.creation.date", false),
 				SettingBinding.flag(changes.filedate.chkModifiedDate, "changes.filedate.modified.date", false),
 				SettingBinding.flag(changes.filedate.chkAccessDate, "changes.filedate.access.date", false),
 				SettingBinding.flag(changes.filedate.chkExifDate, "changes.filedate.exif.date", false),
-				SettingBinding.choice(changes.filedate.cmbBaseDate, "changes.filedate.base.date", DateType.class, DateType.FileModifiedDate),
+				SettingBinding.choice(changes.filedate.cmbBaseDate, "changes.filedate.base.date.type", DateType.class, DateType.FileModifiedDate),
 				SettingBinding.text(changes.filedate.txtCustomBaseDate, "changes.filedate.custom.base.date", ""),
 				SettingBinding.choice(changes.filedate.cmbAdjustmentType, "changes.filedate.adjustment.type", DateModType.class, DateModType.None),
-				SettingBinding.text(changes.filedate.txtAdjustmentYear, "changes.filedate.adjustment.year", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentMonth, "changes.filedate.adjustment.month", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentDay, "changes.filedate.adjustment.day", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentHour, "changes.filedate.adjustment.hour", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentMinute, "changes.filedate.adjustment.minute", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentSecond, "changes.filedate.adjustment.second", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentYears, "changes.filedate.adjustment.years", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentMonths, "changes.filedate.adjustment.months", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentDays, "changes.filedate.adjustment.days", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentHours, "changes.filedate.adjustment.hours", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentMinutes, "changes.filedate.adjustment.minutes", ""),
+				SettingBinding.text(changes.filedate.txtAdjustmentSeconds, "changes.filedate.adjustment.seconds", ""),
 				SettingBinding.flag(changes.exif.chkRemoveGps, "changes.exif.remove.gps", false),
 				SettingBinding.flag(changes.exif.chkRemoveAll, "changes.exif.remove.all", false));
 	}
@@ -1853,16 +1853,16 @@ public class MainFrame extends JFrame {
 				txtDestFolder,
 				destOpt.txtSubFilePathPattern,
 				changes.filedate.txtCustomBaseDate,
-				changes.filedate.txtAdjustmentYear,
-				changes.filedate.txtAdjustmentMonth,
-				changes.filedate.txtAdjustmentDay,
-				changes.filedate.txtAdjustmentHour,
-				changes.filedate.txtAdjustmentMinute,
-				changes.filedate.txtAdjustmentSecond);
+				changes.filedate.txtAdjustmentYears,
+				changes.filedate.txtAdjustmentMonths,
+				changes.filedate.txtAdjustmentDays,
+				changes.filedate.txtAdjustmentHours,
+				changes.filedate.txtAdjustmentMinutes,
+				changes.filedate.txtAdjustmentSeconds);
 		addChangeListener(changeListener,
 				srcOpt.chkIncludeSubfolders,
 				srcOpt.chkIncludeHiddenFiles,
-				destOpt.chkCompareFileDigest,
+				destOpt.chkCheckFileDigest,
 				changes.filedate.chkCreationDate,
 				changes.filedate.chkModifiedDate,
 				changes.filedate.chkAccessDate,
@@ -1979,13 +1979,13 @@ public class MainFrame extends JFrame {
 	private String destinationOptionsSummary() {
 		ProcessConditionValues values = collectProcessConditionValues();
 		List<String> items = new ArrayList<>();
-		if (!values.destSubFilePathPattern.isBlank() && !DEFAULT_DEST_SUB_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
+		if (!values.destSubFilePathPattern.isBlank() && !DEFAULT_DEST_SUB_FILE_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
 			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), values.destSubFilePathPattern));
 		}
 		if (values.existingFileMethod != ExistingFileMethod.Confirm) {
 			items.add(summaryItem(Messages.getString("MainFrame.dest.existingFileMethod"), String.valueOf(values.existingFileMethod)));
 		}
-		if (values.compareFileDigest) {
+		if (values.checkFileDigest) {
 			items.add(checkedItem(Messages.getString("MainFrame.dest.validateFile")));
 		}
 		return joinOptionsSummary(items);
@@ -2012,7 +2012,7 @@ public class MainFrame extends JFrame {
 			changesFileDate = true;
 		}
 		if (changesFileDate) {
-			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.baseDate"), baseDateTypeSummary(values)));
+			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.baseDateType"), baseDateTypeSummary(values)));
 		}
 		if (changesFileDate && values.adjustmentType != DateModType.None) {
 			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.adjustment"), adjustmentSummary(values)));
@@ -2124,7 +2124,7 @@ public class MainFrame extends JFrame {
 		destOpt.lblExistingFileMethod.setEnabled(enabled);
 		destOpt.cmbExistingFileMethod.setEnabled(enabled);
 		destOpt.lblValidateFile.setEnabled(enabled);
-		destOpt.chkCompareFileDigest.setEnabled(enabled);
+		destOpt.chkCheckFileDigest.setEnabled(enabled);
 	}
 
 	private void changeEnableFileDateModConditions() {
@@ -2146,17 +2146,17 @@ public class MainFrame extends JFrame {
 		changes.filedate.cmbAdjustmentType.setEnabled(enabled);
 
 		boolean adjustmentEnabled = enabled && changes.filedate.cmbAdjustmentType.getSelectedItem() != DateModType.None;
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentYear, adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentYears, adjustmentEnabled);
 		changes.filedate.lblYearMonthSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMonth, adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMonths, adjustmentEnabled);
 		changes.filedate.lblMonthDaySeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentDay, adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentDays, adjustmentEnabled);
 		changes.filedate.lblDayHourSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentHour, adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentHours, adjustmentEnabled);
 		changes.filedate.lblHourMinuteSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMinute, adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMinutes, adjustmentEnabled);
 		changes.filedate.lblMinuteSecondSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentSecond, adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentSeconds, adjustmentEnabled);
 	}
 
 	private void runProcess(boolean dryRun) {
@@ -2248,7 +2248,7 @@ public class MainFrame extends JFrame {
 		values.destFolder = Paths.get(txtDestFolder.getText()).normalize();
 		values.destSubFilePathPattern = fieldText(destOpt.txtSubFilePathPattern);
 		values.existingFileMethod = (ExistingFileMethod)destOpt.cmbExistingFileMethod.getSelectedItem();
-		values.compareFileDigest = destOpt.chkCompareFileDigest.isEnabled() && destOpt.chkCompareFileDigest.isSelected();
+		values.checkFileDigest = destOpt.chkCheckFileDigest.isEnabled() && destOpt.chkCheckFileDigest.isSelected();
 
 		values.changeFileCreationDate = changes.filedate.chkCreationDate.isEnabled() && changes.filedate.chkCreationDate.isSelected();
 		values.changeFileModifiedDate = changes.filedate.chkModifiedDate.isEnabled() && changes.filedate.chkModifiedDate.isSelected();
@@ -2257,12 +2257,12 @@ public class MainFrame extends JFrame {
 		values.baseDateType = (DateType)changes.filedate.cmbBaseDate.getSelectedItem();
 		values.customBaseDate = DateTimeText.parseDate(changes.filedate.txtCustomBaseDate.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
 		values.adjustmentType = (DateModType)changes.filedate.cmbAdjustmentType.getSelectedItem();
-		values.adjustmentYears = parseInteger(changes.filedate.txtAdjustmentYear.getText());
-		values.adjustmentMonths = parseInteger(changes.filedate.txtAdjustmentMonth.getText());
-		values.adjustmentDays = parseInteger(changes.filedate.txtAdjustmentDay.getText());
-		values.adjustmentHours = parseInteger(changes.filedate.txtAdjustmentHour.getText());
-		values.adjustmentMinutes = parseInteger(changes.filedate.txtAdjustmentMinute.getText());
-		values.adjustmentSeconds = parseInteger(changes.filedate.txtAdjustmentSecond.getText());
+		values.adjustmentYears = parseInteger(changes.filedate.txtAdjustmentYears.getText());
+		values.adjustmentMonths = parseInteger(changes.filedate.txtAdjustmentMonths.getText());
+		values.adjustmentDays = parseInteger(changes.filedate.txtAdjustmentDays.getText());
+		values.adjustmentHours = parseInteger(changes.filedate.txtAdjustmentHours.getText());
+		values.adjustmentMinutes = parseInteger(changes.filedate.txtAdjustmentMinutes.getText());
+		values.adjustmentSeconds = parseInteger(changes.filedate.txtAdjustmentSeconds.getText());
 
 		values.removeExifGps = changes.exif.chkRemoveGps.isEnabled() && changes.exif.chkRemoveGps.isSelected();
 		values.removeExifAll = changes.exif.chkRemoveAll.isEnabled() && changes.exif.chkRemoveAll.isSelected();
@@ -2303,7 +2303,7 @@ public class MainFrame extends JFrame {
 			return null;
 		}
 
-		if (values.compareFileDigest && (values.changeFileExifDate || values.removeExifGps || values.removeExifAll)) {
+		if (values.checkFileDigest && (values.changeFileExifDate || values.removeExifGps || values.removeExifAll)) {
 			int ret = JOptionPane.showConfirmDialog(
 					frame,
 					Messages.getString("message.confirm.change.file.with.checkFileDigest"),
@@ -2315,14 +2315,14 @@ public class MainFrame extends JFrame {
 				return null;
 			}
 
-			values.compareFileDigest = false;
+			values.checkFileDigest = false;
 		}
 
 		PictoPathFilter pathFilter = buildPathFilter(values);
 
 
 		String destSubFilePathPattern = values.destSubFilePathPattern.isBlank()
-				? EMPTY_DEST_SUB_PATH_PATTERN
+				? EMPTY_DEST_SUB_FILE_PATH_PATTERN
 				: values.destSubFilePathPattern;
 		NanoTemplate destSubFilePathTemplate = new NanoTemplate(destSubFilePathPattern).timeZone(timeZone);
 
@@ -2336,7 +2336,7 @@ public class MainFrame extends JFrame {
 		processCondition.setDestSubFilePathTemplate(destSubFilePathTemplate);
 		processCondition.setOperationType(values.operationType);
 		processCondition.setExistingFileMethod(values.existingFileMethod);
-		processCondition.setCompareFileDigest(values.compareFileDigest);
+		processCondition.setCheckFileDigest(values.checkFileDigest);
 		processCondition.setChangeFileCreationDate(values.changeFileCreationDate);
 		processCondition.setChangeFileModifiedDate(values.changeFileModifiedDate);
 		processCondition.setChangeFileAccessDate(values.changeFileAccessDate);
@@ -2515,7 +2515,7 @@ public class MainFrame extends JFrame {
 		JTextField textField = switch (field) {
 		case SOURCE_FOLDER -> txtSrcFolder;
 		case DESTINATION_FOLDER -> txtDestFolder;
-		case FILE_PATTERN -> srcOpt.txtFileNamePattern;
+		case FILE_NAME_PATTERN -> srcOpt.txtFileNamePattern;
 		case DESTINATION_SUBFOLDER -> destOpt.txtSubFilePathPattern;
 		case NONE -> null;
 		};
