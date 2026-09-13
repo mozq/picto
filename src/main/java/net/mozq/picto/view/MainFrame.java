@@ -1311,7 +1311,20 @@ public class MainFrame extends JFrame {
 		// Backward compatibility: a *.picto file from before the ZIP-based archive format was a plain
 		// key=value settings.properties dump, sharing the same extension as the current format. Remove
 		// this branch and LegacyPictoFileImport once nobody plausibly still has one of those old exports.
-		if (!LegacyPictoFileImport.isZip(zipPath)) {
+		boolean isLegacyFile;
+		try {
+			isLegacyFile = LegacyPictoFileImport.isLegacyFile(zipPath);
+		} catch (IOException e1) {
+			JOptionPane.showMessageDialog(
+					frame,
+					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
+					null,
+					JOptionPane.ERROR_MESSAGE
+					);
+			App.handleError(e1.getMessage(), e1);
+			return;
+		}
+		if (isLegacyFile) {
 			importLegacySettingsFile(zipPath);
 			return;
 		}

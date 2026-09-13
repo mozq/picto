@@ -17,6 +17,7 @@
 package net.mozq.picto;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -36,15 +37,23 @@ class LegacyPictoFileImportTest {
 	Path tempDir;
 
 	@Test
-	void isZipIsFalseForAPlainKeyValueFile() throws IOException {
+	void isLegacyFileIsTrueForAPlainKeyValueFileWithSrcRootDir() throws IOException {
 		Path legacyFile = tempDir.resolve("settings.picto");
 		Files.writeString(legacyFile, "src.root.dir=/photos");
 
-		assertFalse(LegacyPictoFileImport.isZip(legacyFile));
+		assertTrue(LegacyPictoFileImport.isLegacyFile(legacyFile));
 	}
 
 	@Test
-	void isZipIsTrueForAZipFile() throws IOException {
+	void isLegacyFileIsFalseForATextFileWithoutSrcRootDir() throws IOException {
+		Path notLegacyFile = tempDir.resolve("settings.picto");
+		Files.writeString(notLegacyFile, "some.other.key=value");
+
+		assertFalse(LegacyPictoFileImport.isLegacyFile(notLegacyFile));
+	}
+
+	@Test
+	void isLegacyFileIsFalseForAZipFile() throws IOException {
 		Path archive = tempDir.resolve("settings.picto");
 		try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(archive))) {
 			zos.putNextEntry(new ZipEntry("settings.conf"));
@@ -52,7 +61,16 @@ class LegacyPictoFileImportTest {
 			zos.closeEntry();
 		}
 
-		assertTrue(LegacyPictoFileImport.isZip(archive));
+		assertFalse(LegacyPictoFileImport.isLegacyFile(archive));
+	}
+
+	@Test
+	void isLegacyFilePropagatesAGenuineIoError() {
+		// A missing file fails for a reason unrelated to format detection (NoSuchFileException) -
+		// isLegacyFile must not swallow that as "not legacy" the way it does an undecodable byte sequence.
+		Path missingFile = tempDir.resolve("does-not-exist.picto");
+
+		assertThrows(IOException.class, () -> LegacyPictoFileImport.isLegacyFile(missingFile));
 	}
 
 	@Test
