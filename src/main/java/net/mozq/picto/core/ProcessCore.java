@@ -90,7 +90,7 @@ public final class ProcessCore {
 		}
 
 		Files.walkFileTree(
-				processCondition.getSrcRootPath(),
+				processCondition.getSrcFolder(),
 				fileVisitOptionSet,
 				processCondition.getDepth(),
 				new SimpleFileVisitor<Path>() {
@@ -118,7 +118,7 @@ public final class ProcessCore {
 							return FileVisitResult.SKIP_SUBTREE;
 						}
 
-						Path rootRelativeSubPath = processCondition.getSrcRootPath().relativize(file.getParent());
+						Path rootRelativeSubPath = processCondition.getSrcFolder().relativize(file.getParent());
 
 						Supplier<ImageMetadata> imageMetadataSupplier = memoize(() -> ExifMetadataSupport.loadMetadata(file));
 
@@ -126,7 +126,7 @@ public final class ProcessCore {
 						if (processCondition.isChangeFileCreationDate()
 								|| processCondition.isChangeFileModifiedDate()
 								|| processCondition.isChangeFileAccessDate()
-								|| processCondition.isChangeExifDate()
+								|| processCondition.isChangeFileExifDate()
 								) {
 							baseDate = getBaseDate(processCondition, file, attrs, imageMetadataSupplier);
 						} else {
@@ -142,7 +142,7 @@ public final class ProcessCore {
 									rootRelativeSubPath,
 									imageMetadataSupplier,
 									baseDate);
-							destSubPathname = processCondition.getDestSubPathTemplate().render(varName -> {
+							destSubPathname = processCondition.getDestSubFilePathTemplate().render(varName -> {
 								try {
 									return templateVariables.resolve(varName);
 								} catch (PictoException e) {
@@ -173,7 +173,7 @@ public final class ProcessCore {
 							ProcessData processData = new ProcessData();
 							processData.setSrcPath(file);
 							processData.setSrcFileAttributes(attrs);
-							processData.setSrcRelativePath(processCondition.getSrcRootPath().relativize(file).toString());
+							processData.setSrcRelativePath(processCondition.getSrcFolder().relativize(file).toString());
 							processData.setDestRelativePath("");
 							processData.setStatus(ProcessDataStatus.Error);
 							processData.setMessage(Messages.getString("message.warn.destSubPath.empty"));
@@ -183,9 +183,9 @@ public final class ProcessCore {
 							return FileVisitResult.CONTINUE;
 						}
 
-						Path destSubPath = processCondition.getDestRootPath().resolve(normalizedDestSubPathname).normalize();
+						Path destSubPath = processCondition.getDestFolder().resolve(normalizedDestSubPathname).normalize();
 
-						if (!destSubPath.startsWith(processCondition.getDestRootPath())) {
+						if (!destSubPath.startsWith(processCondition.getDestFolder())) {
 							throw new PictoInvalidDestinationPathException(
 									Messages.getString("message.warn.invalid.destination.path", destSubPath)
 									);
@@ -195,8 +195,8 @@ public final class ProcessCore {
 						processData.setSrcPath(file);
 						processData.setSrcFileAttributes(attrs);
 						processData.setDestPath(destSubPath);
-						processData.setSrcRelativePath(processCondition.getSrcRootPath().relativize(file).toString());
-						processData.setDestRelativePath(processCondition.getDestRootPath().relativize(destSubPath).toString());
+						processData.setSrcRelativePath(processCondition.getSrcFolder().relativize(file).toString());
+						processData.setDestRelativePath(processCondition.getDestFolder().relativize(destSubPath).toString());
 						processData.setBaseDate(baseDate);
 
 						processDataSetter.accept(processData);
@@ -281,27 +281,27 @@ public final class ProcessCore {
 			Files.createDirectories(outputParentPath);
 		}
 
-		if (processCondition.isCheckDigest()
-				|| (processCondition.isChangeExifDate() && processData.getBaseDate() != null)
-				|| processCondition.isRemoveExifTagsGps()
-				|| processCondition.isRemoveExifTagsAll()
+		if (processCondition.isCompareFileDigest()
+				|| (processCondition.isChangeFileExifDate() && processData.getBaseDate() != null)
+				|| processCondition.isRemoveExifGps()
+				|| processCondition.isRemoveExifAll()
 				) {
 			Path destTempPath = null;
 			try {
 				destTempPath = createTempFile(outputPath);
 
-				if (processCondition.isCheckDigest()) {
+				if (processCondition.isCompareFileDigest()) {
 					FileDigestSupport.copyAndVerify(processData.getSrcPath(), destTempPath);
-				} else if (processCondition.isRemoveExifTagsAll()) {
+				} else if (processCondition.isRemoveExifAll()) {
 					ExifMetadataSupport.removeAll(processData.getSrcPath(), destTempPath);
-				} else if (processCondition.isChangeExifDate() || processCondition.isRemoveExifTagsGps()) {
-					Date exifDate = processCondition.isChangeExifDate() ? processData.getBaseDate() : null;
+				} else if (processCondition.isChangeFileExifDate() || processCondition.isRemoveExifGps()) {
+					Date exifDate = processCondition.isChangeFileExifDate() ? processData.getBaseDate() : null;
 					ExifMetadataSupport.updateLossless(
 							processData.getSrcPath(),
 							destTempPath,
 							exifDate,
 							processCondition.getTimeZone(),
-							processCondition.isRemoveExifTagsGps());
+							processCondition.isRemoveExifGps());
 				}
 
 				try {
@@ -420,27 +420,27 @@ public final class ProcessCore {
 		};
 
 		if (baseDate != null) {
-			if (processCondition.getBaseDateModType() != DateModType.None) {
+			if (processCondition.getAdjustmentType() != DateModType.None) {
 				Calendar cal = Calendar.getInstance(processCondition.getTimeZone());
 				cal.setTime(baseDate);
-				switch (processCondition.getBaseDateModType()) {
+				switch (processCondition.getAdjustmentType()) {
 				case None -> {}
 				case Minus, Plus -> {
-					int signum = processCondition.getBaseDateModType() == DateModType.Minus ? -1 : 1;
-					addField(cal, Calendar.YEAR, processCondition.getBaseDateModYears(), signum);
-					addField(cal, Calendar.MONTH, processCondition.getBaseDateModMonths(), signum);
-					addField(cal, Calendar.DAY_OF_MONTH, processCondition.getBaseDateModDays(), signum);
-					addField(cal, Calendar.HOUR_OF_DAY, processCondition.getBaseDateModHours(), signum);
-					addField(cal, Calendar.MINUTE, processCondition.getBaseDateModMinutes(), signum);
-					addField(cal, Calendar.SECOND, processCondition.getBaseDateModSeconds(), signum);
+					int signum = processCondition.getAdjustmentType() == DateModType.Minus ? -1 : 1;
+					addField(cal, Calendar.YEAR, processCondition.getAdjustmentYears(), signum);
+					addField(cal, Calendar.MONTH, processCondition.getAdjustmentMonths(), signum);
+					addField(cal, Calendar.DAY_OF_MONTH, processCondition.getAdjustmentDays(), signum);
+					addField(cal, Calendar.HOUR_OF_DAY, processCondition.getAdjustmentHours(), signum);
+					addField(cal, Calendar.MINUTE, processCondition.getAdjustmentMinutes(), signum);
+					addField(cal, Calendar.SECOND, processCondition.getAdjustmentSeconds(), signum);
 				}
 				case Overwrite -> {
-					setField(cal, Calendar.YEAR, processCondition.getBaseDateModYears());
-					setField(cal, Calendar.MONTH, processCondition.getBaseDateModMonths());
-					setField(cal, Calendar.DAY_OF_MONTH, processCondition.getBaseDateModDays());
-					setField(cal, Calendar.HOUR_OF_DAY, processCondition.getBaseDateModHours());
-					setField(cal, Calendar.MINUTE, processCondition.getBaseDateModMinutes());
-					setField(cal, Calendar.SECOND, processCondition.getBaseDateModSeconds());
+					setField(cal, Calendar.YEAR, processCondition.getAdjustmentYears());
+					setField(cal, Calendar.MONTH, processCondition.getAdjustmentMonths());
+					setField(cal, Calendar.DAY_OF_MONTH, processCondition.getAdjustmentDays());
+					setField(cal, Calendar.HOUR_OF_DAY, processCondition.getAdjustmentHours());
+					setField(cal, Calendar.MINUTE, processCondition.getAdjustmentMinutes());
+					setField(cal, Calendar.SECOND, processCondition.getAdjustmentSeconds());
 				}
 				}
 				baseDate = cal.getTime();

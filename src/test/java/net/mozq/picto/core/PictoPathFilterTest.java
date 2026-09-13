@@ -73,7 +73,7 @@ class PictoPathFilterTest {
 		Path hidden = Files.write(tempDir.resolve(".hidden.jpg"), new byte[] { 1 });
 		assumeTrue(Files.isHidden(hidden));
 
-		PictoPathFilter filter = new PictoPathFilter().setContainsHiddens(true);
+		PictoPathFilter filter = new PictoPathFilter().setIncludeHiddenFiles(true);
 
 		assertTrue(filter.accept(hidden));
 	}
@@ -83,7 +83,7 @@ class PictoPathFilterTest {
 		Path small = Files.write(tempDir.resolve("small.jpg"), new byte[] { 1, 2 });
 		Path large = Files.write(tempDir.resolve("large.jpg"), new byte[] { 1, 2, 3, 4 });
 
-		PictoPathFilter filter = new PictoPathFilter().setSizeRange(2L, 2L);
+		PictoPathFilter filter = new PictoPathFilter().setFileSizeRange(2L, 2L);
 
 		assertTrue(filter.accept(small));
 		assertFalse(filter.accept(large));

@@ -227,7 +227,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.txt");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setCheckDigest(true);
+		condition.setCompareFileDigest(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -241,7 +241,7 @@ class ProcessCoreTest {
 		Path unusedDest = tempDir.resolve("unused/dest.txt");
 		ProcessData data = processData(src, unusedDest);
 		ProcessCondition condition = condition(OperationType.Overwrite);
-		condition.setCheckDigest(true);
+		condition.setCompareFileDigest(true);
 		AtomicBoolean confirmed = new AtomicBoolean(false);
 
 		runSingle(condition, data, ignored -> {
@@ -261,7 +261,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.jpg");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemoveExifTagsAll(true);
+		condition.setRemoveExifAll(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -275,7 +275,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.jpg");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemoveExifTagsGps(true);
+		condition.setRemoveExifGps(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -295,7 +295,7 @@ class ProcessCoreTest {
 		ProcessData data = processData(src, dest);
 		data.setBaseDate(baseDate);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setChangeExifDate(true);
+		condition.setChangeFileExifDate(true);
 		condition.setTimeZone(UTC);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
@@ -314,7 +314,7 @@ class ProcessCoreTest {
 		ProcessData data = processData(src, dest);
 		data.setBaseDate(parseUtc("2027-01-02 03:04:05"));
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setChangeExifDate(true);
+		condition.setChangeFileExifDate(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -329,7 +329,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.txt");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemoveExifTagsGps(true);
+		condition.setRemoveExifGps(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -343,7 +343,7 @@ class ProcessCoreTest {
 		Path dest = tempDir.resolve("dest.txt");
 		ProcessData data = processData(src, dest);
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setRemoveExifTagsAll(true);
+		condition.setRemoveExifAll(true);
 
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
@@ -512,7 +512,7 @@ class ProcessCoreTest {
 		Path source = plainJpeg(srcRoot.resolve("source.jpg"));
 		Files.setLastModifiedTime(source, FileTime.fromMillis(parseUtc("2026-08-20 12:34:56").getTime()));
 		ProcessCondition condition = findCondition(srcRoot, destRoot, "${TakenDate:uuuu-MM-dd}.txt");
-		condition.getDestSubPathTemplate().timeZone(UTC);
+		condition.getDestSubFilePathTemplate().timeZone(UTC);
 
 		ProcessData data = findFiles(condition).get(0);
 
@@ -566,12 +566,12 @@ class ProcessCoreTest {
 		condition.setChangeFileModifiedDate(true);
 		condition.setBaseDateType(DateType.CustomDate);
 		condition.setCustomBaseDate(parseUtc("2026-08-20 12:34:56"));
-		condition.setBaseDateModType(DateModType.Overwrite);
-		condition.setBaseDateModYears(2027);
-		condition.setBaseDateModDays(2);
-		condition.setBaseDateModHours(3);
-		condition.setBaseDateModMinutes(4);
-		condition.setBaseDateModSeconds(5);
+		condition.setAdjustmentType(DateModType.Overwrite);
+		condition.setAdjustmentYears(2027);
+		condition.setAdjustmentDays(2);
+		condition.setAdjustmentHours(3);
+		condition.setAdjustmentMinutes(4);
+		condition.setAdjustmentSeconds(5);
 
 		ProcessData data = findFiles(condition).get(0);
 
@@ -594,12 +594,12 @@ class ProcessCoreTest {
 		return data;
 	}
 
-	private ProcessCondition findCondition(Path srcRoot, Path destRoot, String destSubPathPattern) {
+	private ProcessCondition findCondition(Path srcRoot, Path destRoot, String destSubFilePathPattern) {
 		ProcessCondition condition = condition(OperationType.Copy);
-		condition.setSrcRootPath(srcRoot);
-		condition.setDestRootPath(destRoot);
+		condition.setSrcFolder(srcRoot);
+		condition.setDestFolder(destRoot);
 		condition.setPathFilter(new PictoPathFilter());
-		condition.setDestSubPathTemplate(new NanoTemplate(destSubPathPattern).timeZone(UTC));
+		condition.setDestSubFilePathTemplate(new NanoTemplate(destSubFilePathPattern).timeZone(UTC));
 		condition.setDepth(Integer.MAX_VALUE);
 		return condition;
 	}
@@ -618,10 +618,10 @@ class ProcessCoreTest {
 		condition.setChangeFileModifiedDate(true);
 		condition.setBaseDateType(DateType.CustomDate);
 		condition.setCustomBaseDate(parseUtc("2026-08-20 12:34:56"));
-		condition.setBaseDateModType(dateModType);
-		condition.setBaseDateModDays(days);
-		condition.setBaseDateModHours(hours);
-		condition.setBaseDateModMinutes(minutes);
+		condition.setAdjustmentType(dateModType);
+		condition.setAdjustmentDays(days);
+		condition.setAdjustmentHours(hours);
+		condition.setAdjustmentMinutes(minutes);
 		return findFiles(condition).get(0);
 	}
 

@@ -743,10 +743,10 @@ public class ProcessDialog extends JDialog {
 			case 1: return getStatusIcon(data.getStatus());
 			case 2:
 				String srcRel = data.getSrcRelativePath();
-				return srcRel != null ? srcRel : processCondition.getSrcRootPath().relativize(data.getSrcPath()).toString();
+				return srcRel != null ? srcRel : processCondition.getSrcFolder().relativize(data.getSrcPath()).toString();
 			case 3:
 				String destRel = data.getDestRelativePath();
-				return destRel != null ? destRel : processCondition.getDestRootPath().relativize(data.getDestPath()).toString();
+				return destRel != null ? destRel : processCondition.getDestFolder().relativize(data.getDestPath()).toString();
 			case 4: return data.getMessage();
 			default: throw new IllegalArgumentException(Integer.toString(columnIndex));
 			}

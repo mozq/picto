@@ -28,35 +28,35 @@ import net.mozq.nanotemplate.NanoTemplate;
 
 public class ProcessCondition {
 
-	private Path srcRootPath;
+	private Path srcFolder;
 	private PictoPathFilter pathFilter;
 	private boolean followLinks = false;
 	private int depth = Integer.MAX_VALUE;
 
-	private Path destRootPath;
-	private NanoTemplate destSubPathTemplate;
+	private Path destFolder;
+	private NanoTemplate destSubFilePathTemplate;
 
 	private OperationType operationType;
 	private ExistingFileMethod existingFileMethod;
 
-	private boolean checkDigest;
+	private boolean compareFileDigest;
 
 	private boolean changeFileCreationDate = false;
 	private boolean changeFileModifiedDate = false;
 	private boolean changeFileAccessDate = false;
-	private boolean changeExifDate = false;
+	private boolean changeFileExifDate = false;
 	private DateType baseDateType;
 	private Date customBaseDate = null;
-	private DateModType baseDateModType = DateModType.None;
-	private Integer baseDateModYears = null;
-	private Integer baseDateModMonths = null;
-	private Integer baseDateModDays = null;
-	private Integer baseDateModHours = null;
-	private Integer baseDateModMinutes = null;
-	private Integer baseDateModSeconds = null;
+	private DateModType adjustmentType = DateModType.None;
+	private Integer adjustmentYears = null;
+	private Integer adjustmentMonths = null;
+	private Integer adjustmentDays = null;
+	private Integer adjustmentHours = null;
+	private Integer adjustmentMinutes = null;
+	private Integer adjustmentSeconds = null;
 
-	private boolean removeExifTagsAll = false;
-	private boolean removeExifTagsGps = false;
+	private boolean removeExifAll = false;
+	private boolean removeExifGps = false;
 
 
 	private TimeZone timeZone;
@@ -66,12 +66,12 @@ public class ProcessCondition {
 	public ProcessCondition() {
 	}
 
-	public Path getSrcRootPath() {
-		return srcRootPath;
+	public Path getSrcFolder() {
+		return srcFolder;
 	}
 
-	public void setSrcRootPath(Path srcRootPath) {
-		this.srcRootPath = srcRootPath;
+	public void setSrcFolder(Path srcFolder) {
+		this.srcFolder = srcFolder;
 	}
 
 	public PictoPathFilter getPathFilter() {
@@ -98,20 +98,20 @@ public class ProcessCondition {
 		this.depth = depth;
 	}
 
-	public Path getDestRootPath() {
-		return destRootPath;
+	public Path getDestFolder() {
+		return destFolder;
 	}
 
-	public void setDestRootPath(Path destRootPath) {
-		this.destRootPath = destRootPath;
+	public void setDestFolder(Path destFolder) {
+		this.destFolder = destFolder;
 	}
 
-	public NanoTemplate getDestSubPathTemplate() {
-		return destSubPathTemplate;
+	public NanoTemplate getDestSubFilePathTemplate() {
+		return destSubFilePathTemplate;
 	}
 
-	public void setDestSubPathTemplate(NanoTemplate destSubPathTemplate) {
-		this.destSubPathTemplate = destSubPathTemplate;
+	public void setDestSubFilePathTemplate(NanoTemplate destSubFilePathTemplate) {
+		this.destSubFilePathTemplate = destSubFilePathTemplate;
 	}
 
 	public OperationType getOperationType() {
@@ -130,12 +130,12 @@ public class ProcessCondition {
 		this.existingFileMethod = existingFileMethod;
 	}
 
-	public boolean isCheckDigest() {
-		return checkDigest;
+	public boolean isCompareFileDigest() {
+		return compareFileDigest;
 	}
 
-	public void setCheckDigest(boolean checkDigest) {
-		this.checkDigest = checkDigest;
+	public void setCompareFileDigest(boolean compareFileDigest) {
+		this.compareFileDigest = compareFileDigest;
 	}
 
 	public boolean isChangeFileCreationDate() {
@@ -162,12 +162,12 @@ public class ProcessCondition {
 		this.changeFileAccessDate = changeFileAccessDate;
 	}
 
-	public boolean isChangeExifDate() {
-		return changeExifDate;
+	public boolean isChangeFileExifDate() {
+		return changeFileExifDate;
 	}
 
-	public void setChangeExifDate(boolean changeExifDate) {
-		this.changeExifDate = changeExifDate;
+	public void setChangeFileExifDate(boolean changeFileExifDate) {
+		this.changeFileExifDate = changeFileExifDate;
 	}
 
 	public DateType getBaseDateType() {
@@ -186,76 +186,76 @@ public class ProcessCondition {
 		this.customBaseDate = customBaseDate;
 	}
 
-	public DateModType getBaseDateModType() {
-		return baseDateModType;
+	public DateModType getAdjustmentType() {
+		return adjustmentType;
 	}
 
-	public void setBaseDateModType(DateModType baseDateModType) {
-		this.baseDateModType = baseDateModType;
+	public void setAdjustmentType(DateModType adjustmentType) {
+		this.adjustmentType = adjustmentType;
 	}
 
-	public Integer getBaseDateModYears() {
-		return baseDateModYears;
+	public Integer getAdjustmentYears() {
+		return adjustmentYears;
 	}
 
-	public void setBaseDateModYears(Integer baseDateModYears) {
-		this.baseDateModYears = baseDateModYears;
+	public void setAdjustmentYears(Integer adjustmentYears) {
+		this.adjustmentYears = adjustmentYears;
 	}
 
-	public Integer getBaseDateModMonths() {
-		return baseDateModMonths;
+	public Integer getAdjustmentMonths() {
+		return adjustmentMonths;
 	}
 
-	public void setBaseDateModMonths(Integer baseDateModMonths) {
-		this.baseDateModMonths = baseDateModMonths;
+	public void setAdjustmentMonths(Integer adjustmentMonths) {
+		this.adjustmentMonths = adjustmentMonths;
 	}
 
-	public Integer getBaseDateModDays() {
-		return baseDateModDays;
+	public Integer getAdjustmentDays() {
+		return adjustmentDays;
 	}
 
-	public void setBaseDateModDays(Integer baseDateModDays) {
-		this.baseDateModDays = baseDateModDays;
+	public void setAdjustmentDays(Integer adjustmentDays) {
+		this.adjustmentDays = adjustmentDays;
 	}
 
-	public Integer getBaseDateModHours() {
-		return baseDateModHours;
+	public Integer getAdjustmentHours() {
+		return adjustmentHours;
 	}
 
-	public void setBaseDateModHours(Integer baseDateModHours) {
-		this.baseDateModHours = baseDateModHours;
+	public void setAdjustmentHours(Integer adjustmentHours) {
+		this.adjustmentHours = adjustmentHours;
 	}
 
-	public Integer getBaseDateModMinutes() {
-		return baseDateModMinutes;
+	public Integer getAdjustmentMinutes() {
+		return adjustmentMinutes;
 	}
 
-	public void setBaseDateModMinutes(Integer baseDateModMinutes) {
-		this.baseDateModMinutes = baseDateModMinutes;
+	public void setAdjustmentMinutes(Integer adjustmentMinutes) {
+		this.adjustmentMinutes = adjustmentMinutes;
 	}
 
-	public Integer getBaseDateModSeconds() {
-		return baseDateModSeconds;
+	public Integer getAdjustmentSeconds() {
+		return adjustmentSeconds;
 	}
 
-	public void setBaseDateModSeconds(Integer baseDateModSeconds) {
-		this.baseDateModSeconds = baseDateModSeconds;
+	public void setAdjustmentSeconds(Integer adjustmentSeconds) {
+		this.adjustmentSeconds = adjustmentSeconds;
 	}
 
-	public boolean isRemoveExifTagsAll() {
-		return removeExifTagsAll;
+	public boolean isRemoveExifAll() {
+		return removeExifAll;
 	}
 
-	public void setRemoveExifTagsAll(boolean removeExifTagsAll) {
-		this.removeExifTagsAll = removeExifTagsAll;
+	public void setRemoveExifAll(boolean removeExifAll) {
+		this.removeExifAll = removeExifAll;
 	}
 
-	public boolean isRemoveExifTagsGps() {
-		return removeExifTagsGps;
+	public boolean isRemoveExifGps() {
+		return removeExifGps;
 	}
 
-	public void setRemoveExifTagsGps(boolean removeExifTagsGps) {
-		this.removeExifTagsGps = removeExifTagsGps;
+	public void setRemoveExifGps(boolean removeExifGps) {
+		this.removeExifGps = removeExifGps;
 	}
 
 	public TimeZone getTimeZone() {

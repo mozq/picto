@@ -40,7 +40,7 @@ final class SourceFileScanner {
 	private static final long STATUS_THROTTLE_MS = 100;
 	private static final long STATUS_THROTTLE_NANOS = TimeUnit.MILLISECONDS.toNanos(STATUS_THROTTLE_MS);
 
-	private final Path srcRootPath;
+	private final Path srcFolder;
 	private final List<ProcessCore.CachedFile> cache = new ArrayList<>();
 	private final ResumableFileWalker walker;
 	private final AtomicBoolean cancelled = new AtomicBoolean();
@@ -57,20 +57,20 @@ final class SourceFileScanner {
 	private final Consumer<MatchCountStatus> statusListener;
 
 	SourceFileScanner(
-			Path srcRootPath,
+			Path srcFolder,
 			PictoPathFilter initialFilter,
 			boolean initialIncludeSubfolders,
 			Consumer<MatchCountStatus> statusListener
 			) throws IOException {
-		this.srcRootPath = srcRootPath;
-		this.walker = new ResumableFileWalker(srcRootPath);
+		this.srcFolder = srcFolder;
+		this.walker = new ResumableFileWalker(srcFolder);
 		this.targetFilter = initialFilter;
 		this.targetIncludeSubfolders = initialIncludeSubfolders;
 		this.statusListener = statusListener;
 	}
 
-	Path srcRootPath() {
-		return srcRootPath;
+	Path srcFolder() {
+		return srcFolder;
 	}
 
 	void start() {
@@ -179,7 +179,7 @@ final class SourceFileScanner {
 	}
 
 	private boolean matches(ProcessCore.CachedFile file, PictoPathFilter pathFilter, boolean includeSubfolders) {
-		if (!includeSubfolders && srcRootPath.relativize(file.path()).getNameCount() > 1) {
+		if (!includeSubfolders && srcFolder.relativize(file.path()).getNameCount() > 1) {
 			return false;
 		}
 		try {

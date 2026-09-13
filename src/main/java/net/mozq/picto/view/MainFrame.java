@@ -1948,9 +1948,9 @@ public class MainFrame extends JFrame {
 	private String sourceOptionsSummary() {
 		ProcessConditionValues values = collectProcessConditionValues();
 		List<String> items = new ArrayList<>();
-		if (!values.filePattern.isEmpty()) {
-			String pattern = values.filePattern;
-			if (values.filePatternSyntax == FilePatternSyntax.Regex) {
+		if (!values.srcFileNamePattern.isEmpty()) {
+			String pattern = values.srcFileNamePattern;
+			if (values.srcFileNamePatternSyntax == FilePatternSyntax.Regex) {
 				pattern += " (" + FilePatternSyntax.Regex + ")";
 			}
 			items.add(summaryItem(Messages.getString("MainFrame.src.fileNamePattern"), pattern));
@@ -1958,18 +1958,18 @@ public class MainFrame extends JFrame {
 		if (values.depth != 1) {
 			items.add(checkedItem(Messages.getString("MainFrame.src.includeSubfolders")));
 		}
-		if (values.containsHiddens) {
+		if (values.includeHiddenFiles) {
 			items.add(checkedItem(Messages.getString("MainFrame.src.includeHiddenFiles")));
 		}
-		if (values.sizeRangeFrom != null || values.sizeRangeTo != null) {
+		if (values.fileSizeFrom != null || values.fileSizeTo != null) {
 			String range = rangeText(fieldText(srcOpt.txtFileSizeFrom), fieldText(srcOpt.txtFileSizeTo));
 			items.add(summaryItem(Messages.getString("MainFrame.src.fileSize"), range + " " + srcOpt.cmbFileSizeUnit.getSelectedItem()));
 		}
-		if (values.creationTimeRangeFrom != null || values.creationTimeRangeTo != null) {
+		if (values.createdFrom != null || values.createdTo != null) {
 			items.add(summaryItem(Messages.getString("MainFrame.src.created"),
 					rangeText(dateFieldText(srcOpt.txtCreatedFrom), dateFieldText(srcOpt.txtCreatedTo))));
 		}
-		if (values.modifiedTimeRangeFrom != null || values.modifiedTimeRangeTo != null) {
+		if (values.modifiedFrom != null || values.modifiedTo != null) {
 			items.add(summaryItem(Messages.getString("MainFrame.src.modified"),
 					rangeText(dateFieldText(srcOpt.txtModifiedFrom), dateFieldText(srcOpt.txtModifiedTo))));
 		}
@@ -1979,13 +1979,13 @@ public class MainFrame extends JFrame {
 	private String destinationOptionsSummary() {
 		ProcessConditionValues values = collectProcessConditionValues();
 		List<String> items = new ArrayList<>();
-		if (!values.destSubPathPattern.isBlank() && !DEFAULT_DEST_SUB_PATH_PATTERN.equals(values.destSubPathPattern)) {
-			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), values.destSubPathPattern));
+		if (!values.destSubFilePathPattern.isBlank() && !DEFAULT_DEST_SUB_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
+			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), values.destSubFilePathPattern));
 		}
 		if (values.existingFileMethod != ExistingFileMethod.Confirm) {
 			items.add(summaryItem(Messages.getString("MainFrame.dest.existingFileMethod"), String.valueOf(values.existingFileMethod)));
 		}
-		if (values.checkDigest) {
+		if (values.compareFileDigest) {
 			items.add(checkedItem(Messages.getString("MainFrame.dest.validateFile")));
 		}
 		return joinOptionsSummary(items);
@@ -2007,20 +2007,20 @@ public class MainFrame extends JFrame {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.accessDate")));
 			changesFileDate = true;
 		}
-		if (values.changeExifDate) {
+		if (values.changeFileExifDate) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.exifDate")));
 			changesFileDate = true;
 		}
 		if (changesFileDate) {
 			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.baseDate"), baseDateTypeSummary(values)));
 		}
-		if (changesFileDate && values.baseDateModType != DateModType.None) {
+		if (changesFileDate && values.adjustmentType != DateModType.None) {
 			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.adjustment"), adjustmentSummary(values)));
 		}
-		if (values.removeExifTagsGps) {
+		if (values.removeExifGps) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.exif.removeGps")));
 		}
-		if (values.removeExifTagsAll) {
+		if (values.removeExifAll) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.exif.removeAll")));
 		}
 		return joinOptionsSummary(items);
@@ -2045,14 +2045,14 @@ public class MainFrame extends JFrame {
 	}
 
 	private String adjustmentSummary(ProcessConditionValues values) {
-		String value = String.valueOf(values.baseDateModType);
+		String value = String.valueOf(values.adjustmentType);
 		List<String> amounts = new ArrayList<>();
-		addAdjustmentAmount(amounts, values.baseDateModYears, "Y");
-		addAdjustmentAmount(amounts, values.baseDateModMonths, "M");
-		addAdjustmentAmount(amounts, values.baseDateModDays, "D");
-		addAdjustmentAmount(amounts, values.baseDateModHours, "h");
-		addAdjustmentAmount(amounts, values.baseDateModMinutes, "m");
-		addAdjustmentAmount(amounts, values.baseDateModSeconds, "s");
+		addAdjustmentAmount(amounts, values.adjustmentYears, "Y");
+		addAdjustmentAmount(amounts, values.adjustmentMonths, "M");
+		addAdjustmentAmount(amounts, values.adjustmentDays, "D");
+		addAdjustmentAmount(amounts, values.adjustmentHours, "h");
+		addAdjustmentAmount(amounts, values.adjustmentMinutes, "m");
+		addAdjustmentAmount(amounts, values.adjustmentSeconds, "s");
 		if (!amounts.isEmpty()) {
 			value += " " + String.join(" ", amounts);
 		}
@@ -2175,10 +2175,10 @@ public class MainFrame extends JFrame {
 		}
 
 		if (!dryRun) {
-			InputHistory.record(InputHistory.SRC_FOLDER_KEY, processCondition.getSrcRootPath());
+			InputHistory.record(InputHistory.SRC_FOLDER_KEY, processCondition.getSrcFolder());
 			InputHistory.record(InputHistory.SRC_FILE_NAME_PATTERN_KEY, fieldText(srcOpt.txtFileNamePattern));
 			if (processCondition.getOperationType() != OperationType.Overwrite) {
-				InputHistory.record(InputHistory.DEST_FOLDER_KEY, processCondition.getDestRootPath());
+				InputHistory.record(InputHistory.DEST_FOLDER_KEY, processCondition.getDestFolder());
 			}
 			InputHistory.record(InputHistory.DEST_SUB_FILE_PATH_PATTERN_KEY, fieldText(destOpt.txtSubFilePathPattern));
 		}
@@ -2236,45 +2236,45 @@ public class MainFrame extends JFrame {
 	private ProcessConditionValues collectProcessConditionValues() {
 		ProcessConditionValues values = new ProcessConditionValues();
 
-		values.srcRootDirPath = Paths.get(txtSrcFolder.getText()).normalize();
-		values.filePattern = fieldText(srcOpt.txtFileNamePattern);
-		values.filePatternSyntax = srcOpt.selectedFilePatternSyntax();
-		values.containsHiddens = srcOpt.chkIncludeHiddenFiles.isEnabled() && srcOpt.chkIncludeHiddenFiles.isSelected();
+		values.srcFolder = Paths.get(txtSrcFolder.getText()).normalize();
+		values.srcFileNamePattern = fieldText(srcOpt.txtFileNamePattern);
+		values.srcFileNamePatternSyntax = srcOpt.selectedFilePatternSyntax();
+		values.includeHiddenFiles = srcOpt.chkIncludeHiddenFiles.isEnabled() && srcOpt.chkIncludeHiddenFiles.isSelected();
 		values.followLinks = false;
 		values.depth = (srcOpt.chkIncludeSubfolders.isEnabled() && srcOpt.chkIncludeSubfolders.isSelected()) ? Integer.MAX_VALUE : 1;
 
 		values.operationType = selectedEnumValue(btngrpOperationType, OperationType.class, OperationType.Copy);
 
-		values.destRootDirPath = Paths.get(txtDestFolder.getText()).normalize();
-		values.destSubPathPattern = fieldText(destOpt.txtSubFilePathPattern);
+		values.destFolder = Paths.get(txtDestFolder.getText()).normalize();
+		values.destSubFilePathPattern = fieldText(destOpt.txtSubFilePathPattern);
 		values.existingFileMethod = (ExistingFileMethod)destOpt.cmbExistingFileMethod.getSelectedItem();
-		values.checkDigest = destOpt.chkCompareFileDigest.isEnabled() && destOpt.chkCompareFileDigest.isSelected();
+		values.compareFileDigest = destOpt.chkCompareFileDigest.isEnabled() && destOpt.chkCompareFileDigest.isSelected();
 
 		values.changeFileCreationDate = changes.filedate.chkCreationDate.isEnabled() && changes.filedate.chkCreationDate.isSelected();
 		values.changeFileModifiedDate = changes.filedate.chkModifiedDate.isEnabled() && changes.filedate.chkModifiedDate.isSelected();
 		values.changeFileAccessDate = changes.filedate.chkAccessDate.isEnabled() && changes.filedate.chkAccessDate.isSelected();
-		values.changeExifDate = changes.filedate.chkExifDate.isEnabled() && changes.filedate.chkExifDate.isSelected();
+		values.changeFileExifDate = changes.filedate.chkExifDate.isEnabled() && changes.filedate.chkExifDate.isSelected();
 		values.baseDateType = (DateType)changes.filedate.cmbBaseDate.getSelectedItem();
 		values.customBaseDate = DateTimeText.parseDate(changes.filedate.txtCustomBaseDate.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.baseDateModType = (DateModType)changes.filedate.cmbAdjustmentType.getSelectedItem();
-		values.baseDateModYears = parseInteger(changes.filedate.txtAdjustmentYear.getText());
-		values.baseDateModMonths = parseInteger(changes.filedate.txtAdjustmentMonth.getText());
-		values.baseDateModDays = parseInteger(changes.filedate.txtAdjustmentDay.getText());
-		values.baseDateModHours = parseInteger(changes.filedate.txtAdjustmentHour.getText());
-		values.baseDateModMinutes = parseInteger(changes.filedate.txtAdjustmentMinute.getText());
-		values.baseDateModSeconds = parseInteger(changes.filedate.txtAdjustmentSecond.getText());
+		values.adjustmentType = (DateModType)changes.filedate.cmbAdjustmentType.getSelectedItem();
+		values.adjustmentYears = parseInteger(changes.filedate.txtAdjustmentYear.getText());
+		values.adjustmentMonths = parseInteger(changes.filedate.txtAdjustmentMonth.getText());
+		values.adjustmentDays = parseInteger(changes.filedate.txtAdjustmentDay.getText());
+		values.adjustmentHours = parseInteger(changes.filedate.txtAdjustmentHour.getText());
+		values.adjustmentMinutes = parseInteger(changes.filedate.txtAdjustmentMinute.getText());
+		values.adjustmentSeconds = parseInteger(changes.filedate.txtAdjustmentSecond.getText());
 
-		values.removeExifTagsGps = changes.exif.chkRemoveGps.isEnabled() && changes.exif.chkRemoveGps.isSelected();
-		values.removeExifTagsAll = changes.exif.chkRemoveAll.isEnabled() && changes.exif.chkRemoveAll.isSelected();
+		values.removeExifGps = changes.exif.chkRemoveGps.isEnabled() && changes.exif.chkRemoveGps.isSelected();
+		values.removeExifAll = changes.exif.chkRemoveAll.isEnabled() && changes.exif.chkRemoveAll.isSelected();
 
 		FileSizeUnit fileSizeUnit = (FileSizeUnit)srcOpt.cmbFileSizeUnit.getSelectedItem();
-		values.sizeRangeFrom = convertSize(parseLong(srcOpt.txtFileSizeFrom.getText()), fileSizeUnit);
-		values.sizeRangeTo = convertSize(parseLong(srcOpt.txtFileSizeTo.getText()), fileSizeUnit);
+		values.fileSizeFrom = convertSize(parseLong(srcOpt.txtFileSizeFrom.getText()), fileSizeUnit);
+		values.fileSizeTo = convertSize(parseLong(srcOpt.txtFileSizeTo.getText()), fileSizeUnit);
 
-		values.creationTimeRangeFrom = DateTimeText.parseDate(srcOpt.txtCreatedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.creationTimeRangeTo = DateTimeText.parseDate(srcOpt.txtCreatedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
-		values.modifiedTimeRangeFrom = DateTimeText.parseDate(srcOpt.txtModifiedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.modifiedTimeRangeTo = DateTimeText.parseDate(srcOpt.txtModifiedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+		values.createdFrom = DateTimeText.parseDate(srcOpt.txtCreatedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.createdTo = DateTimeText.parseDate(srcOpt.txtCreatedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+		values.modifiedFrom = DateTimeText.parseDate(srcOpt.txtModifiedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
+		values.modifiedTo = DateTimeText.parseDate(srcOpt.txtModifiedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
 
 		return values;
 	}
@@ -2303,7 +2303,7 @@ public class MainFrame extends JFrame {
 			return null;
 		}
 
-		if (values.checkDigest && (values.changeExifDate || values.removeExifTagsGps || values.removeExifTagsAll)) {
+		if (values.compareFileDigest && (values.changeFileExifDate || values.removeExifGps || values.removeExifAll)) {
 			int ret = JOptionPane.showConfirmDialog(
 					frame,
 					Messages.getString("message.confirm.change.file.with.checkFileDigest"),
@@ -2315,43 +2315,43 @@ public class MainFrame extends JFrame {
 				return null;
 			}
 
-			values.checkDigest = false;
+			values.compareFileDigest = false;
 		}
 
 		PictoPathFilter pathFilter = buildPathFilter(values);
 
 
-		String destSubPathPattern = values.destSubPathPattern.isBlank()
+		String destSubFilePathPattern = values.destSubFilePathPattern.isBlank()
 				? EMPTY_DEST_SUB_PATH_PATTERN
-				: values.destSubPathPattern;
-		NanoTemplate destSubPathTemplate = new NanoTemplate(destSubPathPattern).timeZone(timeZone);
+				: values.destSubFilePathPattern;
+		NanoTemplate destSubFilePathTemplate = new NanoTemplate(destSubFilePathPattern).timeZone(timeZone);
 
 		ProcessCondition processCondition = new ProcessCondition();
 		processCondition.setTimeZone(timeZone);
-		processCondition.setSrcRootPath(values.srcRootDirPath);
-		processCondition.setDestRootPath(values.destRootDirPath);
+		processCondition.setSrcFolder(values.srcFolder);
+		processCondition.setDestFolder(values.destFolder);
 		processCondition.setDepth(values.depth);
 		processCondition.setPathFilter(pathFilter);
 		processCondition.setFollowLinks(values.followLinks);
-		processCondition.setDestSubPathTemplate(destSubPathTemplate);
+		processCondition.setDestSubFilePathTemplate(destSubFilePathTemplate);
 		processCondition.setOperationType(values.operationType);
 		processCondition.setExistingFileMethod(values.existingFileMethod);
-		processCondition.setCheckDigest(values.checkDigest);
+		processCondition.setCompareFileDigest(values.compareFileDigest);
 		processCondition.setChangeFileCreationDate(values.changeFileCreationDate);
 		processCondition.setChangeFileModifiedDate(values.changeFileModifiedDate);
 		processCondition.setChangeFileAccessDate(values.changeFileAccessDate);
-		processCondition.setChangeExifDate(values.changeExifDate);
+		processCondition.setChangeFileExifDate(values.changeFileExifDate);
 		processCondition.setBaseDateType(values.baseDateType);
 		processCondition.setCustomBaseDate(values.customBaseDate);
-		processCondition.setBaseDateModType(values.baseDateModType);
-		processCondition.setBaseDateModYears(values.baseDateModYears);
-		processCondition.setBaseDateModMonths(values.baseDateModMonths);
-		processCondition.setBaseDateModDays(values.baseDateModDays);
-		processCondition.setBaseDateModHours(values.baseDateModHours);
-		processCondition.setBaseDateModMinutes(values.baseDateModMinutes);
-		processCondition.setBaseDateModSeconds(values.baseDateModSeconds);
-		processCondition.setRemoveExifTagsGps(values.removeExifTagsGps);
-		processCondition.setRemoveExifTagsAll(values.removeExifTagsAll);
+		processCondition.setAdjustmentType(values.adjustmentType);
+		processCondition.setAdjustmentYears(values.adjustmentYears);
+		processCondition.setAdjustmentMonths(values.adjustmentMonths);
+		processCondition.setAdjustmentDays(values.adjustmentDays);
+		processCondition.setAdjustmentHours(values.adjustmentHours);
+		processCondition.setAdjustmentMinutes(values.adjustmentMinutes);
+		processCondition.setAdjustmentSeconds(values.adjustmentSeconds);
+		processCondition.setRemoveExifGps(values.removeExifGps);
+		processCondition.setRemoveExifAll(values.removeExifAll);
 		processCondition.setDryRun(dryRun);
 
 		return processCondition;
@@ -2359,12 +2359,12 @@ public class MainFrame extends JFrame {
 
 	private static PictoPathFilter buildPathFilter(ProcessConditionValues values) {
 		PictoPathFilter pathFilter = new PictoPathFilter();
-		pathFilter.setPathPattern(values.filePattern, values.srcRootDirPath, values.filePatternSyntax);
-		pathFilter.setContainsHiddens(values.containsHiddens);
-		pathFilter.setSizeRange(values.sizeRangeFrom, values.sizeRangeTo);
-		pathFilter.setCreationTimeRange(values.creationTimeRangeFrom, values.creationTimeRangeTo);
-		pathFilter.setModifiedTimeRange(values.modifiedTimeRangeFrom, values.modifiedTimeRangeTo);
-//		pathFilter.setAccessTimeRange(from, to);
+		pathFilter.setPathPattern(values.srcFileNamePattern, values.srcFolder, values.srcFileNamePatternSyntax);
+		pathFilter.setIncludeHiddenFiles(values.includeHiddenFiles);
+		pathFilter.setFileSizeRange(values.fileSizeFrom, values.fileSizeTo);
+		pathFilter.setCreatedRange(values.createdFrom, values.createdTo);
+		pathFilter.setModifiedRange(values.modifiedFrom, values.modifiedTo);
+//		pathFilter.setAccessRange(from, to);
 		return pathFilter;
 	}
 
@@ -2398,7 +2398,7 @@ public class MainFrame extends JFrame {
 		}
 		ProcessConditionValues values = collectProcessConditionValues();
 
-		if (!Files.isDirectory(values.srcRootDirPath)) {
+		if (!Files.isDirectory(values.srcFolder)) {
 			if (sourceFileScanner != null) {
 				sourceFileScanner.cancel();
 				sourceFileScanner = null;
@@ -2420,7 +2420,7 @@ public class MainFrame extends JFrame {
 			return;
 		}
 
-		if (sourceFileScanner != null && !sourceFileScanner.srcRootPath().equals(values.srcRootDirPath)) {
+		if (sourceFileScanner != null && !sourceFileScanner.srcFolder().equals(values.srcFolder)) {
 			// The source folder changed while a count was enabled for the previous one; that opt-in doesn't
 			// carry over to a different folder (it could be much larger), so require an explicit re-click.
 			sourceFileScanner.cancel();
@@ -2441,7 +2441,7 @@ public class MainFrame extends JFrame {
 			SourceFileScanner[] holder = new SourceFileScanner[1];
 			try {
 				sourceFileScanner = new SourceFileScanner(
-						values.srcRootDirPath, pathFilter, includeSubfolders,
+						values.srcFolder, pathFilter, includeSubfolders,
 						status -> SwingUtilities.invokeLater(() -> {
 							if (sourceFileScanner == holder[0]) {
 								renderMatchCount(status);

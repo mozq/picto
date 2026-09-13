@@ -58,7 +58,7 @@ final class TemplateVariables {
 	Object resolve(String varName) throws IOException {
 		switch (varName) {
 		case "Now": return new Date();
-		case "SubFilePath": return processCondition.getSrcRootPath().relativize(file).toString();
+		case "SubFilePath": return processCondition.getSrcFolder().relativize(file).toString();
 		case "SubFolderPath": return rootRelativeSubPath.toString();
 		case "FileName": return file.getFileName().toString();
 		case "BaseName": return FileNameSupport.baseName(file.getFileName().toString());
@@ -67,7 +67,7 @@ final class TemplateVariables {
 		case "CreationDate": return processCondition.isChangeFileCreationDate() ? baseDate : new Date(attrs.creationTime().toMillis());
 		case "ModifiedDate": return processCondition.isChangeFileModifiedDate() ? baseDate : new Date(attrs.lastModifiedTime().toMillis());
 		case "AccessDate": return processCondition.isChangeFileAccessDate() ? baseDate : new Date(attrs.lastAccessTime().toMillis());
-		case "TakenDate": return processCondition.isChangeExifDate() ? baseDate : ExifMetadataSupport.photoTakenDate(file, imageMetadata());
+		case "TakenDate": return processCondition.isChangeFileExifDate() ? baseDate : ExifMetadataSupport.photoTakenDate(file, imageMetadata());
 		case "Width": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);
 		case "Height": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);
 		case "FNumber": return ExifMetadataSupport.doubleValue(imageMetadata(), ExifTagConstants.EXIF_TAG_FNUMBER);

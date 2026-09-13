@@ -36,11 +36,11 @@ public class PictoPathFilter implements Filter<Path> {
 	private PathMatcher pathMatcher = null;
 	private Path rootPath = null;
 	private boolean filenameMatch = false;
-	private boolean containsHiddens = false;
-	private Range<FileTime> creationTimeRange = null;
-	private Range<FileTime> modifiedTimeRange = null;
-	private Range<FileTime> accessTimeRange = null;
-	private Range<Long> sizeRange = null;
+	private boolean includeHiddenFiles = false;
+	private Range<FileTime> createdRange = null;
+	private Range<FileTime> modifiedRange = null;
+	private Range<FileTime> accessRange = null;
+	private Range<Long> fileSizeRange = null;
 
 
 	public PictoPathFilter() {
@@ -62,52 +62,52 @@ public class PictoPathFilter implements Filter<Path> {
 		return fileSystem.getPathMatcher((syntax == FilePatternSyntax.Regex ? "regex:" : "glob:") + pathPattern);
 	}
 
-	public PictoPathFilter setContainsHiddens(boolean containsHiddens) {
-		this.containsHiddens = containsHiddens;
+	public PictoPathFilter setIncludeHiddenFiles(boolean includeHiddenFiles) {
+		this.includeHiddenFiles = includeHiddenFiles;
 		return this;
 	}
 
-	public PictoPathFilter setCreationTimeRange(FileTime from, FileTime to) {
-		this.creationTimeRange = Range.of(from, to);
+	public PictoPathFilter setCreatedRange(FileTime from, FileTime to) {
+		this.createdRange = Range.of(from, to);
 		return this;
 	}
 
-	public PictoPathFilter setCreationTimeRange(Instant from, Instant to) {
-		return setCreationTimeRange(toFileTime(from), toFileTime(to));
+	public PictoPathFilter setCreatedRange(Instant from, Instant to) {
+		return setCreatedRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setCreationTimeRange(Date from, Date to) {
-		return setCreationTimeRange(toFileTime(from), toFileTime(to));
+	public PictoPathFilter setCreatedRange(Date from, Date to) {
+		return setCreatedRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setModifiedTimeRange(FileTime from, FileTime to) {
-		this.modifiedTimeRange = Range.of(from, to);
+	public PictoPathFilter setModifiedRange(FileTime from, FileTime to) {
+		this.modifiedRange = Range.of(from, to);
 		return this;
 	}
 
-	public PictoPathFilter setModifiedTimeRange(Instant from, Instant to) {
-		return setModifiedTimeRange(toFileTime(from), toFileTime(to));
+	public PictoPathFilter setModifiedRange(Instant from, Instant to) {
+		return setModifiedRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setModifiedTimeRange(Date from, Date to) {
-		return setModifiedTimeRange(toFileTime(from), toFileTime(to));
+	public PictoPathFilter setModifiedRange(Date from, Date to) {
+		return setModifiedRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setAccessTimeRange(FileTime from, FileTime to) {
-		this.accessTimeRange = Range.of(from, to);
+	public PictoPathFilter setAccessRange(FileTime from, FileTime to) {
+		this.accessRange = Range.of(from, to);
 		return this;
 	}
 
-	public PictoPathFilter setAccessTimeRange(Instant from, Instant to) {
-		return setAccessTimeRange(toFileTime(from), toFileTime(to));
+	public PictoPathFilter setAccessRange(Instant from, Instant to) {
+		return setAccessRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setAccessTimeRange(Date from, Date to) {
-		return setAccessTimeRange(toFileTime(from), toFileTime(to));
+	public PictoPathFilter setAccessRange(Date from, Date to) {
+		return setAccessRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setSizeRange(Long from, Long to) {
-		this.sizeRange = Range.of(from, to);
+	public PictoPathFilter setFileSizeRange(Long from, Long to) {
+		this.fileSizeRange = Range.of(from, to);
 		return this;
 	}
 
@@ -115,24 +115,24 @@ public class PictoPathFilter implements Filter<Path> {
 		return pathMatcher;
 	}
 
-	public boolean isContainsHiddens() {
-		return containsHiddens;
+	public boolean isIncludeHiddenFiles() {
+		return includeHiddenFiles;
 	}
 
-	public Range<FileTime> getCreationTimeRange() {
-		return creationTimeRange;
+	public Range<FileTime> getCreatedRange() {
+		return createdRange;
 	}
 
-	public Range<FileTime> getModifiedTimeRange() {
-		return modifiedTimeRange;
+	public Range<FileTime> getModifiedRange() {
+		return modifiedRange;
 	}
 
-	public Range<FileTime> getAccessTimeRange() {
-		return accessTimeRange;
+	public Range<FileTime> getAccessRange() {
+		return accessRange;
 	}
 
-	public Range<Long> getSizeRange() {
-		return sizeRange;
+	public Range<Long> getFileSizeRange() {
+		return fileSizeRange;
 	}
 
 	private static FileTime toFileTime(Instant instant) {
@@ -148,10 +148,10 @@ public class PictoPathFilter implements Filter<Path> {
 
 		BasicFileAttributes fileAttrs = null;
 
-		if (this.creationTimeRange != null
-				|| this.modifiedTimeRange != null
-				|| this.accessTimeRange != null
-				|| this.sizeRange != null) {
+		if (this.createdRange != null
+				|| this.modifiedRange != null
+				|| this.accessRange != null
+				|| this.fileSizeRange != null) {
 			fileAttrs = Files.readAttributes(path, BasicFileAttributes.class);
 		}
 
@@ -175,39 +175,39 @@ public class PictoPathFilter implements Filter<Path> {
 			}
 		}
 
-		if (!this.containsHiddens) {
+		if (!this.includeHiddenFiles) {
 			if (Files.isHidden(path)) {
 				return false;
 			}
 		}
 
-		if (fileAttrs == null && (this.creationTimeRange != null
-				|| this.modifiedTimeRange != null
-				|| this.accessTimeRange != null
-				|| this.sizeRange != null)) {
+		if (fileAttrs == null && (this.createdRange != null
+				|| this.modifiedRange != null
+				|| this.accessRange != null
+				|| this.fileSizeRange != null)) {
 			fileAttrs = Files.readAttributes(path, BasicFileAttributes.class);
 		}
 
-		if (this.creationTimeRange != null) {
-			if (!this.creationTimeRange.contains(fileAttrs.creationTime())) {
+		if (this.createdRange != null) {
+			if (!this.createdRange.contains(fileAttrs.creationTime())) {
 				return false;
 			}
 		}
 
-		if (this.modifiedTimeRange != null) {
-			if (!this.modifiedTimeRange.contains(fileAttrs.lastModifiedTime())) {
+		if (this.modifiedRange != null) {
+			if (!this.modifiedRange.contains(fileAttrs.lastModifiedTime())) {
 				return false;
 			}
 		}
 
-		if (this.accessTimeRange != null) {
-			if (!this.accessTimeRange.contains(fileAttrs.lastAccessTime())) {
+		if (this.accessRange != null) {
+			if (!this.accessRange.contains(fileAttrs.lastAccessTime())) {
 				return false;
 			}
 		}
 
-		if (this.sizeRange != null) {
-			if (!this.sizeRange.contains(fileAttrs.size())) {
+		if (this.fileSizeRange != null) {
+			if (!this.fileSizeRange.contains(fileAttrs.size())) {
 				return false;
 			}
 		}

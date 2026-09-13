@@ -120,10 +120,10 @@ class ProcessRunnerTest {
 	private ProcessCondition condition(Path srcRoot, Path destRoot) {
 		ProcessCondition condition = new ProcessCondition();
 		condition.setTimeZone(UTC);
-		condition.setSrcRootPath(srcRoot);
-		condition.setDestRootPath(destRoot);
+		condition.setSrcFolder(srcRoot);
+		condition.setDestFolder(destRoot);
 		condition.setPathFilter(new PictoPathFilter());
-		condition.setDestSubPathTemplate(new NanoTemplate("${FileName}").timeZone(UTC));
+		condition.setDestSubFilePathTemplate(new NanoTemplate("${FileName}").timeZone(UTC));
 		condition.setDepth(Integer.MAX_VALUE);
 		condition.setOperationType(OperationType.Copy);
 		condition.setExistingFileMethod(ExistingFileMethod.Overwrite);

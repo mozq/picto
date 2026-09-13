@@ -88,14 +88,14 @@ class ProcessConditionValidatorTest {
 		Path dest = Files.createDirectories(tempDir.resolve("dest"));
 
 		ProcessConditionValues values = values(src, dest);
-		values.destSubPathPattern = "${";
+		values.destSubFilePathPattern = "${";
 
 		assertEquals(ProcessConditionValidator.Field.DESTINATION_SUBFOLDER,
 				ProcessConditionValidator.validate(values).field());
 
-		values.destSubPathPattern = "${FileName}";
-		values.sizeRangeFrom = 20L;
-		values.sizeRangeTo = 10L;
+		values.destSubFilePathPattern = "${FileName}";
+		values.fileSizeFrom = 20L;
+		values.fileSizeTo = 10L;
 
 		assertEquals(ProcessConditionValidator.Field.NONE,
 				ProcessConditionValidator.validate(values).field());
@@ -107,7 +107,7 @@ class ProcessConditionValidatorTest {
 		Path dest = Files.createDirectories(tempDir.resolve("dest"));
 
 		ProcessConditionValues values = values(src, dest);
-		values.filePattern = "[";
+		values.srcFileNamePattern = "[";
 
 		assertEquals(ProcessConditionValidator.Field.FILE_PATTERN,
 				ProcessConditionValidator.validate(values).field());
@@ -115,16 +115,16 @@ class ProcessConditionValidatorTest {
 
 	private static ProcessConditionValues values(Path src, Path dest) {
 		ProcessConditionValues values = new ProcessConditionValues();
-		values.srcRootDirPath = src;
-		values.destRootDirPath = dest;
+		values.srcFolder = src;
+		values.destFolder = dest;
 		values.operationType = OperationType.Copy;
-		values.filePattern = "*";
-		values.filePatternSyntax = FilePatternSyntax.Glob;
-		values.destSubPathPattern = "${FileName}";
-		values.creationTimeRangeFrom = new Date(0);
-		values.creationTimeRangeTo = new Date(1);
-		values.modifiedTimeRangeFrom = new Date(0);
-		values.modifiedTimeRangeTo = new Date(1);
+		values.srcFileNamePattern = "*";
+		values.srcFileNamePatternSyntax = FilePatternSyntax.Glob;
+		values.destSubFilePathPattern = "${FileName}";
+		values.createdFrom = new Date(0);
+		values.createdTo = new Date(1);
+		values.modifiedFrom = new Date(0);
+		values.modifiedTo = new Date(1);
 		return values;
 	}
 }

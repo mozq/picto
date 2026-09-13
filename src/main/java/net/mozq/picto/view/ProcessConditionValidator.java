@@ -91,15 +91,15 @@ final class ProcessConditionValidator {
 		if (values.operationType == OperationType.Overwrite) {
 			return null;
 		}
-		Path srcRootDirPath = realPath(values.srcRootDirPath);
-		Path destRootDirPath = realPath(values.destRootDirPath);
-		if (srcRootDirPath.equals(destRootDirPath)) {
+		Path srcFolder = realPath(values.srcFolder);
+		Path destFolder = realPath(values.destFolder);
+		if (srcFolder.equals(destFolder)) {
 			return new Result(Messages.getString("message.warn.folder.same"), Field.NONE);
 		}
-		if (destRootDirPath.startsWith(srcRootDirPath)) {
+		if (destFolder.startsWith(srcFolder)) {
 			return new Result(Messages.getString("message.warn.folder.dest.under.src"), Field.DESTINATION_FOLDER);
 		}
-		if (srcRootDirPath.startsWith(destRootDirPath)) {
+		if (srcFolder.startsWith(destFolder)) {
 			return new Result(Messages.getString("message.warn.folder.src.under.dest"), Field.SOURCE_FOLDER);
 		}
 		return null;
@@ -107,7 +107,7 @@ final class ProcessConditionValidator {
 
 	private static Result validateDestSubPathPattern(ProcessConditionValues values) {
 		try {
-			new NanoTemplate(values.destSubPathPattern).render(Map.of());
+			new NanoTemplate(values.destSubFilePathPattern).render(Map.of());
 			return null;
 		} catch (NanoTemplateException _) {
 			return new Result(Messages.getString("message.warn.invalid.destSubPath.pattern"), Field.DESTINATION_SUBFOLDER);
@@ -116,7 +116,7 @@ final class ProcessConditionValidator {
 
 	private static Result validateFilePattern(ProcessConditionValues values) {
 		try {
-			PictoPathFilter.buildPathMatcher(values.filePattern, values.filePatternSyntax);
+			PictoPathFilter.buildPathMatcher(values.srcFileNamePattern, values.srcFileNamePatternSyntax);
 			return null;
 		} catch (Exception e) {
 			return new Result(Messages.getString("message.warn.invalid.filePattern", e.getLocalizedMessage()), Field.FILE_PATTERN);
@@ -124,15 +124,15 @@ final class ProcessConditionValidator {
 	}
 
 	private static Result validateRanges(ProcessConditionValues values) {
-		Result result = validateRange(values.sizeRangeFrom, values.sizeRangeTo, "message.warn.sizeRange.is.invalid.range");
+		Result result = validateRange(values.fileSizeFrom, values.fileSizeTo, "message.warn.sizeRange.is.invalid.range");
 		if (result != null) {
 			return result;
 		}
-		result = validateRange(values.creationTimeRangeFrom, values.creationTimeRangeTo, "message.warn.creationTimeRange.is.invalid.range");
+		result = validateRange(values.createdFrom, values.createdTo, "message.warn.creationTimeRange.is.invalid.range");
 		if (result != null) {
 			return result;
 		}
-		return validateRange(values.modifiedTimeRangeFrom, values.modifiedTimeRangeTo, "message.warn.modifiedTimeRange.is.invalid.range");
+		return validateRange(values.modifiedFrom, values.modifiedTo, "message.warn.modifiedTimeRange.is.invalid.range");
 	}
 
 	private static <T extends Comparable<T>> Result validateRange(T from, T to, String messageKey) {
