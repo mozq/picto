@@ -24,7 +24,6 @@ import java.awt.Font;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.Dimension;
 import java.awt.Cursor;
@@ -40,37 +39,23 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Year;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.function.Consumer;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
-import javax.swing.JProgressBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -85,23 +70,18 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.JTextComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
-import net.mozq.appsettings.AppSettings;
-import net.mozq.appsettings.AppSettingsDirectory;
 import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
 import net.mozq.picto.AppMain;
-import net.mozq.picto.LegacyPictoFileImport;
 import net.mozq.picto.core.PictoPathFilter;
 import net.mozq.picto.core.ProcessCondition;
 import net.mozq.picto.enums.DateModType;
@@ -110,7 +90,6 @@ import net.mozq.picto.enums.ExistingFileMethod;
 import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.FileSizeUnit;
 import net.mozq.picto.enums.OperationType;
-import net.mozq.picto.util.FileNameSupport;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -121,7 +100,6 @@ import javax.swing.JMenuItem;
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 
-	private static final String DEFAULT_DEST_SUB_FILE_PATH_PATTERN = "${FileName}";
 	private static final String EMPTY_DEST_SUB_FILE_PATH_PATTERN = "${SubFilePath}";
 	private static final int WINDOW_PADDING = 10;
 	private static final int MAIN_LABEL_WIDTH = 52;
@@ -130,7 +108,7 @@ public class MainFrame extends JFrame {
 	private static final int SECTION_GAP = 10;
 	private static final int OPERATION_BOTTOM_GAP = 14;
 	private static final int INLINE_HGAP = 6;
-	private static final int INLINE_VGAP = 2;
+	static final int INLINE_VGAP = 2;
 	private static final int RUN_SPLIT_BUTTON_OVERLAP = 4;
 	private static final int RUN_MENU_BUTTON_WIDTH = 28;
 	private static final int RUN_STATUS_ICON_SIZE = 24;
@@ -142,10 +120,6 @@ public class MainFrame extends JFrame {
 	private static final int OPTIONS_BODY_SHADE_DARK = -8;
 	private static final int MID_BRIGHTNESS = 128;
 	private static final String CHECKED_ITEM_PREFIX = "✓ ";
-	private static final String PRESETS_DIR_NAME = "presets";
-	static final String PRESET_FILE_NAME_EXT = "conf";
-	private static final int PRESET_SHORTCUT_COUNT = 9;
-	private static final String PICTO_FILE_NAME_EXT = "picto";
 	private static final int MATCH_COUNT_DEBOUNCE_MS = 400;
 
 	private TimeZone timeZone = TimeZone.getDefault();
@@ -201,6 +175,8 @@ public class MainFrame extends JFrame {
 	private boolean processing;
 	private JLabel lblRunStatus;
 	private ProcessDialog lastProcessDialog;
+	private MainFrameSettings mainFrameSettings;
+	private PresetManager presetManager;
 
 	private static final class MainFrameState {
 		private final Rectangle bounds;
@@ -239,7 +215,7 @@ public class MainFrame extends JFrame {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				try {
-					storeSettings();
+					mainFrameSettings.store();
 				} catch (IOException e1) {
 					JOptionPane.showMessageDialog(
 							null,
@@ -280,8 +256,11 @@ public class MainFrame extends JFrame {
 		matchCountTimer = new Timer(MATCH_COUNT_DEBOUNCE_MS, _ -> updateMatchCountTarget());
 		matchCountTimer.setRepeats(false);
 
+		mainFrameSettings = new MainFrameSettings(txtSrcFolder, srcOpt, btngrpOperationType, txtDestFolder, destOpt, changes);
+		presetManager = new PresetManager(this, mnPresets, mainFrameSettings);
+
 		installOptionsSummaryListeners();
-		loadSettings();
+		mainFrameSettings.load();
 		changeEnableDestConditions();
 		changeEnableFileDateModConditions();
 		restoreFrameState(state);
@@ -299,7 +278,7 @@ public class MainFrame extends JFrame {
 		mnPresets.setMnemonic(KeyEvent.VK_P);
 		mnPresets.addMenuListener(new MenuListener() {
 			public void menuSelected(MenuEvent e) {
-				rebuildPresetsMenu();
+				presetManager.rebuildPresetsMenu();
 			}
 
 			public void menuDeselected(MenuEvent e) {
@@ -371,7 +350,7 @@ public class MainFrame extends JFrame {
 		mntmImportData.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
 		mntmImportData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				promptImportData();
+				presetManager.promptImportData();
 			}
 		});
 
@@ -380,7 +359,7 @@ public class MainFrame extends JFrame {
 		mntmExportData.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK));
 		mntmExportData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				promptExportData();
+				presetManager.promptExportData();
 			}
 		});
 
@@ -713,13 +692,13 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-		for (int digit = 1; digit <= PRESET_SHORTCUT_COUNT; digit++) {
+		for (int digit = 1; digit <= PresetManager.PRESET_SHORTCUT_COUNT; digit++) {
 			int index = digit - 1;
 			String actionKey = "picto.loadPreset" + digit;
-			rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(presetShortcutKeyStroke(digit), actionKey);
+			rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(PresetManager.presetShortcutKeyStroke(digit), actionKey);
 			rootPane.getActionMap().put(actionKey, new AbstractAction() {
 				public void actionPerformed(ActionEvent e) {
-					loadPresetByIndex(index);
+					presetManager.loadPresetByIndex(index);
 				}
 			});
 		}
@@ -742,770 +721,6 @@ public class MainFrame extends JFrame {
 			}
 		});
 
-	}
-
-	protected void loadSettings() {
-		applySettingsFrom(App.settings());
-	}
-
-	/**
-	 * One persisted setting's key paired with how to load it into its Swing field and how to read it back
-	 * out, declared once so {@link #applySettingsFrom} and {@link #captureSettingsInto} can't drift apart on
-	 * the key, default, or field a future change touches only one side of.
-	 */
-	private record SettingBinding(
-			Consumer<AppSettings> applyFrom,
-			Consumer<AppSettings> captureInto,
-			Consumer<AppSettings> applyDefault) {
-		static SettingBinding text(JTextComponent field, String key, String defaultValue) {
-			return new SettingBinding(
-					conf -> field.setText(conf.getString(key, defaultValue)),
-					conf -> conf.set(key, field.getText()),
-					conf -> conf.set(key, defaultValue));
-		}
-
-		static SettingBinding flag(AbstractButton button, String key, boolean defaultValue) {
-			return new SettingBinding(
-					conf -> button.setSelected(conf.getBoolean(key, defaultValue)),
-					conf -> conf.set(key, button.isSelected()),
-					conf -> conf.set(key, defaultValue));
-		}
-
-		static <E extends Enum<E>> SettingBinding choice(JComboBox<E> combo, String key, Class<E> type, E defaultValue) {
-			return new SettingBinding(
-					conf -> combo.setSelectedItem(conf.getEnum(key, type, defaultValue)),
-					conf -> conf.set(key, combo.getSelectedItem()),
-					conf -> conf.set(key, defaultValue));
-		}
-
-		/**
-		 * Like {@link #choice}, but for a mutually exclusive set of radio buttons instead of a combo box.
-		 * Each button in {@code group} must have its action command set to the name of the enum constant it
-		 * represents (as {@link MainFrame#buildOperationPanel} does for the operation-type radios), so this
-		 * can read and set the selection generically instead of every caller writing its own button-to-enum
-		 * mapping.
-		 */
-		static <E extends Enum<E>> SettingBinding radioChoice(ButtonGroup group, String key, Class<E> type, E defaultValue) {
-			return new SettingBinding(
-					conf -> selectButtonFor(group, conf.getEnum(key, type, defaultValue)),
-					conf -> conf.set(key, selectedEnumValue(group, type, defaultValue)),
-					conf -> conf.set(key, defaultValue));
-		}
-	}
-
-	private static <E extends Enum<E>> void selectButtonFor(ButtonGroup group, E value) {
-		for (java.util.Enumeration<AbstractButton> e = group.getElements(); e.hasMoreElements();) {
-			AbstractButton button = e.nextElement();
-			if (button.getActionCommand().equals(value.name())) {
-				button.setSelected(true);
-				return;
-			}
-		}
-	}
-
-	private static <E extends Enum<E>> E selectedEnumValue(ButtonGroup group, Class<E> type, E defaultValue) {
-		for (java.util.Enumeration<AbstractButton> e = group.getElements(); e.hasMoreElements();) {
-			AbstractButton button = e.nextElement();
-			if (button.isSelected()) {
-				return Enum.valueOf(type, button.getActionCommand());
-			}
-		}
-		return defaultValue;
-	}
-
-	private List<SettingBinding> settingBindings() {
-		return List.of(
-				SettingBinding.text(txtSrcFolder, "src.folder", ""),
-				SettingBinding.text(srcOpt.txtFileNamePattern, "src.file.name.pattern", ""),
-				SettingBinding.choice(srcOpt.cmbFileNamePatternSyntax, "src.file.name.pattern.syntax", FilePatternSyntax.class, FilePatternSyntax.Glob),
-				SettingBinding.flag(srcOpt.chkIncludeSubfolders, "src.include.subfolders", true),
-				SettingBinding.flag(srcOpt.chkIncludeHiddenFiles, "src.include.hidden.files", false),
-
-				SettingBinding.text(srcOpt.txtFileSizeFrom, "src.file.size.from", ""),
-				SettingBinding.text(srcOpt.txtFileSizeTo, "src.file.size.to", ""),
-				SettingBinding.choice(srcOpt.cmbFileSizeUnit, "src.file.size.unit", FileSizeUnit.class, FileSizeUnit.MB),
-				SettingBinding.text(srcOpt.txtCreatedFrom, "src.created.from", ""),
-				SettingBinding.text(srcOpt.txtCreatedTo, "src.created.to", ""),
-				SettingBinding.text(srcOpt.txtModifiedFrom, "src.modified.from", ""),
-				SettingBinding.text(srcOpt.txtModifiedTo, "src.modified.to", ""),
-
-				SettingBinding.radioChoice(btngrpOperationType, "operation.type", OperationType.class, OperationType.Copy),
-
-				SettingBinding.text(txtDestFolder, "dest.folder", ""),
-				SettingBinding.text(destOpt.txtSubFilePathPattern, "dest.sub.file.path.pattern", DEFAULT_DEST_SUB_FILE_PATH_PATTERN),
-				SettingBinding.choice(destOpt.cmbExistingFileMethod, "dest.existing.file.method", ExistingFileMethod.class, ExistingFileMethod.Confirm),
-				SettingBinding.flag(destOpt.chkCheckFileDigest, "dest.check.file.digest", false),
-
-				SettingBinding.flag(changes.filedate.chkCreationDate, "changes.filedate.creation.date", false),
-				SettingBinding.flag(changes.filedate.chkModifiedDate, "changes.filedate.modified.date", false),
-				SettingBinding.flag(changes.filedate.chkAccessDate, "changes.filedate.access.date", false),
-				SettingBinding.flag(changes.filedate.chkExifDate, "changes.filedate.exif.date", false),
-				SettingBinding.choice(changes.filedate.cmbBaseDate, "changes.filedate.base.date.type", DateType.class, DateType.FileModifiedDate),
-				SettingBinding.text(changes.filedate.txtCustomBaseDate, "changes.filedate.custom.base.date", ""),
-				SettingBinding.choice(changes.filedate.cmbAdjustmentType, "changes.filedate.adjustment.type", DateModType.class, DateModType.None),
-				SettingBinding.text(changes.filedate.txtAdjustmentYears, "changes.filedate.adjustment.years", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentMonths, "changes.filedate.adjustment.months", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentDays, "changes.filedate.adjustment.days", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentHours, "changes.filedate.adjustment.hours", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentMinutes, "changes.filedate.adjustment.minutes", ""),
-				SettingBinding.text(changes.filedate.txtAdjustmentSeconds, "changes.filedate.adjustment.seconds", ""),
-				SettingBinding.flag(changes.exif.chkRemoveGps, "changes.exif.remove.gps", false),
-				SettingBinding.flag(changes.exif.chkRemoveAll, "changes.exif.remove.all", false));
-	}
-
-	private void applySettingsFrom(AppSettings conf) {
-		for (SettingBinding binding : settingBindings()) {
-			binding.applyFrom().accept(conf);
-		}
-	}
-
-	protected void storeSettings() throws IOException {
-		AppSettings conf = App.settings();
-
-		captureSettingsInto(conf);
-
-		conf.store();
-		App.deleteMigratedLegacySettingsIfNeeded();
-	}
-
-	private void captureSettingsInto(AppSettings conf) {
-		for (SettingBinding binding : settingBindings()) {
-			binding.captureInto().accept(conf);
-		}
-	}
-
-	/**
-	 * Writes each bound setting's schema default into {@code conf}, without reading or touching any Swing
-	 * component. Used as the base for a newly imported preset, so a key the import doesn't mention still
-	 * ends up with the same value a never-customized preset would have, rather than being left undefined.
-	 */
-	void applyDefaultSettings(AppSettings conf) {
-		for (SettingBinding binding : settingBindings()) {
-			binding.applyDefault().accept(conf);
-		}
-	}
-
-	private void rebuildPresetsMenu() {
-		mnPresets.removeAll();
-
-		List<PresetEntry> presets = listPresets();
-		if (presets.isEmpty()) {
-			JMenuItem emptyItem = new JMenuItem(Messages.getString("MainFrame.menu.presets.empty"));
-			emptyItem.setEnabled(false);
-			mnPresets.add(emptyItem);
-		} else {
-			int digit = 1;
-			for (PresetEntry preset : presets) {
-				JMenuItem presetItem = new JMenuItem(preset.name());
-				if (digit <= PRESET_SHORTCUT_COUNT) {
-					presetItem.setAccelerator(presetShortcutKeyStroke(digit));
-				}
-				presetItem.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						confirmAndLoadPreset(preset);
-					}
-				});
-				mnPresets.add(presetItem);
-				digit++;
-			}
-		}
-
-		mnPresets.addSeparator();
-
-		JMenuItem mntmDefaultSettings = new JMenuItem(Messages.getString("MainFrame.menu.presets.default"));
-		mntmDefaultSettings.setMnemonic(KeyEvent.VK_D);
-		mntmDefaultSettings.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				confirmAndResetToDefaultSettings();
-			}
-		});
-		mnPresets.add(mntmDefaultSettings);
-
-		mnPresets.addSeparator();
-
-		JMenuItem mntmSavePreset = new JMenuItem(Messages.getString("MainFrame.menu.presets.save"));
-		mntmSavePreset.setMnemonic(KeyEvent.VK_S);
-		mntmSavePreset.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				promptSaveCurrentAsPreset();
-			}
-		});
-		mnPresets.add(mntmSavePreset);
-
-		JMenuItem mntmManagePresets = new JMenuItem(Messages.getString("MainFrame.menu.presets.manage"));
-		mntmManagePresets.setMnemonic(KeyEvent.VK_M);
-		mntmManagePresets.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				PresetsManageDialog manageDialog = new PresetsManageDialog(MainFrame.this);
-				manageDialog.setModalityType(ModalityType.DOCUMENT_MODAL);
-				manageDialog.setLocationRelativeTo(frame);
-				manageDialog.setVisible(true);
-			}
-		});
-		mnPresets.add(mntmManagePresets);
-	}
-
-	private void promptSaveCurrentAsPreset() {
-		JComboBox<String> nameComboBox = new JComboBox<>();
-		nameComboBox.setEditable(true);
-		for (PresetEntry preset : listPresets()) {
-			nameComboBox.addItem(preset.name());
-		}
-		nameComboBox.setSelectedItem("");
-
-		JPanel panel = new JPanel(new BorderLayout(0, INLINE_VGAP));
-		panel.add(new JLabel(Messages.getString("message.prompt.preset.name")), BorderLayout.NORTH);
-		panel.add(nameComboBox, BorderLayout.CENTER);
-
-		int result = JOptionPane.showConfirmDialog(
-				frame,
-				panel,
-				Messages.getString("MainFrame.menu.presets.save"),
-				JOptionPane.OK_CANCEL_OPTION,
-				JOptionPane.PLAIN_MESSAGE
-				);
-		if (result != JOptionPane.OK_OPTION) {
-			return;
-		}
-
-		Object editorItem = nameComboBox.getEditor().getItem();
-		String name = editorItem == null ? "" : editorItem.toString().trim();
-		if (name.isEmpty()) {
-			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.preset.name.empty"), null, JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
-		boolean alreadyExists = false;
-		for (PresetEntry preset : listPresets()) {
-			if (preset.name().equals(name)) {
-				alreadyExists = true;
-				break;
-			}
-		}
-		if (alreadyExists && !confirmYesNo("message.confirm.preset.overwrite", name)) {
-			return;
-		}
-
-		try {
-			saveCurrentSettingsAsPreset(name);
-		} catch (IOException e1) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.error.preset.save", e1.getLocalizedMessage()),
-					null,
-					JOptionPane.ERROR_MESSAGE
-					);
-			App.handleError(e1.getMessage(), e1);
-		}
-	}
-
-	private void saveCurrentSettingsAsPreset(String name) throws IOException {
-		AppSettingsDirectory dir = presetsDirectory();
-		dir.ensureExists();
-
-		String fileName = null;
-		for (PresetEntry preset : listPresets()) {
-			if (preset.name().equals(name)) {
-				fileName = preset.fileName();
-				break;
-			}
-		}
-		if (fileName == null) {
-			long timestamp = System.currentTimeMillis();
-			fileName = dir.uniqueFileName(i -> "preset-" + timestamp + "-" + i + "." + PRESET_FILE_NAME_EXT);
-		}
-
-		AppSettings presetSettings = AppSettings.of(dir, fileName);
-		captureSettingsInto(presetSettings);
-		presetSettings.addComment(name);
-		presetSettings.store();
-	}
-
-	private static KeyStroke presetShortcutKeyStroke(int digit) {
-		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
-		return KeyStroke.getKeyStroke(KeyEvent.VK_0 + digit, shortcutKeyMask | InputEvent.SHIFT_DOWN_MASK);
-	}
-
-	private void loadPresetByIndex(int index) {
-		List<PresetEntry> presets = listPresets();
-		if (index >= presets.size()) {
-			return;
-		}
-		confirmAndLoadPreset(presets.get(index));
-	}
-
-	private void confirmAndLoadPreset(PresetEntry preset) {
-		if (!confirmYesNo("message.confirm.preset.load", preset.name())) {
-			return;
-		}
-
-		try {
-			loadPreset(preset.fileName());
-		} catch (IOException e1) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.error.preset.load", e1.getLocalizedMessage()),
-					null,
-					JOptionPane.ERROR_MESSAGE
-					);
-			App.handleError(e1.getMessage(), e1);
-		}
-	}
-
-	private void loadPreset(String fileName) throws IOException {
-		AppSettings presetSettings = AppSettings.of(presetsDirectory(), fileName);
-		presetSettings.load();
-		applySettingsSource(presetSettings);
-	}
-
-	private void confirmAndResetToDefaultSettings() {
-		if (!confirmYesNo("message.confirm.settings.default")) {
-			return;
-		}
-
-		applyDefaultSettings(App.settings());
-		loadSettings();
-	}
-
-	/** Copies every key from {@code source} into the live settings, then refreshes the UI from it. */
-	private void applySettingsSource(AppSettings source) {
-		AppSettings conf = App.settings();
-		for (String key : source.keySet()) {
-			conf.set(key, source.get(key));
-		}
-
-		loadSettings();
-	}
-
-	/** Shows a Yes/No confirmation dialog for {@code messageKey} and reports whether the user chose Yes. */
-	private boolean confirmYesNo(String messageKey, Object... args) {
-		int result = JOptionPane.showConfirmDialog(
-				frame,
-				Messages.getString(messageKey, args),
-				null,
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.WARNING_MESSAGE
-				);
-		return result == JOptionPane.YES_OPTION;
-	}
-
-	void renamePreset(String fileName, String newName) throws IOException {
-		AppSettings presetSettings = AppSettings.of(presetsDirectory(), fileName);
-		presetSettings.load();
-		presetSettings.clearComments();
-		presetSettings.addComment(newName);
-		presetSettings.store();
-	}
-
-	void deletePreset(String fileName) throws IOException {
-		Files.delete(AppSettings.of(presetsDirectory(), fileName).path());
-	}
-
-	private AppSettingsDirectory presetsDirectory() {
-		return AppSettings.directory(App.GROUP_NAME, App.APP_NAME, PRESETS_DIR_NAME);
-	}
-
-	List<PresetEntry> listPresets() {
-		AppSettingsDirectory dir = presetsDirectory();
-		try {
-			dir.ensureExists();
-		} catch (IOException _) {
-			return List.of();
-		}
-
-		List<PresetEntry> result = new ArrayList<>();
-		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir.path(), "*." + PRESET_FILE_NAME_EXT)) {
-			for (Path file : stream) {
-				String fileName = file.getFileName().toString();
-				AppSettings presetSettings = AppSettings.of(dir, fileName);
-				try {
-					presetSettings.load();
-				} catch (IOException _) {
-					continue;
-				}
-				List<String> comments = presetSettings.comments();
-				String name = comments.isEmpty() ? fileName : comments.get(0);
-				result.add(new PresetEntry(name, fileName));
-			}
-		} catch (IOException _) {
-			return List.of();
-		}
-
-		result.sort(Comparator.comparing(PresetEntry::name));
-		return result;
-	}
-
-	record PresetEntry(String name, String fileName) {
-		@Override
-		public String toString() {
-			return name;
-		}
-	}
-
-	private enum PresetConflictResolution {
-		RENAME, REPLACE, SKIP
-	}
-
-	private void promptExportData() {
-		boolean historyAvailable = Files.exists(App.history().path());
-		boolean presetsAvailable = !listPresets().isEmpty();
-
-		DataArchiveSupport.DataCategories selection = promptDataCategorySelection(
-				Messages.getString("MainFrame.menu.settings.exportData"),
-				true,
-				presetsAvailable,
-				historyAvailable);
-		if (selection == null) {
-			return;
-		}
-		if (!selection.any()) {
-			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.dataSelection.empty"), null, JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
-		JFileChooser filechooser = new JFileChooser();
-		filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("data.ext.description"), PICTO_FILE_NAME_EXT));
-
-		int selected = filechooser.showSaveDialog(frame);
-		if (selected != JFileChooser.APPROVE_OPTION) {
-			return;
-		}
-		File file = filechooser.getSelectedFile();
-		if (!PICTO_FILE_NAME_EXT.equals(FileNameSupport.extension(file.getName()))) {
-			file = new File(file.getParentFile(), file.getName() + "." + PICTO_FILE_NAME_EXT);
-		}
-
-		try {
-			exportData(file.toPath(), selection);
-
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.info.export.data"),
-					null,
-					JOptionPane.INFORMATION_MESSAGE
-					);
-		} catch (Exception e1) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.error.export.data", e1.getLocalizedMessage()),
-					null,
-					JOptionPane.ERROR_MESSAGE
-					);
-
-			App.handleError(e1.getMessage(), e1);
-		}
-	}
-
-	private void exportData(Path zipPath, DataArchiveSupport.DataCategories selection) throws IOException {
-		try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zipPath))) {
-			if (selection.settings()) {
-				DataArchiveSupport.writeSettingsEntry(zos, DataArchiveSupport.SETTINGS_ENTRY_NAME, App.settings());
-			}
-			if (selection.history()) {
-				DataArchiveSupport.writeSettingsEntry(zos, DataArchiveSupport.HISTORY_ENTRY_NAME, App.history());
-			}
-			if (selection.presets()) {
-				AppSettingsDirectory dir = presetsDirectory();
-				int index = 1;
-				for (PresetEntry preset : listPresets()) {
-					DataArchiveSupport.writeFileEntry(zos, DataArchiveSupport.presetEntryName(index), dir.path().resolve(preset.fileName()));
-					index++;
-				}
-			}
-		}
-	}
-
-	private void promptImportData() {
-		JFileChooser filechooser = new JFileChooser();
-		filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		filechooser.setFileFilter(new FileNameExtensionFilter(Messages.getString("data.ext.description"), PICTO_FILE_NAME_EXT));
-
-		int selected = filechooser.showOpenDialog(frame);
-		if (selected != JFileChooser.APPROVE_OPTION) {
-			return;
-		}
-		Path zipPath = filechooser.getSelectedFile().toPath();
-
-		// Backward compatibility: a *.picto file from before the ZIP-based archive format was a plain
-		// key=value settings.properties dump, sharing the same extension as the current format. Remove
-		// this branch and LegacyPictoFileImport once nobody plausibly still has one of those old exports.
-		boolean isLegacyFile;
-		try {
-			isLegacyFile = LegacyPictoFileImport.isLegacyFile(zipPath);
-		} catch (IOException e1) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
-					null,
-					JOptionPane.ERROR_MESSAGE
-					);
-			App.handleError(e1.getMessage(), e1);
-			return;
-		}
-		if (isLegacyFile) {
-			importLegacySettingsFile(zipPath);
-			return;
-		}
-
-		DataArchiveSupport.DataCategories available;
-		try {
-			available = DataArchiveSupport.readAvailableCategories(zipPath);
-		} catch (Exception e1) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
-					null,
-					JOptionPane.ERROR_MESSAGE
-					);
-			App.handleError(e1.getMessage(), e1);
-			return;
-		}
-		if (!available.any()) {
-			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.importData.none"), null, JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
-		DataArchiveSupport.DataCategories selection = promptDataCategorySelection(
-				Messages.getString("MainFrame.menu.settings.importData"),
-				available.settings(),
-				available.presets(),
-				available.history());
-		if (selection == null) {
-			return;
-		}
-		if (!selection.any()) {
-			JOptionPane.showMessageDialog(frame, Messages.getString("message.warn.dataSelection.empty"), null, JOptionPane.WARNING_MESSAGE);
-			return;
-		}
-
-		try {
-			if (!importData(zipPath, selection)) {
-				return;
-			}
-			if (selection.settings()) {
-				loadSettings();
-			}
-
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.info.import.data"),
-					null,
-					JOptionPane.INFORMATION_MESSAGE
-					);
-		} catch (Exception e1) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
-					null,
-					JOptionPane.ERROR_MESSAGE
-					);
-
-			App.handleError(e1.getMessage(), e1);
-		}
-	}
-
-	// Backward compatibility: see the comment at LegacyPictoFileImport's one call site above. Remove
-	// this method alongside that branch and the LegacyPictoFileImport class.
-	private void importLegacySettingsFile(Path legacyFile) {
-		try {
-			LegacyPictoFileImport.importInto(App.settings(), legacyFile);
-			loadSettings();
-
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.info.import.data"),
-					null,
-					JOptionPane.INFORMATION_MESSAGE
-					);
-		} catch (Exception e1) {
-			JOptionPane.showMessageDialog(
-					frame,
-					Messages.getString("message.error.import.data", e1.getLocalizedMessage()),
-					null,
-					JOptionPane.ERROR_MESSAGE
-					);
-
-			App.handleError(e1.getMessage(), e1);
-		}
-	}
-
-	/**
-	 * Parses and validates every selected category before applying or persisting any of them, so corrupt or
-	 * unreadable archive entries fail without changing the current settings. Once persistence starts, later
-	 * write failures are reported to the user but are not fully rolled back. Returns {@code false} if the user
-	 * cancelled the preset name-conflict prompt, in which case nothing was applied.
-	 */
-	private boolean importData(Path zipPath, DataArchiveSupport.DataCategories selection) throws IOException {
-		Map<String, Object> settingsValues = null;
-		Map<String, Object> historyValues = null;
-		List<AppSettings> preparedPresets = null;
-
-		try (ZipFile zip = new ZipFile(zipPath.toFile())) {
-			if (selection.settings()) {
-				settingsValues = DataArchiveSupport.readEntryValues(zip, DataArchiveSupport.SETTINGS_ENTRY_NAME);
-			}
-			if (selection.history()) {
-				historyValues = DataArchiveSupport.readEntryValues(zip, DataArchiveSupport.HISTORY_ENTRY_NAME);
-			}
-			if (selection.presets()) {
-				preparedPresets = preparePresetImports(zip);
-				if (preparedPresets == null) {
-					return false;
-				}
-			}
-		}
-
-		if (settingsValues != null) {
-			for (Map.Entry<String, Object> entry : settingsValues.entrySet()) {
-				App.settings().set(entry.getKey(), entry.getValue());
-			}
-			App.settings().store();
-		}
-		if (historyValues != null) {
-			for (Map.Entry<String, Object> entry : historyValues.entrySet()) {
-				App.history().set(entry.getKey(), entry.getValue());
-			}
-			App.history().store();
-		}
-		if (preparedPresets != null) {
-			presetsDirectory().ensureExists();
-			for (AppSettings preset : preparedPresets) {
-				preset.store();
-			}
-		}
-		return true;
-	}
-
-	/**
-	 * Builds the {@link AppSettings} to store for each imported preset, without writing any of them yet.
-	 * Returns {@code null} if the user cancelled the name-conflict prompt (shown at most once, covering
-	 * every conflicting name in this batch at once).
-	 */
-	private List<AppSettings> preparePresetImports(ZipFile zip) throws IOException {
-		List<DataArchiveSupport.ParsedPreset> parsed = DataArchiveSupport.readPresetEntries(zip);
-
-		List<PresetEntry> existingPresets = listPresets();
-		Map<String, PresetEntry> existingByName = new HashMap<>();
-		for (PresetEntry preset : existingPresets) {
-			existingByName.put(preset.name(), preset);
-		}
-
-		List<String> conflictingNames = new ArrayList<>();
-		for (DataArchiveSupport.ParsedPreset p : parsed) {
-			if (existingByName.containsKey(p.name())) {
-				conflictingNames.add(p.name());
-			}
-		}
-
-		PresetConflictResolution resolution = PresetConflictResolution.RENAME;
-		if (!conflictingNames.isEmpty()) {
-			PresetConflictResolution chosen = promptPresetConflictResolution(conflictingNames);
-			if (chosen == null) {
-				return null;
-			}
-			resolution = chosen;
-		}
-
-		AppSettingsDirectory dir = presetsDirectory();
-		Set<String> namesInUse = new HashSet<>(existingByName.keySet());
-		Set<String> fileNamesInUse = new HashSet<>();
-		for (PresetEntry preset : existingPresets) {
-			fileNamesInUse.add(preset.fileName());
-		}
-
-		List<AppSettings> result = new ArrayList<>();
-		for (DataArchiveSupport.ParsedPreset p : parsed) {
-			PresetEntry existing = existingByName.get(p.name());
-			if (existing == null || resolution == PresetConflictResolution.RENAME) {
-				String finalName = DataArchiveSupport.uniqueDisplayName(p.name(), namesInUse);
-				String fileName = DataArchiveSupport.allocatePresetFileName(fileNamesInUse);
-				result.add(buildPresetImport(dir, fileName, finalName, p.values()));
-			} else if (resolution == PresetConflictResolution.REPLACE) {
-				// Discards the existing preset's own content instead of merging onto it, so a replaced
-				// preset ends up built exactly like a new one - same defaults, same imported keys - just
-				// written under the existing name/file instead of a new one.
-				result.add(buildPresetImport(dir, existing.fileName(), existing.name(), p.values()));
-			}
-			// SKIP: leave the existing preset untouched.
-		}
-		return result;
-	}
-
-	private AppSettings buildPresetImport(AppSettingsDirectory dir, String fileName, String name, Map<String, Object> values) {
-		return DataArchiveSupport.buildPresetSettings(dir, fileName, this::applyDefaultSettings, values, name);
-	}
-
-	private DataArchiveSupport.DataCategories promptDataCategorySelection(
-			String title,
-			boolean settingsAvailable,
-			boolean presetsAvailable,
-			boolean historyAvailable) {
-		JCheckBox chkSettings = new JCheckBox(Messages.getString("MainFrame.dataCategory.settings"), settingsAvailable);
-		chkSettings.setEnabled(settingsAvailable);
-		JCheckBox chkPresets = new JCheckBox(Messages.getString("MainFrame.dataCategory.presets"), presetsAvailable);
-		chkPresets.setEnabled(presetsAvailable);
-		JCheckBox chkHistory = new JCheckBox(Messages.getString("MainFrame.dataCategory.history"), historyAvailable);
-		chkHistory.setEnabled(historyAvailable);
-
-		JPanel panel = new JPanel(new GridLayout(0, 1, 0, INLINE_VGAP));
-		panel.add(chkSettings);
-		panel.add(chkPresets);
-		panel.add(chkHistory);
-
-		int result = JOptionPane.showConfirmDialog(frame, panel, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (result != JOptionPane.OK_OPTION) {
-			return null;
-		}
-		return new DataArchiveSupport.DataCategories(chkSettings.isSelected(), chkPresets.isSelected(), chkHistory.isSelected());
-	}
-
-	private PresetConflictResolution promptPresetConflictResolution(List<String> conflictingNames) {
-		JRadioButton rdoRename = new JRadioButton(Messages.getString("MainFrame.presetConflict.rename"), true);
-		JRadioButton rdoReplace = new JRadioButton(Messages.getString("MainFrame.presetConflict.replace"));
-		JRadioButton rdoSkip = new JRadioButton(Messages.getString("MainFrame.presetConflict.skip"));
-		ButtonGroup group = new ButtonGroup();
-		group.add(rdoRename);
-		group.add(rdoReplace);
-		group.add(rdoSkip);
-
-		StringBuilder names = new StringBuilder();
-		for (String name : conflictingNames) {
-			if (!names.isEmpty()) {
-				names.append("<br>");
-			}
-			names.append(escapeHtml(name));
-		}
-
-		JPanel panel = new JPanel(new BorderLayout(0, INLINE_VGAP));
-		panel.add(new JLabel(Messages.getString("MainFrame.presetConflict.message", names.toString())), BorderLayout.NORTH);
-		JPanel radios = new JPanel(new GridLayout(0, 1));
-		radios.add(rdoRename);
-		radios.add(rdoReplace);
-		radios.add(rdoSkip);
-		panel.add(radios, BorderLayout.CENTER);
-
-		int result = JOptionPane.showConfirmDialog(
-				frame,
-				panel,
-				Messages.getString("MainFrame.presetConflict.title"),
-				JOptionPane.OK_CANCEL_OPTION,
-				JOptionPane.WARNING_MESSAGE
-				);
-		if (result != JOptionPane.OK_OPTION) {
-			return null;
-		}
-		if (rdoReplace.isSelected()) {
-			return PresetConflictResolution.REPLACE;
-		}
-		if (rdoSkip.isSelected()) {
-			return PresetConflictResolution.SKIP;
-		}
-		return PresetConflictResolution.RENAME;
-	}
-
-	private static String escapeHtml(String s) {
-		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 
 	private void addSettingsMenuItem(JMenu menu, ButtonGroup group, String label, String key, String value, int mnemonic) {
@@ -1967,7 +1182,7 @@ public class MainFrame extends JFrame {
 
 	private String destinationOptionsSummary(ProcessConditionValues values) {
 		List<String> items = new ArrayList<>();
-		if (!values.destSubFilePathPattern.isBlank() && !DEFAULT_DEST_SUB_FILE_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
+		if (!values.destSubFilePathPattern.isBlank() && !MainFrameSettings.DEFAULT_DEST_SUB_FILE_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
 			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), values.destSubFilePathPattern));
 		}
 		if (values.existingFileMethod != ExistingFileMethod.Confirm) {
@@ -2230,7 +1445,7 @@ public class MainFrame extends JFrame {
 		values.followLinks = false;
 		values.depth = (srcOpt.chkIncludeSubfolders.isEnabled() && srcOpt.chkIncludeSubfolders.isSelected()) ? Integer.MAX_VALUE : 1;
 
-		values.operationType = selectedEnumValue(btngrpOperationType, OperationType.class, OperationType.Copy);
+		values.operationType = MainFrameSettings.selectedEnumValue(btngrpOperationType, OperationType.class, OperationType.Copy);
 
 		values.destFolder = Paths.get(txtDestFolder.getText()).normalize();
 		values.destSubFilePathPattern = fieldText(destOpt.txtSubFilePathPattern);
@@ -2470,7 +1685,7 @@ public class MainFrame extends JFrame {
 		case Overwrite -> "message.confirm.destructive.overwrite";
 		case Copy -> throw new IllegalStateException(values.operationType.toString());
 		};
-		return confirmYesNo(messageKey);
+		return DialogSupport.confirmYesNo(frame, messageKey);
 	}
 
 	private boolean showValidationResult(ProcessConditionValidator.Result result) {

@@ -189,11 +189,11 @@ class AppSettingsMigrationTest {
 
 	/**
 	 * Every legacy key this class knows how to migrate (the whole {@code RENAMED_KEYS} table plus the
-	 * three specially-handled ones) must land on a key {@code MainFrame.settingBindings()} actually binds
+	 * three specially-handled ones) must land on a key {@code MainFrameSettings.bindings()} actually binds
 	 * to a Swing field - otherwise a real 2016/2017 user's setting silently reverts to its default with no
-	 * error anywhere. {@code MainFrame.settingBindings()} isn't reachable from here (private, different
+	 * error anywhere. {@code MainFrameSettings.bindings()} isn't reachable from here (private, different
 	 * package), so this pins the current 32-key set as a regression baseline instead: if a future rename
-	 * changes either side (a settingBindings() key, or a RENAMED_KEYS/special-cased target) without
+	 * changes either side (a bindings() key, or a RENAMED_KEYS/special-cased target) without
 	 * updating the other, this test's expected set stops matching and fails.
 	 */
 	@Test

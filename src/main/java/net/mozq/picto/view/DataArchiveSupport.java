@@ -90,7 +90,7 @@ final class DataArchiveSupport {
 	 * {@code AppSettings} object rather than copying its backing file.
 	 */
 	static void writeSettingsEntry(ZipOutputStream zos, String entryName, AppSettings settings) throws IOException {
-		Path temp = Files.createTempFile("picto-export-", "." + MainFrame.PRESET_FILE_NAME_EXT);
+		Path temp = Files.createTempFile("picto-export-", "." + PresetManager.PRESET_FILE_NAME_EXT);
 		try {
 			settings.storeTo(temp);
 			writeFileEntry(zos, entryName, temp);
@@ -106,7 +106,7 @@ final class DataArchiveSupport {
 	}
 
 	static String presetEntryName(int index) {
-		return PRESETS_ENTRY_PREFIX + "preset-" + index + "." + MainFrame.PRESET_FILE_NAME_EXT;
+		return PRESETS_ENTRY_PREFIX + "preset-" + index + "." + PresetManager.PRESET_FILE_NAME_EXT;
 	}
 
 	/**
@@ -192,7 +192,7 @@ final class DataArchiveSupport {
 	 */
 	static String allocatePresetFileName(Set<String> fileNamesInUse) {
 		for (int attempt = 1;; attempt++) {
-			String candidate = "preset-" + System.nanoTime() + "-" + attempt + "." + MainFrame.PRESET_FILE_NAME_EXT;
+			String candidate = "preset-" + System.nanoTime() + "-" + attempt + "." + PresetManager.PRESET_FILE_NAME_EXT;
 			if (fileNamesInUse.add(candidate)) {
 				return candidate;
 			}
@@ -224,14 +224,14 @@ final class DataArchiveSupport {
 	}
 
 	private static boolean isPresetEntry(String entryName) {
-		return entryName.startsWith(PRESETS_ENTRY_PREFIX) && entryName.endsWith("." + MainFrame.PRESET_FILE_NAME_EXT);
+		return entryName.startsWith(PRESETS_ENTRY_PREFIX) && entryName.endsWith("." + PresetManager.PRESET_FILE_NAME_EXT);
 	}
 
 	private static int presetEntryIndex(String entryName) {
 		try {
 			String base = entryName.substring(
 					PRESETS_ENTRY_PREFIX.length(),
-					entryName.length() - (1 + MainFrame.PRESET_FILE_NAME_EXT.length()));
+					entryName.length() - (1 + PresetManager.PRESET_FILE_NAME_EXT.length()));
 			return Integer.parseInt(base.substring("preset-".length()));
 		} catch (NumberFormatException | IndexOutOfBoundsException e) {
 			return Integer.MAX_VALUE;
@@ -239,7 +239,7 @@ final class DataArchiveSupport {
 	}
 
 	private static Path extractToTempFile(ZipFile zip, ZipEntry entry) throws IOException {
-		Path temp = Files.createTempFile("picto-import-", "." + MainFrame.PRESET_FILE_NAME_EXT);
+		Path temp = Files.createTempFile("picto-import-", "." + PresetManager.PRESET_FILE_NAME_EXT);
 		try (InputStream in = zip.getInputStream(entry)) {
 			Files.copy(in, temp, StandardCopyOption.REPLACE_EXISTING);
 		}

@@ -32,19 +32,19 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 import net.mozq.picto.App;
-import net.mozq.picto.view.MainFrame.PresetEntry;
+import net.mozq.picto.view.PresetManager.PresetEntry;
 
 public class PresetsManageDialog extends JDialog {
 	private static final long serialVersionUID = 1L;
 
-	private final MainFrame frame;
+	private final PresetManager presetManager;
 	private final DefaultListModel<PresetEntry> listModel = new DefaultListModel<>();
 	private final JList<PresetEntry> list = new JList<>(listModel);
 	private final JButton btnRename;
 	private final JButton btnDelete;
 
-	public PresetsManageDialog(MainFrame frame) {
-		this.frame = frame;
+	public PresetsManageDialog(PresetManager presetManager) {
+		this.presetManager = presetManager;
 
 		setTitle(Messages.getString("PresetsManageDialog.title"));
 		setBounds(100, 100, 360, 400);
@@ -89,7 +89,7 @@ public class PresetsManageDialog extends JDialog {
 
 	private void refreshList() {
 		listModel.clear();
-		for (PresetEntry preset : frame.listPresets()) {
+		for (PresetEntry preset : presetManager.listPresets()) {
 			listModel.addElement(preset);
 		}
 	}
@@ -120,7 +120,7 @@ public class PresetsManageDialog extends JDialog {
 		}
 
 		try {
-			frame.renamePreset(selected.fileName(), newName);
+			presetManager.renamePreset(selected.fileName(), newName);
 			refreshList();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(
@@ -151,7 +151,7 @@ public class PresetsManageDialog extends JDialog {
 		}
 
 		try {
-			frame.deletePreset(selected.fileName());
+			presetManager.deletePreset(selected.fileName());
 			refreshList();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(
