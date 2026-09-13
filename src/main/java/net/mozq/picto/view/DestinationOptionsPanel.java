@@ -18,7 +18,6 @@ package net.mozq.picto.view;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
@@ -51,12 +50,7 @@ class DestinationOptionsPanel extends JPanel {
 		setLayout(layout);
 
 		lblSubFilePathPattern = new JLabel(Messages.getString("MainFrame.dest.subFilePathPattern"));
-		GridBagConstraints lblSubFilePathPatternConstraints = new GridBagConstraints();
-		lblSubFilePathPatternConstraints.anchor = GridBagConstraints.WEST;
-		lblSubFilePathPatternConstraints.insets = new Insets(0, 0, 5, 5);
-		lblSubFilePathPatternConstraints.gridx = 0;
-		lblSubFilePathPatternConstraints.gridy = 0;
-		add(lblSubFilePathPattern, lblSubFilePathPatternConstraints);
+		add(lblSubFilePathPattern, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		txtSubFilePathPattern = new JTextField();
 		txtSubFilePathPattern.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
@@ -67,47 +61,23 @@ class DestinationOptionsPanel extends JPanel {
 		InputSupport.installLabelFocusAction(lblSubFilePathPattern, txtSubFilePathPattern, LabelFocusBehavior.CARET_END);
 		txtSubFilePathPattern.setColumns(10);
 		new SubfolderTemplatePopup(txtSubFilePathPattern);
-		GridBagConstraints txtSubFilePathPatternConstraints = new GridBagConstraints();
-		txtSubFilePathPatternConstraints.insets = new Insets(0, 0, 5, 0);
-		txtSubFilePathPatternConstraints.fill = GridBagConstraints.HORIZONTAL;
-		txtSubFilePathPatternConstraints.gridx = 1;
-		txtSubFilePathPatternConstraints.gridy = 0;
-		add(txtSubFilePathPattern, txtSubFilePathPatternConstraints);
+		add(txtSubFilePathPattern, GridBagSupport.at(1, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 
 		lblExistingFileMethod = new JLabel(Messages.getString("MainFrame.dest.existingFileMethod"));
-		GridBagConstraints lblExistingFileMethodConstraints = new GridBagConstraints();
-		lblExistingFileMethodConstraints.anchor = GridBagConstraints.WEST;
-		lblExistingFileMethodConstraints.insets = new Insets(0, 0, 5, 5);
-		lblExistingFileMethodConstraints.gridx = 0;
-		lblExistingFileMethodConstraints.gridy = 1;
-		add(lblExistingFileMethod, lblExistingFileMethodConstraints);
+		add(lblExistingFileMethod, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		cmbExistingFileMethod = new JComboBox<>();
 		lblExistingFileMethod.setLabelFor(cmbExistingFileMethod);
 		InputSupport.installLabelFocusAction(lblExistingFileMethod, cmbExistingFileMethod, LabelFocusBehavior.FOCUS_ONLY);
-		GridBagConstraints cmbExistingFileMethodConstraints = new GridBagConstraints();
-		cmbExistingFileMethodConstraints.insets = new Insets(0, 0, 5, 0);
-		cmbExistingFileMethodConstraints.anchor = GridBagConstraints.WEST;
-		cmbExistingFileMethodConstraints.gridx = 1;
-		cmbExistingFileMethodConstraints.gridy = 1;
 		cmbExistingFileMethod.setModel(new DefaultComboBoxModel<>(ExistingFileMethod.values()));
-		add(cmbExistingFileMethod, cmbExistingFileMethodConstraints);
+		add(cmbExistingFileMethod, GridBagSupport.at(1, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 0).build());
 
 		lblValidateFile = new JLabel(Messages.getString("MainFrame.dest.validateFile"));
-		GridBagConstraints lblValidateFileConstraints = new GridBagConstraints();
-		lblValidateFileConstraints.anchor = GridBagConstraints.WEST;
-		lblValidateFileConstraints.insets = new Insets(0, 0, 0, 5);
-		lblValidateFileConstraints.gridx = 0;
-		lblValidateFileConstraints.gridy = 2;
-		add(lblValidateFile, lblValidateFileConstraints);
+		add(lblValidateFile, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
 
 		chkCheckFileDigest = new JCheckBox(Messages.getString("MainFrame.dest.checkFileDigest"));
 		lblValidateFile.setLabelFor(chkCheckFileDigest);
 		InputSupport.installLabelFocusAction(lblValidateFile, chkCheckFileDigest, LabelFocusBehavior.FOCUS_ONLY);
-		GridBagConstraints chkCheckFileDigestConstraints = new GridBagConstraints();
-		chkCheckFileDigestConstraints.anchor = GridBagConstraints.WEST;
-		chkCheckFileDigestConstraints.gridx = 1;
-		chkCheckFileDigestConstraints.gridy = 2;
-		add(chkCheckFileDigest, chkCheckFileDigestConstraints);
+		add(chkCheckFileDigest, GridBagSupport.at(1, 2).anchor(GridBagConstraints.WEST).build());
 	}
 }

@@ -427,13 +427,7 @@ public class MainFrame extends JFrame {
 
 	private void buildSourcePanel() {
 		pnlSrcConditions = new JPanel();
-		GridBagConstraints gbc_pnlSrcConditions = new GridBagConstraints();
-		gbc_pnlSrcConditions.fill = GridBagConstraints.HORIZONTAL;
-		gbc_pnlSrcConditions.anchor = GridBagConstraints.NORTH;
-		gbc_pnlSrcConditions.insets = new Insets(0, 0, SECTION_GAP, 0);
-		gbc_pnlSrcConditions.gridx = 0;
-		gbc_pnlSrcConditions.gridy = 0;
-		getContentPane().add(pnlSrcConditions, gbc_pnlSrcConditions);
+		getContentPane().add(pnlSrcConditions, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).anchor(GridBagConstraints.NORTH).insets(0, 0, SECTION_GAP, 0).build());
 		GridBagLayout gbl_pnlSrcConditions = new GridBagLayout();
 		gbl_pnlSrcConditions.columnWidths = new int[]{0, 0, 0};
 		gbl_pnlSrcConditions.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -443,21 +437,11 @@ public class MainFrame extends JFrame {
 
 		JLabel lblSrcConditionsTitle = newMainLabel(Messages.getString("MainFrame.src.conditionsTitle"));
 		lblSrcConditionsTitle.setDisplayedMnemonic(KeyEvent.VK_F);
-		GridBagConstraints gbc_lblSrcConditionsTitle = new GridBagConstraints();
-		gbc_lblSrcConditionsTitle.anchor = GridBagConstraints.WEST;
-		gbc_lblSrcConditionsTitle.insets = new Insets(0, 0, 5, 8);
-		gbc_lblSrcConditionsTitle.gridx = 0;
-		gbc_lblSrcConditionsTitle.gridy = 0;
-		pnlSrcConditions.add(lblSrcConditionsTitle, gbc_lblSrcConditionsTitle);
+		pnlSrcConditions.add(lblSrcConditionsTitle, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 8).build());
 
 		pnlSrcFolder = new JPanel();
 		pnlSrcFolder.setBorder(null);
-		GridBagConstraints gbc_pnlSrcFolder = new GridBagConstraints();
-		gbc_pnlSrcFolder.insets = new Insets(0, 0, 5, 0);
-		gbc_pnlSrcFolder.fill = GridBagConstraints.BOTH;
-		gbc_pnlSrcFolder.gridx = 1;
-		gbc_pnlSrcFolder.gridy = 0;
-		pnlSrcConditions.add(pnlSrcFolder, gbc_pnlSrcFolder);
+		pnlSrcConditions.add(pnlSrcFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 		pnlSrcFolder.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
 		btnSrcFolderSelect = new JButton(Messages.getString("MainFrame.src.folderSelect"));
@@ -490,13 +474,7 @@ public class MainFrame extends JFrame {
 		});
 		srcOpt.btnMatchCountStop.addActionListener(_ -> matchCountStopButtonClicked());
 
-		GridBagConstraints gbc_srcOpt = new GridBagConstraints();
-		gbc_srcOpt.fill = GridBagConstraints.BOTH;
-		gbc_srcOpt.gridwidth = 2;
-		gbc_srcOpt.insets = new Insets(0, 0, 5, 0);
-		gbc_srcOpt.gridx = 1;
-		gbc_srcOpt.gridy = 1;
-		pnlSrcConditions.add(srcOpt, gbc_srcOpt);
+		pnlSrcConditions.add(srcOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
 		setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"), false);
 		btnSrcOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -505,24 +483,12 @@ public class MainFrame extends JFrame {
 		});
 
 		txtSrcOptionsSummary = newOptionsSummaryText(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"));
-		GridBagConstraints gbc_txtSrcOptionsSummary = new GridBagConstraints();
-		gbc_txtSrcOptionsSummary.fill = GridBagConstraints.HORIZONTAL;
-		gbc_txtSrcOptionsSummary.gridwidth = 2;
-		gbc_txtSrcOptionsSummary.insets = new Insets(0, 0, 5, 0);
-		gbc_txtSrcOptionsSummary.gridx = 1;
-		gbc_txtSrcOptionsSummary.gridy = 1;
-		pnlSrcConditions.add(txtSrcOptionsSummary, gbc_txtSrcOptionsSummary);
+		pnlSrcConditions.add(txtSrcOptionsSummary, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
 	}
 
 	private void buildOperationPanel() {
 		pnlOperation = new JPanel();
-		GridBagConstraints gbc_pnlOperation = new GridBagConstraints();
-		gbc_pnlOperation.insets = new Insets(0, MAIN_LABEL_WIDTH + 8, OPERATION_BOTTOM_GAP, 0);
-		gbc_pnlOperation.anchor = GridBagConstraints.NORTH;
-		gbc_pnlOperation.fill = GridBagConstraints.HORIZONTAL;
-		gbc_pnlOperation.gridx = 0;
-		gbc_pnlOperation.gridy = 1;
-		getContentPane().add(pnlOperation, gbc_pnlOperation);
+		getContentPane().add(pnlOperation, GridBagSupport.at(0, 1).insets(0, MAIN_LABEL_WIDTH + 8, OPERATION_BOTTOM_GAP, 0).anchor(GridBagConstraints.NORTH).fill(GridBagConstraints.HORIZONTAL).build());
 		GridBagLayout gbl_pnlOperation = new GridBagLayout();
 		gbl_pnlOperation.columnWidths = new int[]{0, 0, 0};
 		gbl_pnlOperation.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
@@ -532,12 +498,7 @@ public class MainFrame extends JFrame {
 
 		pnlOperationType = new JPanel();
 		pnlOperationType.setBorder(null);
-		GridBagConstraints gbc_pnlOperationType = new GridBagConstraints();
-		gbc_pnlOperationType.anchor = GridBagConstraints.WEST;
-		gbc_pnlOperationType.fill = GridBagConstraints.HORIZONTAL;
-		gbc_pnlOperationType.gridx = 0;
-		gbc_pnlOperationType.gridy = 0;
-		pnlOperation.add(pnlOperationType, gbc_pnlOperationType);
+		pnlOperation.add(pnlOperationType, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).fill(GridBagConstraints.HORIZONTAL).build());
 		pnlOperationType.setLayout(new FlowLayout(FlowLayout.LEFT, INLINE_HGAP, 0));
 
 		rdoOperationTypeCopy = new JRadioButton(Messages.getString("MainFrame.operationType.copy"));
@@ -561,13 +522,7 @@ public class MainFrame extends JFrame {
 
 	private void buildDestinationPanel() {
 		pnlDestConditions = new JPanel();
-		GridBagConstraints gbc_pnlDestConditions = new GridBagConstraints();
-		gbc_pnlDestConditions.insets = new Insets(0, 0, SECTION_GAP, 0);
-		gbc_pnlDestConditions.anchor = GridBagConstraints.NORTH;
-		gbc_pnlDestConditions.fill = GridBagConstraints.HORIZONTAL;
-		gbc_pnlDestConditions.gridx = 0;
-		gbc_pnlDestConditions.gridy = 2;
-		getContentPane().add(pnlDestConditions, gbc_pnlDestConditions);
+		getContentPane().add(pnlDestConditions, GridBagSupport.at(0, 2).insets(0, 0, SECTION_GAP, 0).anchor(GridBagConstraints.NORTH).fill(GridBagConstraints.HORIZONTAL).build());
 		GridBagLayout gbl_pnlDestConditions = new GridBagLayout();
 		gbl_pnlDestConditions.columnWidths = new int[]{0, 0, 0};
 		gbl_pnlDestConditions.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
@@ -577,21 +532,11 @@ public class MainFrame extends JFrame {
 
 		lblDestConditionsTitle = newMainLabel(Messages.getString("MainFrame.dest.conditionsTitle"));
 		lblDestConditionsTitle.setDisplayedMnemonic(KeyEvent.VK_T);
-		GridBagConstraints gbc_lblDestConditionsTitle = new GridBagConstraints();
-		gbc_lblDestConditionsTitle.anchor = GridBagConstraints.WEST;
-		gbc_lblDestConditionsTitle.insets = new Insets(0, 0, 5, 8);
-		gbc_lblDestConditionsTitle.gridx = 0;
-		gbc_lblDestConditionsTitle.gridy = 0;
-		pnlDestConditions.add(lblDestConditionsTitle, gbc_lblDestConditionsTitle);
+		pnlDestConditions.add(lblDestConditionsTitle, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 8).build());
 
 		pnlDestFolder = new JPanel();
 		pnlDestFolder.setBorder(null);
-		GridBagConstraints gbc_pnlDestFolder = new GridBagConstraints();
-		gbc_pnlDestFolder.insets = new Insets(0, 0, 5, 0);
-		gbc_pnlDestFolder.fill = GridBagConstraints.BOTH;
-		gbc_pnlDestFolder.gridx = 1;
-		gbc_pnlDestFolder.gridy = 0;
-		pnlDestConditions.add(pnlDestFolder, gbc_pnlDestFolder);
+		pnlDestConditions.add(pnlDestFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 		pnlDestFolder.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
 		btnDestFolderSelect = new JButton(Messages.getString("MainFrame.dest.folderSelect"));
@@ -616,13 +561,7 @@ public class MainFrame extends JFrame {
 
 		destOpt = new DestinationOptionsPanel();
 		stylizeOptionsBody(destOpt);
-		GridBagConstraints gbc_destOpt = new GridBagConstraints();
-		gbc_destOpt.fill = GridBagConstraints.BOTH;
-		gbc_destOpt.gridwidth = 2;
-		gbc_destOpt.insets = new Insets(0, 0, 5, 0);
-		gbc_destOpt.gridx = 1;
-		gbc_destOpt.gridy = 1;
-		pnlDestConditions.add(destOpt, gbc_destOpt);
+		pnlDestConditions.add(destOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
 		setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"), false);
 		btnDestOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -631,13 +570,7 @@ public class MainFrame extends JFrame {
 		});
 
 		txtDestOptionsSummary = newOptionsSummaryText(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"));
-		GridBagConstraints gbc_txtDestOptionsSummary = new GridBagConstraints();
-		gbc_txtDestOptionsSummary.fill = GridBagConstraints.HORIZONTAL;
-		gbc_txtDestOptionsSummary.gridwidth = 2;
-		gbc_txtDestOptionsSummary.insets = new Insets(0, 0, 5, 0);
-		gbc_txtDestOptionsSummary.gridx = 1;
-		gbc_txtDestOptionsSummary.gridy = 1;
-		pnlDestConditions.add(txtDestOptionsSummary, gbc_txtDestOptionsSummary);
+		pnlDestConditions.add(txtDestOptionsSummary, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
 
 	}
 
@@ -645,12 +578,7 @@ public class MainFrame extends JFrame {
 		btnChanges = newOptionsToggleButton(Messages.getString("MainFrame.changes.title"));
 		btnChanges.setMnemonic(KeyEvent.VK_G);
 		btnChanges.setFont(btnChanges.getFont().deriveFont(Font.BOLD, btnChanges.getFont().getSize2D() + 1.0f));
-		GridBagConstraints gbc_btnChanges = new GridBagConstraints();
-		gbc_btnChanges.anchor = GridBagConstraints.WEST;
-		gbc_btnChanges.insets = new Insets(0, 0, SECTION_HEADER_GAP, 0);
-		gbc_btnChanges.gridx = 0;
-		gbc_btnChanges.gridy = 3;
-		contentPane.add(btnChanges, gbc_btnChanges);
+		contentPane.add(btnChanges, GridBagSupport.at(0, 3).anchor(GridBagConstraints.WEST).insets(0, 0, SECTION_HEADER_GAP, 0).build());
 
 		changes = new ChangesPanel(
 				SECTION_PADDING,
@@ -658,20 +586,10 @@ public class MainFrame extends JFrame {
 				INLINE_VGAP,
 				this::changeEnableFileDateModConditions,
 				this::fitWindowToContent);
-		GridBagConstraints gbc_changes = new GridBagConstraints();
-		gbc_changes.insets = new Insets(0, 0, SECTION_GAP, 0);
-		gbc_changes.fill = GridBagConstraints.BOTH;
-		gbc_changes.gridx = 0;
-		gbc_changes.gridy = 5;
-		contentPane.add(changes, gbc_changes);
+		contentPane.add(changes, GridBagSupport.at(0, 5).insets(0, 0, SECTION_GAP, 0).fill(GridBagConstraints.BOTH).build());
 
 		txtChangesSummary = newOptionsSummaryText(btnChanges, changes, Messages.getString("MainFrame.changes.title"));
-		GridBagConstraints gbc_txtChangesSummary = new GridBagConstraints();
-		gbc_txtChangesSummary.fill = GridBagConstraints.HORIZONTAL;
-		gbc_txtChangesSummary.insets = new Insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0);
-		gbc_txtChangesSummary.gridx = 0;
-		gbc_txtChangesSummary.gridy = 4;
-		contentPane.add(txtChangesSummary, gbc_txtChangesSummary);
+		contentPane.add(txtChangesSummary, GridBagSupport.at(0, 4).fill(GridBagConstraints.HORIZONTAL).insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0).build());
 
 		setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changes.title"), false);
 		btnChanges.addActionListener(new ActionListener() {
@@ -684,12 +602,7 @@ public class MainFrame extends JFrame {
 
 	private void buildControlsPanel() {
 		pnlControls = new JPanel();
-		GridBagConstraints gbc_pnlControls = new GridBagConstraints();
-		gbc_pnlControls.anchor = GridBagConstraints.SOUTH;
-		gbc_pnlControls.fill = GridBagConstraints.HORIZONTAL;
-		gbc_pnlControls.gridx = 0;
-		gbc_pnlControls.gridy = 6;
-		getContentPane().add(pnlControls, gbc_pnlControls);
+		getContentPane().add(pnlControls, GridBagSupport.at(0, 6).anchor(GridBagConstraints.SOUTH).fill(GridBagConstraints.HORIZONTAL).build());
 		pnlControls.setLayout(new BorderLayout(0, INLINE_VGAP));
 
 		btnStart = new JButton(Messages.getString("MainFrame.start"));

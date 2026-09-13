@@ -297,27 +297,17 @@ class SuggestionPopup {
 		};
 		row.addMouseListener(rowMouseListener);
 
-		GridBagConstraints labelGbc = new GridBagConstraints();
-		labelGbc.gridx = 0;
-		labelGbc.gridy = 0;
-		labelGbc.anchor = GridBagConstraints.WEST;
-		labelGbc.insets = new Insets(0, 0, 0, 16);
 		JLabel label = new JLabel(item.label());
 		label.setPreferredSize(new Dimension(labelWidth, label.getPreferredSize().height));
 		label.setToolTipText(tooltip);
 		label.addMouseListener(rowMouseListener);
-		row.add(label, labelGbc);
+		row.add(label, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 16).build());
 
 		JLabel valueLabel = new JLabel(item.value());
 		valueLabel.setFont(new Font(Font.MONOSPACED, Font.PLAIN, valueLabel.getFont().getSize()));
 		valueLabel.setToolTipText(tooltip);
 		valueLabel.addMouseListener(rowMouseListener);
-		GridBagConstraints valueGbc = new GridBagConstraints();
-		valueGbc.gridx = 1;
-		valueGbc.gridy = 0;
-		valueGbc.anchor = GridBagConstraints.WEST;
-		valueGbc.weightx = 1.0;
-		row.add(valueLabel, valueGbc);
+		row.add(valueLabel, GridBagSupport.at(1, 0).anchor(GridBagConstraints.WEST).weightx(1.0).build());
 
 		if (onDelete != null && removable) {
 			JButton deleteButton = new JButton("✕");
@@ -333,12 +323,7 @@ class SuggestionPopup {
 				field.requestFocusInWindow();
 				refresh();
 			});
-			GridBagConstraints deleteGbc = new GridBagConstraints();
-			deleteGbc.gridx = 2;
-			deleteGbc.gridy = 0;
-			deleteGbc.anchor = GridBagConstraints.EAST;
-			deleteGbc.insets = new Insets(0, 8, 0, 0);
-			row.add(deleteButton, deleteGbc);
+			row.add(deleteButton, GridBagSupport.at(2, 0).anchor(GridBagConstraints.EAST).insets(0, 8, 0, 0).build());
 		}
 
 		gbc.gridy++;

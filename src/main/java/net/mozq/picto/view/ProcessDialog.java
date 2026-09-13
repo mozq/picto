@@ -21,7 +21,6 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -127,12 +126,7 @@ public class ProcessDialog extends JDialog {
 		getContentPane().setLayout(gbl_contentPane);
 
 		JScrollPane scrollPane = new JScrollPane();
-		GridBagConstraints gbc_scrollPane = new GridBagConstraints();
-		gbc_scrollPane.insets = new Insets(0, 0, 5, 0);
-		gbc_scrollPane.fill = GridBagConstraints.BOTH;
-		gbc_scrollPane.gridx = 0;
-		gbc_scrollPane.gridy = 0;
-		getContentPane().add(scrollPane, gbc_scrollPane);
+		getContentPane().add(scrollPane, GridBagSupport.at(0, 0).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		tableModel = new ProcessDataTableModel(
 				new String[]{
@@ -263,19 +257,10 @@ public class ProcessDialog extends JDialog {
 		progressBar.setValue(0);
 		progressBar.setStringPainted(true);
 		progressBar.setString("");
-		GridBagConstraints gbc_progressBar = new GridBagConstraints();
-		gbc_progressBar.insets = new Insets(0, 0, 5, 0);
-		gbc_progressBar.fill = GridBagConstraints.HORIZONTAL;
-		gbc_progressBar.gridx = 0;
-		gbc_progressBar.gridy = 1;
-		getContentPane().add(progressBar, gbc_progressBar);
+		getContentPane().add(progressBar, GridBagSupport.at(0, 1).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 
 		pnlControls = new JPanel();
-		GridBagConstraints gbc_pnlControls = new GridBagConstraints();
-		gbc_pnlControls.fill = GridBagConstraints.BOTH;
-		gbc_pnlControls.gridx = 0;
-		gbc_pnlControls.gridy = 2;
-		contentPane.add(pnlControls, gbc_pnlControls);
+		contentPane.add(pnlControls, GridBagSupport.at(0, 2).fill(GridBagConstraints.BOTH).build());
 		pnlControls.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
 		btnStop = new JButton(Messages.getString("ProcessDialog.stop"));

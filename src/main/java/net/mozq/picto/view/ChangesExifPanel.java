@@ -18,7 +18,6 @@ package net.mozq.picto.view;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -40,18 +39,9 @@ class ChangesExifPanel extends JPanel {
 		setLayout(exifLayout);
 
 		chkRemoveGps = new JCheckBox(Messages.getString("MainFrame.changes.exif.removeGps"));
-		GridBagConstraints removeGpsConstraints = new GridBagConstraints();
-		removeGpsConstraints.anchor = GridBagConstraints.WEST;
-		removeGpsConstraints.insets = new Insets(0, 0, 5, 0);
-		removeGpsConstraints.gridx = 0;
-		removeGpsConstraints.gridy = 0;
-		add(chkRemoveGps, removeGpsConstraints);
+		add(chkRemoveGps, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 0).build());
 
 		chkRemoveAll = new JCheckBox(Messages.getString("MainFrame.changes.exif.removeAll"));
-		GridBagConstraints removeAllConstraints = new GridBagConstraints();
-		removeAllConstraints.anchor = GridBagConstraints.WEST;
-		removeAllConstraints.gridx = 0;
-		removeAllConstraints.gridy = 1;
-		add(chkRemoveAll, removeAllConstraints);
+		add(chkRemoveAll, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).build());
 	}
 }

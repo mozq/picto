@@ -20,7 +20,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JCheckBox;
@@ -71,24 +70,14 @@ class ChangesFileDatePanel extends JPanel {
 		setLayout(fileDateLayout);
 
 		lblTargetDate = new JLabel(Messages.getString("MainFrame.changes.filedate.targetDate"));
-		GridBagConstraints lblTargetDateConstraints = new GridBagConstraints();
-		lblTargetDateConstraints.anchor = GridBagConstraints.WEST;
-		lblTargetDateConstraints.insets = new Insets(0, 0, 5, 5);
-		lblTargetDateConstraints.gridx = 0;
-		lblTargetDateConstraints.gridy = 0;
-		add(lblTargetDate, lblTargetDateConstraints);
+		add(lblTargetDate, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		JPanel pnlTargetDate = new JPanel();
 		FlowLayout targetDateLayout = (FlowLayout)pnlTargetDate.getLayout();
 		targetDateLayout.setVgap(inlineVgap);
 		targetDateLayout.setHgap(inlineHgap);
 		targetDateLayout.setAlignment(FlowLayout.LEFT);
-		GridBagConstraints pnlTargetDateConstraints = new GridBagConstraints();
-		pnlTargetDateConstraints.fill = GridBagConstraints.HORIZONTAL;
-		pnlTargetDateConstraints.insets = new Insets(0, 0, 5, 0);
-		pnlTargetDateConstraints.gridx = 1;
-		pnlTargetDateConstraints.gridy = 0;
-		add(pnlTargetDate, pnlTargetDateConstraints);
+		add(pnlTargetDate, GridBagSupport.at(1, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 
 		ChangeListener changeListener = new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -114,20 +103,10 @@ class ChangesFileDatePanel extends JPanel {
 		pnlTargetDate.add(chkExifDate);
 
 		lblBaseDate = new JLabel(Messages.getString("MainFrame.changes.filedate.baseDateType"));
-		GridBagConstraints lblBaseDateConstraints = new GridBagConstraints();
-		lblBaseDateConstraints.anchor = GridBagConstraints.WEST;
-		lblBaseDateConstraints.insets = new Insets(0, 0, 5, 5);
-		lblBaseDateConstraints.gridx = 0;
-		lblBaseDateConstraints.gridy = 1;
-		add(lblBaseDate, lblBaseDateConstraints);
+		add(lblBaseDate, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		JPanel pnlBaseDate = new JPanel();
-		GridBagConstraints pnlBaseDateConstraints = new GridBagConstraints();
-		pnlBaseDateConstraints.fill = GridBagConstraints.HORIZONTAL;
-		pnlBaseDateConstraints.insets = new Insets(0, 0, 5, 0);
-		pnlBaseDateConstraints.gridx = 1;
-		pnlBaseDateConstraints.gridy = 1;
-		add(pnlBaseDate, pnlBaseDateConstraints);
+		add(pnlBaseDate, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 		pnlBaseDate.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
 		cmbBaseDate = new JComboBox<>();
@@ -153,23 +132,14 @@ class ChangesFileDatePanel extends JPanel {
 		});
 
 		lblAdjustment = new JLabel(Messages.getString("MainFrame.changes.filedate.adjustment"));
-		GridBagConstraints lblAdjustmentConstraints = new GridBagConstraints();
-		lblAdjustmentConstraints.anchor = GridBagConstraints.WEST;
-		lblAdjustmentConstraints.insets = new Insets(0, 0, 0, 5);
-		lblAdjustmentConstraints.gridx = 0;
-		lblAdjustmentConstraints.gridy = 2;
-		add(lblAdjustment, lblAdjustmentConstraints);
+		add(lblAdjustment, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
 
 		JPanel pnlAdjustmentType = new JPanel();
 		FlowLayout adjustmentTypeLayout = (FlowLayout)pnlAdjustmentType.getLayout();
 		adjustmentTypeLayout.setVgap(inlineVgap);
 		adjustmentTypeLayout.setHgap(inlineHgap);
 		adjustmentTypeLayout.setAlignment(FlowLayout.LEFT);
-		GridBagConstraints pnlAdjustmentTypeConstraints = new GridBagConstraints();
-		pnlAdjustmentTypeConstraints.fill = GridBagConstraints.HORIZONTAL;
-		pnlAdjustmentTypeConstraints.gridx = 1;
-		pnlAdjustmentTypeConstraints.gridy = 2;
-		add(pnlAdjustmentType, pnlAdjustmentTypeConstraints);
+		add(pnlAdjustmentType, GridBagSupport.at(1, 2).fill(GridBagConstraints.HORIZONTAL).build());
 
 		cmbAdjustmentType = new JComboBox<>();
 		lblAdjustment.setLabelFor(cmbAdjustmentType);
