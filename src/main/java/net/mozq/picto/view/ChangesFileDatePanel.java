@@ -70,14 +70,12 @@ class ChangesFileDatePanel extends JPanel {
 		setLayout(fileDateLayout);
 
 		lblTargetDate = new JLabel(Messages.getString("MainFrame.changes.filedate.targetDate"));
-		add(lblTargetDate, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		JPanel pnlTargetDate = new JPanel();
 		FlowLayout targetDateLayout = (FlowLayout)pnlTargetDate.getLayout();
 		targetDateLayout.setVgap(inlineVgap);
 		targetDateLayout.setHgap(inlineHgap);
 		targetDateLayout.setAlignment(FlowLayout.LEFT);
-		add(pnlTargetDate, GridBagSupport.at(1, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 
 		ChangeListener changeListener = new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -88,31 +86,32 @@ class ChangesFileDatePanel extends JPanel {
 		lblTargetDate.setLabelFor(chkCreationDate);
 		InputSupport.installLabelFocusAction(lblTargetDate, chkCreationDate, LabelFocusBehavior.FOCUS_ONLY);
 		chkCreationDate.addChangeListener(changeListener);
-		pnlTargetDate.add(chkCreationDate);
 
 		chkModifiedDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.modifiedDate"));
 		chkModifiedDate.addChangeListener(changeListener);
-		pnlTargetDate.add(chkModifiedDate);
 
 		chkAccessDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.accessDate"));
 		chkAccessDate.addChangeListener(changeListener);
-		pnlTargetDate.add(chkAccessDate);
 
 		chkExifDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.exifDate"));
 		chkExifDate.addChangeListener(changeListener);
+
+		pnlTargetDate.add(chkCreationDate);
+		pnlTargetDate.add(chkModifiedDate);
+		pnlTargetDate.add(chkAccessDate);
 		pnlTargetDate.add(chkExifDate);
 
+		add(lblTargetDate, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		add(pnlTargetDate, GridBagSupport.at(1, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
+
 		lblBaseDate = new JLabel(Messages.getString("MainFrame.changes.filedate.baseDateType"));
-		add(lblBaseDate, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		JPanel pnlBaseDate = new JPanel();
-		add(pnlBaseDate, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 		pnlBaseDate.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
 		cmbBaseDate = new JComboBox<>();
 		lblBaseDate.setLabelFor(cmbBaseDate);
 		InputSupport.installLabelFocusAction(lblBaseDate, cmbBaseDate, LabelFocusBehavior.FOCUS_ONLY);
-		pnlBaseDate.add(cmbBaseDate);
 		cmbBaseDate.setModel(new DefaultComboBoxModel<>(DateType.values()));
 
 		txtCustomBaseDate = new JFormattedTextField(InputSupport.newMaskFormatter(DateTimeText.MASK_PATTERN));
@@ -123,7 +122,6 @@ class ChangesFileDatePanel extends JPanel {
 		txtCustomBaseDate.setVisible(false);
 		InputSupport.installDateTimeInputPopup(txtCustomBaseDate, false);
 		txtCustomBaseDate.setFocusLostBehavior(JFormattedTextField.COMMIT);
-		pnlBaseDate.add(txtCustomBaseDate);
 
 		cmbBaseDate.addItemListener(e -> {
 			DateType dateType = (DateType)e.getItem();
@@ -131,45 +129,53 @@ class ChangesFileDatePanel extends JPanel {
 			layoutChanged.run();
 		});
 
+		pnlBaseDate.add(cmbBaseDate);
+		pnlBaseDate.add(txtCustomBaseDate);
+
+		add(lblBaseDate, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		add(pnlBaseDate, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
+
 		lblAdjustment = new JLabel(Messages.getString("MainFrame.changes.filedate.adjustment"));
-		add(lblAdjustment, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
 
 		JPanel pnlAdjustmentType = new JPanel();
 		FlowLayout adjustmentTypeLayout = (FlowLayout)pnlAdjustmentType.getLayout();
 		adjustmentTypeLayout.setVgap(inlineVgap);
 		adjustmentTypeLayout.setHgap(inlineHgap);
 		adjustmentTypeLayout.setAlignment(FlowLayout.LEFT);
-		add(pnlAdjustmentType, GridBagSupport.at(1, 2).fill(GridBagConstraints.HORIZONTAL).build());
 
 		cmbAdjustmentType = new JComboBox<>();
 		lblAdjustment.setLabelFor(cmbAdjustmentType);
 		InputSupport.installLabelFocusAction(lblAdjustment, cmbAdjustmentType, LabelFocusBehavior.FOCUS_ONLY);
 		cmbAdjustmentType.setModel(new DefaultComboBoxModel<>(DateModType.values()));
 		cmbAdjustmentType.addItemListener(_ -> enableChanged.run());
-		pnlAdjustmentType.add(cmbAdjustmentType);
 
 		txtAdjustmentYears = newAdjustmentField(4);
-		pnlAdjustmentType.add(txtAdjustmentYears);
 		lblYearMonthSeparator = new JLabel("/");
-		pnlAdjustmentType.add(lblYearMonthSeparator);
 		txtAdjustmentMonths = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentMonths);
 		lblMonthDaySeparator = new JLabel("/");
-		pnlAdjustmentType.add(lblMonthDaySeparator);
 		txtAdjustmentDays = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentDays);
 		lblDayHourSeparator = new JLabel(" ");
-		pnlAdjustmentType.add(lblDayHourSeparator);
 		txtAdjustmentHours = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentHours);
 		lblHourMinuteSeparator = new JLabel(":");
-		pnlAdjustmentType.add(lblHourMinuteSeparator);
 		txtAdjustmentMinutes = newAdjustmentField(2);
-		pnlAdjustmentType.add(txtAdjustmentMinutes);
 		lblMinuteSecondSeparator = new JLabel(":");
-		pnlAdjustmentType.add(lblMinuteSecondSeparator);
 		txtAdjustmentSeconds = newAdjustmentField(2);
+
+		pnlAdjustmentType.add(cmbAdjustmentType);
+		pnlAdjustmentType.add(txtAdjustmentYears);
+		pnlAdjustmentType.add(lblYearMonthSeparator);
+		pnlAdjustmentType.add(txtAdjustmentMonths);
+		pnlAdjustmentType.add(lblMonthDaySeparator);
+		pnlAdjustmentType.add(txtAdjustmentDays);
+		pnlAdjustmentType.add(lblDayHourSeparator);
+		pnlAdjustmentType.add(txtAdjustmentHours);
+		pnlAdjustmentType.add(lblHourMinuteSeparator);
+		pnlAdjustmentType.add(txtAdjustmentMinutes);
+		pnlAdjustmentType.add(lblMinuteSecondSeparator);
 		pnlAdjustmentType.add(txtAdjustmentSeconds);
+
+		add(lblAdjustment, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
+		add(pnlAdjustmentType, GridBagSupport.at(1, 2).fill(GridBagConstraints.HORIZONTAL).build());
 	}
 
 	private static JTextField newAdjustmentField(int columns) {

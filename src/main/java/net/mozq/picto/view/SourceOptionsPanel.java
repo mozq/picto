@@ -90,12 +90,10 @@ class SourceOptionsPanel extends JPanel {
 		// flips the stop control back to the spinner while the pointer is still over this area.
 		JPanel matchCountPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
 		matchCountPanel.setOpaque(false);
-		add(matchCountPanel, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
 
 		lblMatchCount = new JLabel(Messages.getString("MainFrame.src.matchCount.prompt"));
 		lblMatchCount.setFont(lblMatchCount.getFont().deriveFont(lblMatchCount.getFont().getSize2D() - 2f));
 		lblMatchCount.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		matchCountPanel.add(lblMatchCount);
 
 		// A single button plays both roles instead of swapping between two components: swapping components
 		// (even ones sized identically via a CardLayout) hides one and shows the other, and hiding a
@@ -110,7 +108,6 @@ class SourceOptionsPanel extends JPanel {
 		btnMatchCountStop.setPreferredSize(new Dimension(20, 20));
 		btnMatchCountStop.setToolTipText(Messages.getString("MainFrame.src.matchCount.stop"));
 		btnMatchCountStop.setVisible(false);
-		matchCountPanel.add(btnMatchCountStop);
 
 		matchCountSpinnerTimer = new Timer(MATCH_COUNT_SPINNER_INTERVAL_MS, _ -> {
 			matchCountSpinnerFrame = (matchCountSpinnerFrame + 1) % MATCH_COUNT_SPINNER_FRAMES.length;
@@ -144,12 +141,15 @@ class SourceOptionsPanel extends JPanel {
 			}
 		});
 
+		matchCountPanel.add(lblMatchCount);
+		matchCountPanel.add(btnMatchCountStop);
+
+		add(matchCountPanel, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
+
 		lblFileNamePattern = new JLabel(Messages.getString("MainFrame.src.fileNamePattern"));
-		add(lblFileNamePattern, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		JPanel pnlFileNamePattern = new JPanel();
 		pnlFileNamePattern.setOpaque(false);
-		add(pnlFileNamePattern, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 		GridBagLayout fileNamePatternLayout = new GridBagLayout();
 		fileNamePatternLayout.columnWidths = new int[]{0, 0, 0};
 		fileNamePatternLayout.rowHeights = new int[]{0, 0};
@@ -161,7 +161,6 @@ class SourceOptionsPanel extends JPanel {
 		txtFileNamePattern.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, UIManager.getIcon("FileView.fileIcon"));
 		lblFileNamePattern.setLabelFor(txtFileNamePattern);
 		InputSupport.installLabelFocusAction(lblFileNamePattern, txtFileNamePattern, LabelFocusBehavior.CARET_END);
-		pnlFileNamePattern.add(txtFileNamePattern, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 0, 5).build());
 		txtFileNamePattern.setColumns(10);
 
 		cmbFileNamePatternSyntax = new JComboBox<>();
@@ -172,7 +171,12 @@ class SourceOptionsPanel extends JPanel {
 				fileNamePatternPopup.refresh();
 			}
 		});
+
+		pnlFileNamePattern.add(txtFileNamePattern, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 0, 5).build());
 		pnlFileNamePattern.add(cmbFileNamePatternSyntax, GridBagSupport.at(1, 0).anchor(GridBagConstraints.WEST).build());
+
+		add(lblFileNamePattern, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		add(pnlFileNamePattern, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		chkIncludeSubfolders = new JCheckBox(Messages.getString("MainFrame.src.includeSubfolders"));
 		add(chkIncludeSubfolders, GridBagSupport.at(1, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 0).build());
@@ -181,11 +185,9 @@ class SourceOptionsPanel extends JPanel {
 		add(chkIncludeHiddenFiles, GridBagSupport.at(1, 3).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		lblFileSize = new JLabel(Messages.getString("MainFrame.src.fileSize"));
-		add(lblFileSize, GridBagSupport.at(0, 4).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		JPanel pnlFileSize = new JPanel();
 		pnlFileSize.setOpaque(false);
-		add(pnlFileSize, GridBagSupport.at(1, 4).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 		pnlFileSize.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
 		txtFileSizeFrom = new JTextField();
@@ -194,58 +196,66 @@ class SourceOptionsPanel extends JPanel {
 		InputSupport.installLabelFocusAction(lblFileSize, txtFileSizeFrom, LabelFocusBehavior.SELECT_ALL);
 		txtFileSizeFrom.setColumns(5);
 		txtFileSizeFrom.setHorizontalAlignment(JTextField.RIGHT);
-		pnlFileSize.add(txtFileSizeFrom);
 
 		lblFileSizeTo = new JLabel(Messages.getString("MainFrame.src.fileSizeTo"));
-		pnlFileSize.add(lblFileSizeTo);
 
 		txtFileSizeTo = new JTextField();
 		InputSupport.allowDigitsOnly(txtFileSizeTo);
 		txtFileSizeTo.setColumns(5);
 		txtFileSizeTo.setHorizontalAlignment(JTextField.RIGHT);
-		pnlFileSize.add(txtFileSizeTo);
 
 		cmbFileSizeUnit = new JComboBox<>();
-		pnlFileSize.add(cmbFileSizeUnit);
 		cmbFileSizeUnit.setModel(new DefaultComboBoxModel<>(FileSizeUnit.values()));
 
+		pnlFileSize.add(txtFileSizeFrom);
+		pnlFileSize.add(lblFileSizeTo);
+		pnlFileSize.add(txtFileSizeTo);
+		pnlFileSize.add(cmbFileSizeUnit);
+
+		add(lblFileSize, GridBagSupport.at(0, 4).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		add(pnlFileSize, GridBagSupport.at(1, 4).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+
 		lblCreated = new JLabel(Messages.getString("MainFrame.src.created"));
-		add(lblCreated, GridBagSupport.at(0, 5).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		JPanel pnlCreated = new JPanel();
 		pnlCreated.setOpaque(false);
-		add(pnlCreated, GridBagSupport.at(1, 5).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 		pnlCreated.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
 		txtCreatedFrom = newDateTimeField(Messages.getString("MainFrame.src.createdFrom.tooltip"), false);
 		lblCreated.setLabelFor(txtCreatedFrom);
 		InputSupport.installLabelFocusAction(lblCreated, txtCreatedFrom, LabelFocusBehavior.CARET_START);
-		pnlCreated.add(txtCreatedFrom);
 
 		lblCreatedTo = new JLabel(Messages.getString("MainFrame.src.createdTo"));
-		pnlCreated.add(lblCreatedTo);
 
 		txtCreatedTo = newDateTimeField(Messages.getString("MainFrame.src.createdTo.tooltip"), true);
+
+		pnlCreated.add(txtCreatedFrom);
+		pnlCreated.add(lblCreatedTo);
 		pnlCreated.add(txtCreatedTo);
 
+		add(lblCreated, GridBagSupport.at(0, 5).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		add(pnlCreated, GridBagSupport.at(1, 5).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+
 		lblModified = new JLabel(Messages.getString("MainFrame.src.modified"));
-		add(lblModified, GridBagSupport.at(0, 6).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
 
 		JPanel pnlModified = new JPanel();
 		pnlModified.setOpaque(false);
-		add(pnlModified, GridBagSupport.at(1, 6).fill(GridBagConstraints.BOTH).build());
 		pnlModified.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
 
 		txtModifiedFrom = newDateTimeField(Messages.getString("MainFrame.src.modifiedFrom.tooltip"), false);
 		lblModified.setLabelFor(txtModifiedFrom);
 		InputSupport.installLabelFocusAction(lblModified, txtModifiedFrom, LabelFocusBehavior.CARET_START);
-		pnlModified.add(txtModifiedFrom);
 
 		lblModifiedTo = new JLabel(Messages.getString("MainFrame.src.modifiedTo"));
-		pnlModified.add(lblModifiedTo);
 
 		txtModifiedTo = newDateTimeField(Messages.getString("MainFrame.src.modifiedTo.tooltip"), true);
+
+		pnlModified.add(txtModifiedFrom);
+		pnlModified.add(lblModifiedTo);
 		pnlModified.add(txtModifiedTo);
+
+		add(lblModified, GridBagSupport.at(0, 6).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
+		add(pnlModified, GridBagSupport.at(1, 6).fill(GridBagConstraints.BOTH).build());
 	}
 
 	FilePatternSyntax selectedFilePatternSyntax() {

@@ -117,16 +117,15 @@ public class ProcessDialog extends JDialog {
 		setBounds(100, 100, 850, 500);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{0, 0};
 		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0};
 		gbl_contentPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gbl_contentPane.rowWeights = new double[]{1.0, 0.0, 0.0, Double.MIN_VALUE};
-		getContentPane().setLayout(gbl_contentPane);
+		contentPane.setLayout(gbl_contentPane);
+		setContentPane(contentPane);
 
 		JScrollPane scrollPane = new JScrollPane();
-		getContentPane().add(scrollPane, GridBagSupport.at(0, 0).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		tableModel = new ProcessDataTableModel(
 				new String[]{
@@ -161,7 +160,6 @@ public class ProcessDialog extends JDialog {
 		setColumnWidth(table, 2, 250);
 		setColumnWidth(table, 3, 250);
 		setColumnWidth(table, 4, 250);
-		scrollPane.setViewportView(table);
 
 		TableRowSorter<ProcessDataTableModel> sorter = new TableRowSorter<>(tableModel);
 		sorter.setComparator(1, Comparator.comparingInt(ProcessDialog::statusSortRank));
@@ -251,6 +249,9 @@ public class ProcessDialog extends JDialog {
 			}
 		});
 
+		scrollPane.setViewportView(table);
+		getContentPane().add(scrollPane, GridBagSupport.at(0, 0).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+
 		progressBar = new JProgressBar();
 		progressBar.setMinimum(0);
 		progressBar.setMaximum(0);
@@ -260,7 +261,6 @@ public class ProcessDialog extends JDialog {
 		getContentPane().add(progressBar, GridBagSupport.at(0, 1).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 
 		pnlControls = new JPanel();
-		contentPane.add(pnlControls, GridBagSupport.at(0, 2).fill(GridBagConstraints.BOTH).build());
 		pnlControls.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
 		btnStop = new JButton(Messages.getString("ProcessDialog.stop"));
@@ -273,7 +273,6 @@ public class ProcessDialog extends JDialog {
 				}
 			}
 		});
-		pnlControls.add(btnStop);
 
 		btnClose = new JButton(Messages.getString("ProcessDialog.close"));
 		btnClose.setMnemonic(KeyEvent.VK_C);
@@ -283,7 +282,11 @@ public class ProcessDialog extends JDialog {
 			}
 		});
 		btnClose.setVisible(false);
+
+		pnlControls.add(btnStop);
 		pnlControls.add(btnClose);
+
+		contentPane.add(pnlControls, GridBagSupport.at(0, 2).fill(GridBagConstraints.BOTH).build());
 
 		// Hiding (not disposing) on both Close and the window's own close button lets MainFrame keep this
 		// dialog around and bring it back into view later - the results stay reachable until superseded by

@@ -294,7 +294,6 @@ public class MainFrame extends JFrame {
 
 	private void buildMenuBar() {
 		menuBar = new JMenuBar();
-		setJMenuBar(menuBar);
 
 		mnPresets = new JMenu(Messages.getString("MainFrame.menu.presets"));
 		mnPresets.setMnemonic(KeyEvent.VK_P);
@@ -311,15 +310,12 @@ public class MainFrame extends JFrame {
 				// NOP
 			}
 		});
-		menuBar.add(mnPresets);
 
 		mnSettings = new JMenu(Messages.getString("MainFrame.menu.settings"));
 		mnSettings.setMnemonic(KeyEvent.VK_S);
-		menuBar.add(mnSettings);
 
 		mnLanguage = new JMenu(Messages.getString("MainFrame.menu.settings.language"));
 		mnLanguage.setMnemonic(KeyEvent.VK_L);
-		mnSettings.add(mnLanguage);
 		ButtonGroup languageGroup = new ButtonGroup();
 		addSettingsMenuItem(
 				mnLanguage,
@@ -345,7 +341,6 @@ public class MainFrame extends JFrame {
 
 		mnAppearance = new JMenu(Messages.getString("MainFrame.menu.settings.appearance"));
 		mnAppearance.setMnemonic(KeyEvent.VK_A);
-		mnSettings.add(mnAppearance);
 		ButtonGroup appearanceGroup = new ButtonGroup();
 		addSettingsMenuItem(
 				mnAppearance,
@@ -369,8 +364,6 @@ public class MainFrame extends JFrame {
 				AppMain.PREF_APPEARANCE_DARK,
 				KeyEvent.VK_D);
 
-		mnSettings.addSeparator();
-
 		int shortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
 
 		JMenuItem mntmImportData = new JMenuItem(Messages.getString("MainFrame.menu.settings.importData"));
@@ -381,7 +374,6 @@ public class MainFrame extends JFrame {
 				promptImportData();
 			}
 		});
-		mnSettings.add(mntmImportData);
 
 		JMenuItem mntmExportData = new JMenuItem(Messages.getString("MainFrame.menu.settings.exportData"));
 		mntmExportData.setMnemonic(KeyEvent.VK_E);
@@ -391,11 +383,15 @@ public class MainFrame extends JFrame {
 				promptExportData();
 			}
 		});
+
+		mnSettings.add(mnLanguage);
+		mnSettings.add(mnAppearance);
+		mnSettings.addSeparator();
+		mnSettings.add(mntmImportData);
 		mnSettings.add(mntmExportData);
 
 		mnHelp = new JMenu(Messages.getString("MainFrame.menu.help"));
 		mnHelp.setMnemonic(KeyEvent.VK_H);
-		menuBar.add(mnHelp);
 
 		mntmHelp = new JMenuItem(Messages.getString("MainFrame.menu.help.help"));
 		mntmHelp.setMnemonic(KeyEvent.VK_H);
@@ -410,24 +406,27 @@ public class MainFrame extends JFrame {
 		});
 		mnHelp.add(mntmHelp);
 
+		menuBar.add(mnPresets);
+		menuBar.add(mnSettings);
+		menuBar.add(mnHelp);
+
+		setJMenuBar(menuBar);
 	}
 
 	private void buildContentPane() {
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(WINDOW_PADDING, WINDOW_PADDING, WINDOW_PADDING, WINDOW_PADDING));
-		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{427, 0};
 		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_contentPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
-
+		setContentPane(contentPane);
 	}
 
 	private void buildSourcePanel() {
 		pnlSrcConditions = new JPanel();
-		getContentPane().add(pnlSrcConditions, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).anchor(GridBagConstraints.NORTH).insets(0, 0, SECTION_GAP, 0).build());
 		GridBagLayout gbl_pnlSrcConditions = new GridBagLayout();
 		gbl_pnlSrcConditions.columnWidths = new int[]{0, 0, 0};
 		gbl_pnlSrcConditions.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -437,11 +436,9 @@ public class MainFrame extends JFrame {
 
 		JLabel lblSrcConditionsTitle = newMainLabel(Messages.getString("MainFrame.src.conditionsTitle"));
 		lblSrcConditionsTitle.setDisplayedMnemonic(KeyEvent.VK_F);
-		pnlSrcConditions.add(lblSrcConditionsTitle, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 8).build());
 
 		pnlSrcFolder = new JPanel();
 		pnlSrcFolder.setBorder(null);
-		pnlSrcConditions.add(pnlSrcFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 		pnlSrcFolder.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
 		btnSrcFolderSelect = new JButton(Messages.getString("MainFrame.src.folderSelect"));
@@ -457,12 +454,15 @@ public class MainFrame extends JFrame {
 		lblSrcConditionsTitle.setLabelFor(txtSrcFolder);
 		txtSrcFolder.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.src.folder"));
 		txtSrcFolder.setToolTipText(Messages.getString("MainFrame.src.folder"));
-		pnlSrcFolder.add(txtSrcFolder, BorderLayout.CENTER);
 		txtSrcFolder.setColumns(10);
 		InputSupport.installLabelFocusAction(lblSrcConditionsTitle, txtSrcFolder, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtSrcFolder);
 		new FolderHistoryPopup(txtSrcFolder, InputHistory.SRC_FOLDER_KEY);
 		installFolderChooserButton(btnSrcFolderSelect, txtSrcFolder);
+		pnlSrcFolder.add(txtSrcFolder, BorderLayout.CENTER);
+
+		pnlSrcConditions.add(lblSrcConditionsTitle, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 8).build());
+		pnlSrcConditions.add(pnlSrcFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 
 		srcOpt = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
 		stylizeOptionsBody(srcOpt, OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT);
@@ -473,22 +473,22 @@ public class MainFrame extends JFrame {
 			}
 		});
 		srcOpt.btnMatchCountStop.addActionListener(_ -> matchCountStopButtonClicked());
-
-		pnlSrcConditions.add(srcOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
-		setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"), false);
 		btnSrcOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"), btnSrcOptions.isSelected());
 			}
 		});
+		setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"), false);
+		pnlSrcConditions.add(srcOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
 
 		txtSrcOptionsSummary = newOptionsSummaryText(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"));
 		pnlSrcConditions.add(txtSrcOptionsSummary, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
+
+		getContentPane().add(pnlSrcConditions, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).anchor(GridBagConstraints.NORTH).insets(0, 0, SECTION_GAP, 0).build());
 	}
 
 	private void buildOperationPanel() {
 		pnlOperation = new JPanel();
-		getContentPane().add(pnlOperation, GridBagSupport.at(0, 1).insets(0, MAIN_LABEL_WIDTH + 8, OPERATION_BOTTOM_GAP, 0).anchor(GridBagConstraints.NORTH).fill(GridBagConstraints.HORIZONTAL).build());
 		GridBagLayout gbl_pnlOperation = new GridBagLayout();
 		gbl_pnlOperation.columnWidths = new int[]{0, 0, 0};
 		gbl_pnlOperation.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
@@ -498,31 +498,34 @@ public class MainFrame extends JFrame {
 
 		pnlOperationType = new JPanel();
 		pnlOperationType.setBorder(null);
-		pnlOperation.add(pnlOperationType, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).fill(GridBagConstraints.HORIZONTAL).build());
 		pnlOperationType.setLayout(new FlowLayout(FlowLayout.LEFT, INLINE_HGAP, 0));
 
 		rdoOperationTypeCopy = new JRadioButton(Messages.getString("MainFrame.operationType.copy"));
 		rdoOperationTypeCopy.setMnemonic(KeyEvent.VK_C);
 		rdoOperationTypeCopy.setActionCommand(OperationType.Copy.name());
 		btngrpOperationType.add(rdoOperationTypeCopy);
-		pnlOperationType.add(rdoOperationTypeCopy);
 
 		rdoOperationTypeMove = new JRadioButton(Messages.getString("MainFrame.operationType.move"));
 		rdoOperationTypeMove.setMnemonic(KeyEvent.VK_M);
 		rdoOperationTypeMove.setActionCommand(OperationType.Move.name());
 		btngrpOperationType.add(rdoOperationTypeMove);
-		pnlOperationType.add(rdoOperationTypeMove);
 
 		rdoOperationTypeOverwrite = new JRadioButton(Messages.getString("MainFrame.operationType.overwrite"));
 		rdoOperationTypeOverwrite.setMnemonic(KeyEvent.VK_O);
 		rdoOperationTypeOverwrite.setActionCommand(OperationType.Overwrite.name());
 		btngrpOperationType.add(rdoOperationTypeOverwrite);
+
+		pnlOperationType.add(rdoOperationTypeCopy);
+		pnlOperationType.add(rdoOperationTypeMove);
 		pnlOperationType.add(rdoOperationTypeOverwrite);
+
+		pnlOperation.add(pnlOperationType, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).fill(GridBagConstraints.HORIZONTAL).build());
+
+		getContentPane().add(pnlOperation, GridBagSupport.at(0, 1).insets(0, MAIN_LABEL_WIDTH + 8, OPERATION_BOTTOM_GAP, 0).anchor(GridBagConstraints.NORTH).fill(GridBagConstraints.HORIZONTAL).build());
 	}
 
 	private void buildDestinationPanel() {
 		pnlDestConditions = new JPanel();
-		getContentPane().add(pnlDestConditions, GridBagSupport.at(0, 2).insets(0, 0, SECTION_GAP, 0).anchor(GridBagConstraints.NORTH).fill(GridBagConstraints.HORIZONTAL).build());
 		GridBagLayout gbl_pnlDestConditions = new GridBagLayout();
 		gbl_pnlDestConditions.columnWidths = new int[]{0, 0, 0};
 		gbl_pnlDestConditions.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
@@ -532,11 +535,9 @@ public class MainFrame extends JFrame {
 
 		lblDestConditionsTitle = newMainLabel(Messages.getString("MainFrame.dest.conditionsTitle"));
 		lblDestConditionsTitle.setDisplayedMnemonic(KeyEvent.VK_T);
-		pnlDestConditions.add(lblDestConditionsTitle, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 8).build());
 
 		pnlDestFolder = new JPanel();
 		pnlDestFolder.setBorder(null);
-		pnlDestConditions.add(pnlDestFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 		pnlDestFolder.setLayout(new BorderLayout(INLINE_HGAP, 0));
 
 		btnDestFolderSelect = new JButton(Messages.getString("MainFrame.dest.folderSelect"));
@@ -552,33 +553,36 @@ public class MainFrame extends JFrame {
 		lblDestConditionsTitle.setLabelFor(txtDestFolder);
 		txtDestFolder.getAccessibleContext().setAccessibleName(Messages.getString("MainFrame.dest.folder"));
 		txtDestFolder.setToolTipText(Messages.getString("MainFrame.dest.folder"));
-		pnlDestFolder.add(txtDestFolder, BorderLayout.CENTER);
 		txtDestFolder.setColumns(10);
 		InputSupport.installLabelFocusAction(lblDestConditionsTitle, txtDestFolder, LabelFocusBehavior.CARET_END);
 		InputSupport.installFolderDropTarget(txtDestFolder);
 		new FolderHistoryPopup(txtDestFolder, InputHistory.DEST_FOLDER_KEY);
 		installFolderChooserButton(btnDestFolderSelect, txtDestFolder);
+		pnlDestFolder.add(txtDestFolder, BorderLayout.CENTER);
+
+		pnlDestConditions.add(lblDestConditionsTitle, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 8).build());
+		pnlDestConditions.add(pnlDestFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 
 		destOpt = new DestinationOptionsPanel();
 		stylizeOptionsBody(destOpt);
-		pnlDestConditions.add(destOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
-		setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"), false);
 		btnDestOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"), btnDestOptions.isSelected());
 			}
 		});
+		setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"), false);
+		pnlDestConditions.add(destOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
 
 		txtDestOptionsSummary = newOptionsSummaryText(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"));
 		pnlDestConditions.add(txtDestOptionsSummary, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
 
+		getContentPane().add(pnlDestConditions, GridBagSupport.at(0, 2).insets(0, 0, SECTION_GAP, 0).anchor(GridBagConstraints.NORTH).fill(GridBagConstraints.HORIZONTAL).build());
 	}
 
 	private void buildChangesPanel() {
 		btnChanges = newOptionsToggleButton(Messages.getString("MainFrame.changes.title"));
 		btnChanges.setMnemonic(KeyEvent.VK_G);
 		btnChanges.setFont(btnChanges.getFont().deriveFont(Font.BOLD, btnChanges.getFont().getSize2D() + 1.0f));
-		contentPane.add(btnChanges, GridBagSupport.at(0, 3).anchor(GridBagConstraints.WEST).insets(0, 0, SECTION_HEADER_GAP, 0).build());
 
 		changes = new ChangesPanel(
 				SECTION_PADDING,
@@ -586,10 +590,8 @@ public class MainFrame extends JFrame {
 				INLINE_VGAP,
 				this::changeEnableFileDateModConditions,
 				this::fitWindowToContent);
-		contentPane.add(changes, GridBagSupport.at(0, 5).insets(0, 0, SECTION_GAP, 0).fill(GridBagConstraints.BOTH).build());
 
 		txtChangesSummary = newOptionsSummaryText(btnChanges, changes, Messages.getString("MainFrame.changes.title"));
-		contentPane.add(txtChangesSummary, GridBagSupport.at(0, 4).fill(GridBagConstraints.HORIZONTAL).insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0).build());
 
 		setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changes.title"), false);
 		btnChanges.addActionListener(new ActionListener() {
@@ -598,11 +600,13 @@ public class MainFrame extends JFrame {
 			}
 		});
 
+		contentPane.add(btnChanges, GridBagSupport.at(0, 3).anchor(GridBagConstraints.WEST).insets(0, 0, SECTION_HEADER_GAP, 0).build());
+		contentPane.add(changes, GridBagSupport.at(0, 5).insets(0, 0, SECTION_GAP, 0).fill(GridBagConstraints.BOTH).build());
+		contentPane.add(txtChangesSummary, GridBagSupport.at(0, 4).fill(GridBagConstraints.HORIZONTAL).insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0).build());
 	}
 
 	private void buildControlsPanel() {
 		pnlControls = new JPanel();
-		getContentPane().add(pnlControls, GridBagSupport.at(0, 6).anchor(GridBagConstraints.SOUTH).fill(GridBagConstraints.HORIZONTAL).build());
 		pnlControls.setLayout(new BorderLayout(0, INLINE_VGAP));
 
 		btnStart = new JButton(Messages.getString("MainFrame.start"));
@@ -615,6 +619,7 @@ public class MainFrame extends JFrame {
 				runProcess(false);
 			}
 		});
+		installRunSummaryHover(btnStart);
 
 		btnStartMenu = new JButton("\u25be");
 		btnStartMenu.putClientProperty(FlatClientProperties.BUTTON_TYPE, "default");
@@ -638,10 +643,10 @@ public class MainFrame extends JFrame {
 				runMenu.show(btnStart, 0, btnStart.getHeight());
 			}
 		});
+		installRunSummaryHover(btnStartMenu);
 
 		JPanel pnlRunButton = new JPanel(new FlowLayout(FlowLayout.CENTER, INLINE_HGAP, 0));
 		pnlRunButton.setBorder(null);
-		pnlRunButton.add(newRunSplitButtonPanel(btnStart, btnStartMenu));
 
 		// A fixed-size square, regardless of whether an icon is currently set, so toggling it on/off (or
 		// between the processing/results icons) never shifts btnStart's own centered position. The icon is
@@ -676,15 +681,16 @@ public class MainFrame extends JFrame {
 				lblRunStatus.setBackground(runStatusBackground);
 			}
 		});
+
+		lblRunSummary = newRunSummaryLabel();
+
+		pnlRunButton.add(newRunSplitButtonPanel(btnStart, btnStartMenu));
 		pnlRunButton.add(lblRunStatus);
 
 		pnlControls.add(pnlRunButton, BorderLayout.CENTER);
-
-		lblRunSummary = newRunSummaryLabel();
-		installRunSummaryHover(btnStart);
-		installRunSummaryHover(btnStartMenu);
 		pnlControls.add(lblRunSummary, BorderLayout.SOUTH);
 
+		getContentPane().add(pnlControls, GridBagSupport.at(0, 6).anchor(GridBagConstraints.SOUTH).fill(GridBagConstraints.HORIZONTAL).build());
 	}
 
 	private void installKeyboardShortcuts() {

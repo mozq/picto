@@ -50,7 +50,6 @@ class DestinationOptionsPanel extends JPanel {
 		setLayout(layout);
 
 		lblSubFilePathPattern = new JLabel(Messages.getString("MainFrame.dest.subFilePathPattern"));
-		add(lblSubFilePathPattern, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		txtSubFilePathPattern = new JTextField();
 		txtSubFilePathPattern.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
@@ -61,23 +60,27 @@ class DestinationOptionsPanel extends JPanel {
 		InputSupport.installLabelFocusAction(lblSubFilePathPattern, txtSubFilePathPattern, LabelFocusBehavior.CARET_END);
 		txtSubFilePathPattern.setColumns(10);
 		new SubfolderTemplatePopup(txtSubFilePathPattern);
+
+		add(lblSubFilePathPattern, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 		add(txtSubFilePathPattern, GridBagSupport.at(1, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 5, 0).build());
 
 		lblExistingFileMethod = new JLabel(Messages.getString("MainFrame.dest.existingFileMethod"));
-		add(lblExistingFileMethod, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 
 		cmbExistingFileMethod = new JComboBox<>();
 		lblExistingFileMethod.setLabelFor(cmbExistingFileMethod);
 		InputSupport.installLabelFocusAction(lblExistingFileMethod, cmbExistingFileMethod, LabelFocusBehavior.FOCUS_ONLY);
 		cmbExistingFileMethod.setModel(new DefaultComboBoxModel<>(ExistingFileMethod.values()));
+
+		add(lblExistingFileMethod, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 		add(cmbExistingFileMethod, GridBagSupport.at(1, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 0).build());
 
 		lblValidateFile = new JLabel(Messages.getString("MainFrame.dest.validateFile"));
-		add(lblValidateFile, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
 
 		chkCheckFileDigest = new JCheckBox(Messages.getString("MainFrame.dest.checkFileDigest"));
 		lblValidateFile.setLabelFor(chkCheckFileDigest);
 		InputSupport.installLabelFocusAction(lblValidateFile, chkCheckFileDigest, LabelFocusBehavior.FOCUS_ONLY);
+
+		add(lblValidateFile, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
 		add(chkCheckFileDigest, GridBagSupport.at(1, 2).anchor(GridBagConstraints.WEST).build());
 	}
 }

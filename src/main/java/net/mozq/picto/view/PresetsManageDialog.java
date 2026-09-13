@@ -51,38 +51,38 @@ public class PresetsManageDialog extends JDialog {
 
 		JPanel contentPane = new JPanel(new BorderLayout(0, 8));
 		contentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
-		setContentPane(contentPane);
-
-		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		JScrollPane scrollPane = new JScrollPane(list);
-		contentPane.add(scrollPane, BorderLayout.CENTER);
-
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
 
 		btnRename = new JButton(Messages.getString("PresetsManageDialog.rename"));
 		btnRename.setMnemonic(KeyEvent.VK_R);
 		btnRename.setEnabled(false);
 		btnRename.addActionListener(_ -> renameSelected());
-		buttonPanel.add(btnRename);
 
 		btnDelete = new JButton(Messages.getString("PresetsManageDialog.delete"));
 		btnDelete.setMnemonic(KeyEvent.VK_D);
 		btnDelete.setEnabled(false);
 		btnDelete.addActionListener(_ -> deleteSelected());
-		buttonPanel.add(btnDelete);
 
 		JButton btnClose = new JButton(Messages.getString("PresetsManageDialog.close"));
 		btnClose.setMnemonic(KeyEvent.VK_C);
 		btnClose.addActionListener(_ -> dispose());
-		buttonPanel.add(btnClose);
 
-		contentPane.add(buttonPanel, BorderLayout.SOUTH);
-
+		list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		list.addListSelectionListener(_ -> {
 			boolean selected = list.getSelectedValue() != null;
 			btnRename.setEnabled(selected);
 			btnDelete.setEnabled(selected);
 		});
+		JScrollPane scrollPane = new JScrollPane(list);
+
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+		buttonPanel.add(btnRename);
+		buttonPanel.add(btnDelete);
+		buttonPanel.add(btnClose);
+
+		contentPane.add(scrollPane, BorderLayout.CENTER);
+		contentPane.add(buttonPanel, BorderLayout.SOUTH);
+
+		setContentPane(contentPane);
 
 		refreshList();
 	}

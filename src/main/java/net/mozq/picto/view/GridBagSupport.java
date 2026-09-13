@@ -40,6 +40,16 @@ final class GridBagSupport {
 			constraints.gridy = gridy;
 		}
 
+		Cell gridwidth(int gridwidth) {
+			constraints.gridwidth = gridwidth;
+			return this;
+		}
+
+		Cell weightx(double weightx) {
+			constraints.weightx = weightx;
+			return this;
+		}
+
 		Cell anchor(int anchor) {
 			constraints.anchor = anchor;
 			return this;
@@ -52,16 +62,6 @@ final class GridBagSupport {
 
 		Cell insets(int top, int left, int bottom, int right) {
 			constraints.insets = new Insets(top, left, bottom, right);
-			return this;
-		}
-
-		Cell gridwidth(int gridwidth) {
-			constraints.gridwidth = gridwidth;
-			return this;
-		}
-
-		Cell weightx(double weightx) {
-			constraints.weightx = weightx;
 			return this;
 		}
 
