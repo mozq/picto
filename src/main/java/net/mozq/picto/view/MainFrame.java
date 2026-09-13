@@ -1063,17 +1063,8 @@ public class MainFrame extends JFrame {
 				break;
 			}
 		}
-		if (alreadyExists) {
-			int overwrite = JOptionPane.showConfirmDialog(
-					frame,
-					Messages.getString("message.confirm.preset.overwrite", name),
-					null,
-					JOptionPane.YES_NO_OPTION,
-					JOptionPane.WARNING_MESSAGE
-					);
-			if (overwrite != JOptionPane.YES_OPTION) {
-				return;
-			}
+		if (alreadyExists && !confirmYesNo("message.confirm.preset.overwrite", name)) {
+			return;
 		}
 
 		try {
@@ -1125,14 +1116,7 @@ public class MainFrame extends JFrame {
 	}
 
 	private void confirmAndLoadPreset(PresetEntry preset) {
-		int result = JOptionPane.showConfirmDialog(
-				frame,
-				Messages.getString("message.confirm.preset.load", preset.name()),
-				null,
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.WARNING_MESSAGE
-				);
-		if (result != JOptionPane.YES_OPTION) {
+		if (!confirmYesNo("message.confirm.preset.load", preset.name())) {
 			return;
 		}
 
@@ -1156,20 +1140,12 @@ public class MainFrame extends JFrame {
 	}
 
 	private void confirmAndResetToDefaultSettings() {
-		int result = JOptionPane.showConfirmDialog(
-				frame,
-				Messages.getString("message.confirm.settings.default"),
-				null,
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.WARNING_MESSAGE
-				);
-		if (result != JOptionPane.YES_OPTION) {
+		if (!confirmYesNo("message.confirm.settings.default")) {
 			return;
 		}
 
-		AppSettings defaults = AppSettings.of(App.settings().path());
-		applyDefaultSettings(defaults);
-		applySettingsSource(defaults);
+		applyDefaultSettings(App.settings());
+		loadSettings();
 	}
 
 	/** Copies every key from {@code source} into the live settings, then refreshes the UI from it. */
@@ -1180,6 +1156,18 @@ public class MainFrame extends JFrame {
 		}
 
 		loadSettings();
+	}
+
+	/** Shows a Yes/No confirmation dialog for {@code messageKey} and reports whether the user chose Yes. */
+	private boolean confirmYesNo(String messageKey, Object... args) {
+		int result = JOptionPane.showConfirmDialog(
+				frame,
+				Messages.getString(messageKey, args),
+				null,
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE
+				);
+		return result == JOptionPane.YES_OPTION;
 	}
 
 	void renamePreset(String fileName, String newName) throws IOException {
@@ -1969,32 +1957,36 @@ public class MainFrame extends JFrame {
 		if (txtSrcOptionsSummary == null || txtDestOptionsSummary == null || txtChangesSummary == null || btnStart == null || btnStartMenu == null || lblRunSummary == null) {
 			return;
 		}
-		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, sourceOptionsSummary());
-		updateOptionsSummary(txtDestOptionsSummary, destOpt, destinationOptionsSummary());
-		updateOptionsSummary(txtChangesSummary, changes, changesSummary());
-		updateRunSummary();
+		ProcessConditionValues values = collectProcessConditionValues();
+		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, sourceOptionsSummary(values));
+		updateOptionsSummary(txtDestOptionsSummary, destOpt, destinationOptionsSummary(values));
+		updateOptionsSummary(txtChangesSummary, changes, changesSummary(values));
+		updateRunSummary(values);
 	}
 
 	private void updateRunSummary() {
+		updateRunSummary(collectProcessConditionValues());
+	}
+
+	private void updateRunSummary(ProcessConditionValues values) {
 		btnStart.setToolTipText(null);
 		btnStartMenu.setToolTipText(null);
 		if (showingRunSummary) {
-			showRunSummary();
+			showRunSummary(values);
 		} else {
 			clearRunSummary();
 		}
 	}
 
-	private void showRunSummary() {
-		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(runSummary(), lblRunSummary.getWidth() - 8, lblRunSummary));
+	private void showRunSummary(ProcessConditionValues values) {
+		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(runSummary(values), lblRunSummary.getWidth() - 8, lblRunSummary));
 	}
 
 	private void clearRunSummary() {
 		lblRunSummary.setText(" ");
 	}
 
-	private String runSummary() {
-		ProcessConditionValues values = collectProcessConditionValues();
+	private String runSummary(ProcessConditionValues values) {
 		String summary = values.operationType + ": "
 				+ Messages.getString("MainFrame.src.conditionsTitle") + " "
 				+ PathTextSupport.shortPathText(fieldText(txtSrcFolder), Messages.getString("MainFrame.src.folder"));
@@ -2011,8 +2003,7 @@ public class MainFrame extends JFrame {
 		summary.setVisible(!optionsBody.isVisible() && !text.isEmpty());
 	}
 
-	private String sourceOptionsSummary() {
-		ProcessConditionValues values = collectProcessConditionValues();
+	private String sourceOptionsSummary(ProcessConditionValues values) {
 		List<String> items = new ArrayList<>();
 		if (!values.srcFileNamePattern.isEmpty()) {
 			String pattern = values.srcFileNamePattern;
@@ -2042,8 +2033,7 @@ public class MainFrame extends JFrame {
 		return joinOptionsSummary(items);
 	}
 
-	private String destinationOptionsSummary() {
-		ProcessConditionValues values = collectProcessConditionValues();
+	private String destinationOptionsSummary(ProcessConditionValues values) {
 		List<String> items = new ArrayList<>();
 		if (!values.destSubFilePathPattern.isBlank() && !DEFAULT_DEST_SUB_FILE_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
 			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), values.destSubFilePathPattern));
@@ -2057,8 +2047,7 @@ public class MainFrame extends JFrame {
 		return joinOptionsSummary(items);
 	}
 
-	private String changesSummary() {
-		ProcessConditionValues values = collectProcessConditionValues();
+	private String changesSummary(ProcessConditionValues values) {
 		List<String> items = new ArrayList<>();
 		boolean changesFileDate = false;
 		if (values.changeFileCreationDate) {
@@ -2549,14 +2538,7 @@ public class MainFrame extends JFrame {
 		case Overwrite -> "message.confirm.destructive.overwrite";
 		case Copy -> throw new IllegalStateException(values.operationType.toString());
 		};
-		int ret = JOptionPane.showConfirmDialog(
-				frame,
-				Messages.getString(messageKey),
-				null,
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.WARNING_MESSAGE
-				);
-		return ret == JOptionPane.YES_OPTION;
+		return confirmYesNo(messageKey);
 	}
 
 	private boolean showValidationResult(ProcessConditionValidator.Result result) {

@@ -24,7 +24,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -164,11 +163,7 @@ final class DataArchiveSupport {
 	}
 
 	private static Map<String, Object> readValues(AppSettings settings) {
-		Map<String, Object> values = new LinkedHashMap<>();
-		for (String key : settings.keySet()) {
-			values.put(key, settings.get(key));
-		}
-		return values;
+		return settings.asMap();
 	}
 
 	/**
