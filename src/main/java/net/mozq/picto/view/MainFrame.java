@@ -42,8 +42,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Year;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TimeZone;
 
 import javax.swing.AbstractAction;
@@ -87,7 +85,6 @@ import net.mozq.picto.core.ProcessCondition;
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
 import net.mozq.picto.enums.ExistingFileMethod;
-import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.FileSizeUnit;
 import net.mozq.picto.enums.OperationType;
 
@@ -119,7 +116,6 @@ public class MainFrame extends JFrame {
 	private static final int OPTIONS_BODY_SHADE_LIGHT = -11;
 	private static final int OPTIONS_BODY_SHADE_DARK = -8;
 	private static final int MID_BRIGHTNESS = 128;
-	private static final String CHECKED_ITEM_PREFIX = "✓ ";
 	private static final int MATCH_COUNT_DEBOUNCE_MS = 400;
 
 	private TimeZone timeZone = TimeZone.getDefault();
@@ -177,6 +173,7 @@ public class MainFrame extends JFrame {
 	private ProcessDialog lastProcessDialog;
 	private MainFrameSettings mainFrameSettings;
 	private PresetManager presetManager;
+	private ConditionSummaryFormatter conditionSummaryFormatter;
 
 	private static final class MainFrameState {
 		private final Rectangle bounds;
@@ -258,6 +255,7 @@ public class MainFrame extends JFrame {
 
 		mainFrameSettings = new MainFrameSettings(txtSrcFolder, srcOpt, btngrpOperationType, txtDestFolder, destOpt, changes);
 		presetManager = new PresetManager(this, mnPresets, mainFrameSettings);
+		conditionSummaryFormatter = new ConditionSummaryFormatter(txtSrcFolder, txtDestFolder, srcOpt, changes);
 
 		installOptionsSummaryListeners();
 		mainFrameSettings.load();
@@ -1105,9 +1103,9 @@ public class MainFrame extends JFrame {
 			return;
 		}
 		ProcessConditionValues values = collectProcessConditionValues();
-		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, sourceOptionsSummary(values));
-		updateOptionsSummary(txtDestOptionsSummary, destOpt, destinationOptionsSummary(values));
-		updateOptionsSummary(txtChangesSummary, changes, changesSummary(values));
+		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, conditionSummaryFormatter.sourceOptionsSummary(values));
+		updateOptionsSummary(txtDestOptionsSummary, destOpt, conditionSummaryFormatter.destinationOptionsSummary(values));
+		updateOptionsSummary(txtChangesSummary, changes, conditionSummaryFormatter.changesSummary(values));
 		updateRunSummary(values);
 	}
 
@@ -1126,23 +1124,11 @@ public class MainFrame extends JFrame {
 	}
 
 	private void showRunSummary(ProcessConditionValues values) {
-		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(runSummary(values), lblRunSummary.getWidth() - 8, lblRunSummary));
+		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(conditionSummaryFormatter.runSummary(values), lblRunSummary.getWidth() - 8, lblRunSummary));
 	}
 
 	private void clearRunSummary() {
 		lblRunSummary.setText(" ");
-	}
-
-	private String runSummary(ProcessConditionValues values) {
-		String summary = values.operationType + ": "
-				+ Messages.getString("MainFrame.src.conditionsTitle") + " "
-				+ PathTextSupport.shortPathText(fieldText(txtSrcFolder), Messages.getString("MainFrame.src.folder"));
-		if (values.operationType == OperationType.Overwrite) {
-			return summary;
-		}
-		return summary + " -> "
-				+ Messages.getString("MainFrame.dest.conditionsTitle") + " "
-				+ PathTextSupport.shortPathText(fieldText(txtDestFolder), Messages.getString("MainFrame.dest.folder"));
 	}
 
 	private static void updateOptionsSummary(JTextArea summary, JComponent optionsBody, String text) {
@@ -1150,143 +1136,9 @@ public class MainFrame extends JFrame {
 		summary.setVisible(!optionsBody.isVisible() && !text.isEmpty());
 	}
 
-	private String sourceOptionsSummary(ProcessConditionValues values) {
-		List<String> items = new ArrayList<>();
-		if (!values.srcFileNamePattern.isEmpty()) {
-			String pattern = values.srcFileNamePattern;
-			if (values.srcFileNamePatternSyntax == FilePatternSyntax.Regex) {
-				pattern += " (" + FilePatternSyntax.Regex + ")";
-			}
-			items.add(summaryItem(Messages.getString("MainFrame.src.fileNamePattern"), pattern));
-		}
-		if (values.depth != 1) {
-			items.add(checkedItem(Messages.getString("MainFrame.src.includeSubfolders")));
-		}
-		if (values.includeHiddenFiles) {
-			items.add(checkedItem(Messages.getString("MainFrame.src.includeHiddenFiles")));
-		}
-		if (values.fileSizeFrom != null || values.fileSizeTo != null) {
-			String range = rangeText(fieldText(srcOpt.txtFileSizeFrom), fieldText(srcOpt.txtFileSizeTo));
-			items.add(summaryItem(Messages.getString("MainFrame.src.fileSize"), range + " " + srcOpt.cmbFileSizeUnit.getSelectedItem()));
-		}
-		if (values.createdFrom != null || values.createdTo != null) {
-			items.add(summaryItem(Messages.getString("MainFrame.src.created"),
-					rangeText(dateFieldText(srcOpt.txtCreatedFrom), dateFieldText(srcOpt.txtCreatedTo))));
-		}
-		if (values.modifiedFrom != null || values.modifiedTo != null) {
-			items.add(summaryItem(Messages.getString("MainFrame.src.modified"),
-					rangeText(dateFieldText(srcOpt.txtModifiedFrom), dateFieldText(srcOpt.txtModifiedTo))));
-		}
-		return joinOptionsSummary(items);
-	}
-
-	private String destinationOptionsSummary(ProcessConditionValues values) {
-		List<String> items = new ArrayList<>();
-		if (!values.destSubFilePathPattern.isBlank() && !MainFrameSettings.DEFAULT_DEST_SUB_FILE_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
-			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), values.destSubFilePathPattern));
-		}
-		if (values.existingFileMethod != ExistingFileMethod.Confirm) {
-			items.add(summaryItem(Messages.getString("MainFrame.dest.existingFileMethod"), String.valueOf(values.existingFileMethod)));
-		}
-		if (values.checkFileDigest) {
-			items.add(checkedItem(Messages.getString("MainFrame.dest.validateFile")));
-		}
-		return joinOptionsSummary(items);
-	}
-
-	private String changesSummary(ProcessConditionValues values) {
-		List<String> items = new ArrayList<>();
-		boolean changesFileDate = false;
-		if (values.changeFileCreationDate) {
-			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.creationDate")));
-			changesFileDate = true;
-		}
-		if (values.changeFileModifiedDate) {
-			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.modifiedDate")));
-			changesFileDate = true;
-		}
-		if (values.changeFileAccessDate) {
-			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.accessDate")));
-			changesFileDate = true;
-		}
-		if (values.changeFileExifDate) {
-			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.exifDate")));
-			changesFileDate = true;
-		}
-		if (changesFileDate) {
-			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.baseDateType"), baseDateTypeSummary(values)));
-		}
-		if (changesFileDate && values.adjustmentType != DateModType.None) {
-			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.adjustment"), adjustmentSummary(values)));
-		}
-		if (values.removeExifGps) {
-			items.add(checkedItem(Messages.getString("MainFrame.changes.exif.removeGps")));
-		}
-		if (values.removeExifAll) {
-			items.add(checkedItem(Messages.getString("MainFrame.changes.exif.removeAll")));
-		}
-		return joinOptionsSummary(items);
-	}
-
-	private static String fieldText(JTextField field) {
+	static String fieldText(JTextField field) {
 		String text = field.getText();
 		return text == null ? "" : text.trim();
-	}
-
-	private static String dateFieldText(JTextField field) {
-		return DateTimeText.compact(field.getText());
-	}
-
-	private String baseDateTypeSummary(ProcessConditionValues values) {
-		String value = String.valueOf(values.baseDateType);
-		String customDate = dateFieldText(changes.filedate.txtCustomBaseDate);
-		if (values.baseDateType == DateType.CustomDate && values.customBaseDate != null && !customDate.isEmpty()) {
-			value += " " + customDate;
-		}
-		return value;
-	}
-
-	private String adjustmentSummary(ProcessConditionValues values) {
-		String value = String.valueOf(values.adjustmentType);
-		List<String> amounts = new ArrayList<>();
-		addAdjustmentAmount(amounts, values.adjustmentYears, "Y");
-		addAdjustmentAmount(amounts, values.adjustmentMonths, "M");
-		addAdjustmentAmount(amounts, values.adjustmentDays, "D");
-		addAdjustmentAmount(amounts, values.adjustmentHours, "h");
-		addAdjustmentAmount(amounts, values.adjustmentMinutes, "m");
-		addAdjustmentAmount(amounts, values.adjustmentSeconds, "s");
-		if (!amounts.isEmpty()) {
-			value += " " + String.join(" ", amounts);
-		}
-		return value;
-	}
-
-	private static void addAdjustmentAmount(List<String> amounts, Integer value, String suffix) {
-		if (value != null) {
-			amounts.add(value + suffix);
-		}
-	}
-
-	private static String rangeText(String from, String to) {
-		if (from.isEmpty()) {
-			return to;
-		}
-		if (to.isEmpty()) {
-			return from;
-		}
-		return from + " - " + to;
-	}
-
-	private static String summaryItem(String label, String value) {
-		return label + ": " + value;
-	}
-
-	private static String checkedItem(String label) {
-		return CHECKED_ITEM_PREFIX + label;
-	}
-
-	private static String joinOptionsSummary(List<String> items) {
-		return String.join(" / ", items);
 	}
 
 	private void fitWindowToContent() {
