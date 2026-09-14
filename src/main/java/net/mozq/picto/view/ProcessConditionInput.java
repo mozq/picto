@@ -16,24 +16,30 @@
  */
 package net.mozq.picto.view;
 
-import java.nio.file.Path;
-import java.util.Date;
-
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
 import net.mozq.picto.enums.ExistingFileMethod;
 import net.mozq.picto.enums.FilePatternSyntax;
+import net.mozq.picto.enums.FileSizeUnit;
 import net.mozq.picto.enums.OperationType;
 
-class ProcessConditionValues {
-	Path srcFolder;
+/**
+ * A snapshot of MainFrame's condition fields, held at the same granularity as the Swing components
+ * themselves (their literal text, selection, or checked state) rather than already parsed into the types
+ * {@link net.mozq.picto.core.ProcessCondition} needs. That parsing happens in {@link ProcessConditionBuilder},
+ * which both validates and builds from the same values - so this snapshot stays free for anything in the
+ * view layer to read (e.g. rendering a summary of the current input) without reaching back into the
+ * Swing fields it came from.
+ */
+class ProcessConditionInput {
+	String srcFolder;
 	String srcFileNamePattern;
 	FilePatternSyntax srcFileNamePatternSyntax;
 	boolean includeHiddenFiles;
 	boolean followLinks;
-	int depth;
+	boolean includeSubfolders;
 	OperationType operationType;
-	Path destFolder;
+	String destFolder;
 	String destSubFilePathPattern;
 	ExistingFileMethod existingFileMethod;
 	boolean checkFileDigest;
@@ -42,20 +48,21 @@ class ProcessConditionValues {
 	boolean changeFileAccessDate;
 	boolean changeFileExifDate;
 	DateType baseDateType;
-	Date customBaseDate;
+	String customBaseDate;
 	DateModType adjustmentType;
-	Integer adjustmentYears;
-	Integer adjustmentMonths;
-	Integer adjustmentDays;
-	Integer adjustmentHours;
-	Integer adjustmentMinutes;
-	Integer adjustmentSeconds;
+	String adjustmentYears;
+	String adjustmentMonths;
+	String adjustmentDays;
+	String adjustmentHours;
+	String adjustmentMinutes;
+	String adjustmentSeconds;
 	boolean removeExifGps;
 	boolean removeExifAll;
-	Long fileSizeFrom;
-	Long fileSizeTo;
-	Date createdFrom;
-	Date createdTo;
-	Date modifiedFrom;
-	Date modifiedTo;
+	String fileSizeFrom;
+	String fileSizeTo;
+	FileSizeUnit fileSizeUnit;
+	String createdFrom;
+	String createdTo;
+	String modifiedFrom;
+	String modifiedTo;
 }

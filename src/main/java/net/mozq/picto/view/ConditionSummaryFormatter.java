@@ -19,153 +19,149 @@ package net.mozq.picto.view;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JTextField;
-
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
 import net.mozq.picto.enums.ExistingFileMethod;
 import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.OperationType;
 
-/** Renders a {@link ProcessConditionValues} snapshot into the short human-readable summary text shown for
+/** Renders a {@link ProcessConditionInput} snapshot into the short human-readable summary text shown for
  * the run button, and each collapsed options/changes section, in {@link MainFrame}. */
 final class ConditionSummaryFormatter {
 	private static final String CHECKED_ITEM_PREFIX = "✓ ";
 
-	private final JTextField txtSrcFolder;
-	private final JTextField txtDestFolder;
-	private final SourceOptionsPanel srcOpt;
-	private final ChangesPanel changes;
-
-	ConditionSummaryFormatter(JTextField txtSrcFolder, JTextField txtDestFolder, SourceOptionsPanel srcOpt, ChangesPanel changes) {
-		this.txtSrcFolder = txtSrcFolder;
-		this.txtDestFolder = txtDestFolder;
-		this.srcOpt = srcOpt;
-		this.changes = changes;
+	private ConditionSummaryFormatter() {
 	}
 
-	String runSummary(ProcessConditionValues values) {
-		String summary = values.operationType + ": "
+	static String runSummary(ProcessConditionInput input) {
+		String summary = input.operationType + ": "
 				+ Messages.getString("MainFrame.src.conditionsTitle") + " "
-				+ PathTextSupport.shortPathText(MainFrame.fieldText(txtSrcFolder), Messages.getString("MainFrame.src.folder"));
-		if (values.operationType == OperationType.Overwrite) {
+				+ PathTextSupport.shortPathText(input.srcFolder, Messages.getString("MainFrame.src.folder"));
+		if (input.operationType == OperationType.Overwrite) {
 			return summary;
 		}
 		return summary + " -> "
 				+ Messages.getString("MainFrame.dest.conditionsTitle") + " "
-				+ PathTextSupport.shortPathText(MainFrame.fieldText(txtDestFolder), Messages.getString("MainFrame.dest.folder"));
+				+ PathTextSupport.shortPathText(input.destFolder, Messages.getString("MainFrame.dest.folder"));
 	}
 
-	String sourceOptionsSummary(ProcessConditionValues values) {
+	static String sourceOptionsSummary(ProcessConditionInput input) {
 		List<String> items = new ArrayList<>();
-		if (!values.srcFileNamePattern.isEmpty()) {
-			String pattern = values.srcFileNamePattern;
-			if (values.srcFileNamePatternSyntax == FilePatternSyntax.Regex) {
+		if (!input.srcFileNamePattern.isEmpty()) {
+			String pattern = input.srcFileNamePattern;
+			if (input.srcFileNamePatternSyntax == FilePatternSyntax.Regex) {
 				pattern += " (" + FilePatternSyntax.Regex + ")";
 			}
 			items.add(summaryItem(Messages.getString("MainFrame.src.fileNamePattern"), pattern));
 		}
-		if (values.depth != 1) {
+		if (input.includeSubfolders) {
 			items.add(checkedItem(Messages.getString("MainFrame.src.includeSubfolders")));
 		}
-		if (values.includeHiddenFiles) {
+		if (input.includeHiddenFiles) {
 			items.add(checkedItem(Messages.getString("MainFrame.src.includeHiddenFiles")));
 		}
-		if (values.fileSizeFrom != null || values.fileSizeTo != null) {
-			String range = rangeText(MainFrame.fieldText(srcOpt.txtFileSizeFrom), MainFrame.fieldText(srcOpt.txtFileSizeTo));
-			items.add(summaryItem(Messages.getString("MainFrame.src.fileSize"), range + " " + srcOpt.cmbFileSizeUnit.getSelectedItem()));
+		if (!input.fileSizeFrom.isEmpty() || !input.fileSizeTo.isEmpty()) {
+			String range = rangeText(input.fileSizeFrom, input.fileSizeTo);
+			items.add(summaryItem(Messages.getString("MainFrame.src.fileSize"), range + " " + input.fileSizeUnit));
 		}
-		if (values.createdFrom != null || values.createdTo != null) {
-			items.add(summaryItem(Messages.getString("MainFrame.src.created"),
-					rangeText(dateFieldText(srcOpt.txtCreatedFrom), dateFieldText(srcOpt.txtCreatedTo))));
+		String createdFrom = dateFieldText(input.createdFrom);
+		String createdTo = dateFieldText(input.createdTo);
+		if (!createdFrom.isEmpty() || !createdTo.isEmpty()) {
+			items.add(summaryItem(Messages.getString("MainFrame.src.created"), rangeText(createdFrom, createdTo)));
 		}
-		if (values.modifiedFrom != null || values.modifiedTo != null) {
-			items.add(summaryItem(Messages.getString("MainFrame.src.modified"),
-					rangeText(dateFieldText(srcOpt.txtModifiedFrom), dateFieldText(srcOpt.txtModifiedTo))));
+		String modifiedFrom = dateFieldText(input.modifiedFrom);
+		String modifiedTo = dateFieldText(input.modifiedTo);
+		if (!modifiedFrom.isEmpty() || !modifiedTo.isEmpty()) {
+			items.add(summaryItem(Messages.getString("MainFrame.src.modified"), rangeText(modifiedFrom, modifiedTo)));
 		}
 		return joinOptionsSummary(items);
 	}
 
-	String destinationOptionsSummary(ProcessConditionValues values) {
+	static String destinationOptionsSummary(ProcessConditionInput input) {
 		List<String> items = new ArrayList<>();
-		if (!values.destSubFilePathPattern.isBlank() && !MainFrameSettings.DEFAULT_DEST_SUB_FILE_PATH_PATTERN.equals(values.destSubFilePathPattern)) {
-			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), values.destSubFilePathPattern));
+		if (!input.destSubFilePathPattern.isBlank() && !MainFrameSettings.DEFAULT_DEST_SUB_FILE_PATH_PATTERN.equals(input.destSubFilePathPattern)) {
+			items.add(summaryItem(Messages.getString("MainFrame.dest.subFilePathPattern"), input.destSubFilePathPattern));
 		}
-		if (values.existingFileMethod != ExistingFileMethod.Confirm) {
-			items.add(summaryItem(Messages.getString("MainFrame.dest.existingFileMethod"), String.valueOf(values.existingFileMethod)));
+		if (input.existingFileMethod != ExistingFileMethod.Confirm) {
+			items.add(summaryItem(Messages.getString("MainFrame.dest.existingFileMethod"), String.valueOf(input.existingFileMethod)));
 		}
-		if (values.checkFileDigest) {
+		if (input.checkFileDigest) {
 			items.add(checkedItem(Messages.getString("MainFrame.dest.validateFile")));
 		}
 		return joinOptionsSummary(items);
 	}
 
-	String changesSummary(ProcessConditionValues values) {
+	static String changesSummary(ProcessConditionInput input) {
 		List<String> items = new ArrayList<>();
 		boolean changesFileDate = false;
-		if (values.changeFileCreationDate) {
+		if (input.changeFileCreationDate) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.creationDate")));
 			changesFileDate = true;
 		}
-		if (values.changeFileModifiedDate) {
+		if (input.changeFileModifiedDate) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.modifiedDate")));
 			changesFileDate = true;
 		}
-		if (values.changeFileAccessDate) {
+		if (input.changeFileAccessDate) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.accessDate")));
 			changesFileDate = true;
 		}
-		if (values.changeFileExifDate) {
+		if (input.changeFileExifDate) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.filedate.exifDate")));
 			changesFileDate = true;
 		}
 		if (changesFileDate) {
-			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.baseDateType"), baseDateTypeSummary(values)));
+			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.baseDateType"), baseDateTypeSummary(input)));
 		}
-		if (changesFileDate && values.adjustmentType != DateModType.None) {
-			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.adjustment"), adjustmentSummary(values)));
+		if (changesFileDate && input.adjustmentType != DateModType.None) {
+			items.add(summaryItem(Messages.getString("MainFrame.changes.filedate.adjustment"), adjustmentSummary(input)));
 		}
-		if (values.removeExifGps) {
+		if (input.removeExifGps) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.exif.removeGps")));
 		}
-		if (values.removeExifAll) {
+		if (input.removeExifAll) {
 			items.add(checkedItem(Messages.getString("MainFrame.changes.exif.removeAll")));
 		}
 		return joinOptionsSummary(items);
 	}
 
-	private String baseDateTypeSummary(ProcessConditionValues values) {
-		String value = String.valueOf(values.baseDateType);
-		String customDate = dateFieldText(changes.filedate.txtCustomBaseDate);
-		if (values.baseDateType == DateType.CustomDate && values.customBaseDate != null && !customDate.isEmpty()) {
+	private static String baseDateTypeSummary(ProcessConditionInput input) {
+		String value = String.valueOf(input.baseDateType);
+		String customDate = dateFieldText(input.customBaseDate);
+		if (input.baseDateType == DateType.CustomDate && !customDate.isEmpty()) {
 			value += " " + customDate;
 		}
 		return value;
 	}
 
-	private static String adjustmentSummary(ProcessConditionValues values) {
-		String value = String.valueOf(values.adjustmentType);
+	private static String adjustmentSummary(ProcessConditionInput input) {
+		String value = String.valueOf(input.adjustmentType);
 		List<String> amounts = new ArrayList<>();
-		addAdjustmentAmount(amounts, values.adjustmentYears, "Y");
-		addAdjustmentAmount(amounts, values.adjustmentMonths, "M");
-		addAdjustmentAmount(amounts, values.adjustmentDays, "D");
-		addAdjustmentAmount(amounts, values.adjustmentHours, "h");
-		addAdjustmentAmount(amounts, values.adjustmentMinutes, "m");
-		addAdjustmentAmount(amounts, values.adjustmentSeconds, "s");
+		addAdjustmentAmount(amounts, input.adjustmentYears, "Y");
+		addAdjustmentAmount(amounts, input.adjustmentMonths, "M");
+		addAdjustmentAmount(amounts, input.adjustmentDays, "D");
+		addAdjustmentAmount(amounts, input.adjustmentHours, "h");
+		addAdjustmentAmount(amounts, input.adjustmentMinutes, "m");
+		addAdjustmentAmount(amounts, input.adjustmentSeconds, "s");
 		if (!amounts.isEmpty()) {
 			value += " " + String.join(" ", amounts);
 		}
 		return value;
 	}
 
-	private static void addAdjustmentAmount(List<String> amounts, Integer value, String suffix) {
-		if (value != null) {
-			amounts.add(value + suffix);
+	private static void addAdjustmentAmount(List<String> amounts, String text, String suffix) {
+		if (text == null || text.isEmpty()) {
+			return;
+		}
+		try {
+			amounts.add(Integer.parseInt(text) + suffix);
+		} catch (NumberFormatException e) {
+			amounts.add(text + suffix);
 		}
 	}
 
-	private static String dateFieldText(JTextField field) {
-		return DateTimeText.compact(field.getText());
+	private static String dateFieldText(String text) {
+		return DateTimeText.compact(text);
 	}
 
 	private static String rangeText(String from, String to) {

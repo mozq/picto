@@ -40,8 +40,9 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Year;
 import java.util.TimeZone;
 
 import javax.swing.AbstractAction;
@@ -77,7 +78,6 @@ import javax.swing.event.MenuListener;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
-import net.mozq.nanotemplate.NanoTemplate;
 import net.mozq.picto.App;
 import net.mozq.picto.AppMain;
 import net.mozq.picto.core.PictoPathFilter;
@@ -97,7 +97,6 @@ import javax.swing.JMenuItem;
 public class MainFrame extends JFrame {
 	private static final long serialVersionUID = 1L;
 
-	private static final String EMPTY_DEST_SUB_FILE_PATH_PATTERN = "${SubFilePath}";
 	private static final int WINDOW_PADDING = 10;
 	private static final int MAIN_LABEL_WIDTH = 52;
 	private static final int SECTION_PADDING = 8;
@@ -173,7 +172,6 @@ public class MainFrame extends JFrame {
 	private ProcessDialog lastProcessDialog;
 	private MainFrameSettings mainFrameSettings;
 	private PresetManager presetManager;
-	private ConditionSummaryFormatter conditionSummaryFormatter;
 
 	private static final class MainFrameState {
 		private final Rectangle bounds;
@@ -255,7 +253,6 @@ public class MainFrame extends JFrame {
 
 		mainFrameSettings = new MainFrameSettings(txtSrcFolder, srcOpt, btngrpOperationType, txtDestFolder, destOpt, changes);
 		presetManager = new PresetManager(this, mnPresets, mainFrameSettings);
-		conditionSummaryFormatter = new ConditionSummaryFormatter(txtSrcFolder, txtDestFolder, srcOpt, changes);
 
 		installOptionsSummaryListeners();
 		mainFrameSettings.load();
@@ -1102,29 +1099,29 @@ public class MainFrame extends JFrame {
 		if (txtSrcOptionsSummary == null || txtDestOptionsSummary == null || txtChangesSummary == null || btnStart == null || btnStartMenu == null || lblRunSummary == null) {
 			return;
 		}
-		ProcessConditionValues values = collectProcessConditionValues();
-		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, conditionSummaryFormatter.sourceOptionsSummary(values));
-		updateOptionsSummary(txtDestOptionsSummary, destOpt, conditionSummaryFormatter.destinationOptionsSummary(values));
-		updateOptionsSummary(txtChangesSummary, changes, conditionSummaryFormatter.changesSummary(values));
-		updateRunSummary(values);
+		ProcessConditionInput input = collectProcessConditionInput();
+		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, ConditionSummaryFormatter.sourceOptionsSummary(input));
+		updateOptionsSummary(txtDestOptionsSummary, destOpt, ConditionSummaryFormatter.destinationOptionsSummary(input));
+		updateOptionsSummary(txtChangesSummary, changes, ConditionSummaryFormatter.changesSummary(input));
+		updateRunSummary(input);
 	}
 
 	private void updateRunSummary() {
-		updateRunSummary(collectProcessConditionValues());
+		updateRunSummary(collectProcessConditionInput());
 	}
 
-	private void updateRunSummary(ProcessConditionValues values) {
+	private void updateRunSummary(ProcessConditionInput input) {
 		btnStart.setToolTipText(null);
 		btnStartMenu.setToolTipText(null);
 		if (showingRunSummary) {
-			showRunSummary(values);
+			showRunSummary(input);
 		} else {
 			clearRunSummary();
 		}
 	}
 
-	private void showRunSummary(ProcessConditionValues values) {
-		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(conditionSummaryFormatter.runSummary(values), lblRunSummary.getWidth() - 8, lblRunSummary));
+	private void showRunSummary(ProcessConditionInput input) {
+		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(ConditionSummaryFormatter.runSummary(input), lblRunSummary.getWidth() - 8, lblRunSummary));
 	}
 
 	private void clearRunSummary() {
@@ -1136,7 +1133,7 @@ public class MainFrame extends JFrame {
 		summary.setVisible(!optionsBody.isVisible() && !text.isEmpty());
 	}
 
-	static String fieldText(JTextField field) {
+	private static String fieldText(JTextField field) {
 		String text = field.getText();
 		return text == null ? "" : text.trim();
 	}
@@ -1221,20 +1218,44 @@ public class MainFrame extends JFrame {
 			return;
 		}
 
-		ProcessCondition processCondition = createProcessCondition(dryRun);
+		ProcessConditionInput input = collectProcessConditionInput();
 
-		if (processCondition == null) {
-			// Validation failed
+		ProcessConditionBuilder.BuildResult result = ProcessConditionBuilder.build(input, timeZone);
+		if (!result.isValid()) {
+			showValidationWarning(result.invalidResult().message());
+			focusValidationField(result.invalidResult().field());
+			return;
+		}
+		ProcessCondition processCondition = result.processCondition();
+
+		if (!confirmDestructiveOperation(input, dryRun)) {
 			return;
 		}
 
-		if (!dryRun) {
-			InputHistory.record(InputHistory.SRC_FOLDER_KEY, processCondition.getSrcFolder());
-			InputHistory.record(InputHistory.SRC_FILE_NAME_PATTERN_KEY, fieldText(srcOpt.txtFileNamePattern));
-			if (processCondition.getOperationType() != OperationType.Overwrite) {
-				InputHistory.record(InputHistory.DEST_FOLDER_KEY, processCondition.getDestFolder());
+		if (input.checkFileDigest && (input.changeFileExifDate || input.removeExifGps || input.removeExifAll)) {
+			int ret = JOptionPane.showConfirmDialog(
+					frame,
+					Messages.getString("message.confirm.change.file.with.checkFileDigest"),
+					null,
+					JOptionPane.YES_NO_OPTION,
+					JOptionPane.QUESTION_MESSAGE
+					);
+			if (ret == JOptionPane.NO_OPTION) {
+				return;
 			}
-			InputHistory.record(InputHistory.DEST_SUB_FILE_PATH_PATTERN_KEY, fieldText(destOpt.txtSubFilePathPattern));
+
+			processCondition.setCheckFileDigest(false);
+		}
+
+		processCondition.setDryRun(dryRun);
+
+		if (!dryRun) {
+			InputHistory.record(InputHistory.SRC_FOLDER_KEY, input.srcFolder);
+			InputHistory.record(InputHistory.SRC_FILE_NAME_PATTERN_KEY, input.srcFileNamePattern);
+			if (input.operationType != OperationType.Overwrite) {
+				InputHistory.record(InputHistory.DEST_FOLDER_KEY, input.destFolder);
+			}
+			InputHistory.record(InputHistory.DEST_SUB_FILE_PATH_PATTERN_KEY, input.destSubFilePathPattern);
 		}
 
 		if (lastProcessDialog != null) {
@@ -1287,139 +1308,50 @@ public class MainFrame extends JFrame {
 		}
 	}
 
-	private ProcessConditionValues collectProcessConditionValues() {
-		ProcessConditionValues values = new ProcessConditionValues();
+	private ProcessConditionInput collectProcessConditionInput() {
+		ProcessConditionInput input = new ProcessConditionInput();
 
-		values.srcFolder = Paths.get(txtSrcFolder.getText()).normalize();
-		values.srcFileNamePattern = fieldText(srcOpt.txtFileNamePattern);
-		values.srcFileNamePatternSyntax = srcOpt.selectedFilePatternSyntax();
-		values.includeHiddenFiles = srcOpt.chkIncludeHiddenFiles.isEnabled() && srcOpt.chkIncludeHiddenFiles.isSelected();
-		values.followLinks = false;
-		values.depth = (srcOpt.chkIncludeSubfolders.isEnabled() && srcOpt.chkIncludeSubfolders.isSelected()) ? Integer.MAX_VALUE : 1;
+		input.srcFolder = fieldText(txtSrcFolder);
+		input.srcFileNamePattern = fieldText(srcOpt.txtFileNamePattern);
+		input.srcFileNamePatternSyntax = srcOpt.selectedFilePatternSyntax();
+		input.includeHiddenFiles = srcOpt.chkIncludeHiddenFiles.isEnabled() && srcOpt.chkIncludeHiddenFiles.isSelected();
+		input.followLinks = false;
+		input.includeSubfolders = srcOpt.chkIncludeSubfolders.isEnabled() && srcOpt.chkIncludeSubfolders.isSelected();
 
-		values.operationType = MainFrameSettings.selectedEnumValue(btngrpOperationType, OperationType.class, OperationType.Copy);
+		input.operationType = MainFrameSettings.selectedEnumValue(btngrpOperationType, OperationType.class, OperationType.Copy);
 
-		values.destFolder = Paths.get(txtDestFolder.getText()).normalize();
-		values.destSubFilePathPattern = fieldText(destOpt.txtSubFilePathPattern);
-		values.existingFileMethod = (ExistingFileMethod)destOpt.cmbExistingFileMethod.getSelectedItem();
-		values.checkFileDigest = destOpt.chkCheckFileDigest.isEnabled() && destOpt.chkCheckFileDigest.isSelected();
+		input.destFolder = fieldText(txtDestFolder);
+		input.destSubFilePathPattern = fieldText(destOpt.txtSubFilePathPattern);
+		input.existingFileMethod = (ExistingFileMethod)destOpt.cmbExistingFileMethod.getSelectedItem();
+		input.checkFileDigest = destOpt.chkCheckFileDigest.isEnabled() && destOpt.chkCheckFileDigest.isSelected();
 
-		values.changeFileCreationDate = changes.filedate.chkCreationDate.isEnabled() && changes.filedate.chkCreationDate.isSelected();
-		values.changeFileModifiedDate = changes.filedate.chkModifiedDate.isEnabled() && changes.filedate.chkModifiedDate.isSelected();
-		values.changeFileAccessDate = changes.filedate.chkAccessDate.isEnabled() && changes.filedate.chkAccessDate.isSelected();
-		values.changeFileExifDate = changes.filedate.chkExifDate.isEnabled() && changes.filedate.chkExifDate.isSelected();
-		values.baseDateType = (DateType)changes.filedate.cmbBaseDate.getSelectedItem();
-		values.customBaseDate = DateTimeText.parseDate(changes.filedate.txtCustomBaseDate.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.adjustmentType = (DateModType)changes.filedate.cmbAdjustmentType.getSelectedItem();
-		values.adjustmentYears = parseInteger(changes.filedate.txtAdjustmentYears.getText());
-		values.adjustmentMonths = parseInteger(changes.filedate.txtAdjustmentMonths.getText());
-		values.adjustmentDays = parseInteger(changes.filedate.txtAdjustmentDays.getText());
-		values.adjustmentHours = parseInteger(changes.filedate.txtAdjustmentHours.getText());
-		values.adjustmentMinutes = parseInteger(changes.filedate.txtAdjustmentMinutes.getText());
-		values.adjustmentSeconds = parseInteger(changes.filedate.txtAdjustmentSeconds.getText());
+		input.changeFileCreationDate = changes.filedate.chkCreationDate.isEnabled() && changes.filedate.chkCreationDate.isSelected();
+		input.changeFileModifiedDate = changes.filedate.chkModifiedDate.isEnabled() && changes.filedate.chkModifiedDate.isSelected();
+		input.changeFileAccessDate = changes.filedate.chkAccessDate.isEnabled() && changes.filedate.chkAccessDate.isSelected();
+		input.changeFileExifDate = changes.filedate.chkExifDate.isEnabled() && changes.filedate.chkExifDate.isSelected();
+		input.baseDateType = (DateType)changes.filedate.cmbBaseDate.getSelectedItem();
+		input.customBaseDate = fieldText(changes.filedate.txtCustomBaseDate);
+		input.adjustmentType = (DateModType)changes.filedate.cmbAdjustmentType.getSelectedItem();
+		input.adjustmentYears = fieldText(changes.filedate.txtAdjustmentYears);
+		input.adjustmentMonths = fieldText(changes.filedate.txtAdjustmentMonths);
+		input.adjustmentDays = fieldText(changes.filedate.txtAdjustmentDays);
+		input.adjustmentHours = fieldText(changes.filedate.txtAdjustmentHours);
+		input.adjustmentMinutes = fieldText(changes.filedate.txtAdjustmentMinutes);
+		input.adjustmentSeconds = fieldText(changes.filedate.txtAdjustmentSeconds);
 
-		values.removeExifGps = changes.exif.chkRemoveGps.isEnabled() && changes.exif.chkRemoveGps.isSelected();
-		values.removeExifAll = changes.exif.chkRemoveAll.isEnabled() && changes.exif.chkRemoveAll.isSelected();
+		input.removeExifGps = changes.exif.chkRemoveGps.isEnabled() && changes.exif.chkRemoveGps.isSelected();
+		input.removeExifAll = changes.exif.chkRemoveAll.isEnabled() && changes.exif.chkRemoveAll.isSelected();
 
-		FileSizeUnit fileSizeUnit = (FileSizeUnit)srcOpt.cmbFileSizeUnit.getSelectedItem();
-		values.fileSizeFrom = convertSize(parseLong(srcOpt.txtFileSizeFrom.getText()), fileSizeUnit);
-		values.fileSizeTo = convertSize(parseLong(srcOpt.txtFileSizeTo.getText()), fileSizeUnit);
+		input.fileSizeFrom = fieldText(srcOpt.txtFileSizeFrom);
+		input.fileSizeTo = fieldText(srcOpt.txtFileSizeTo);
+		input.fileSizeUnit = (FileSizeUnit)srcOpt.cmbFileSizeUnit.getSelectedItem();
 
-		values.createdFrom = DateTimeText.parseDate(srcOpt.txtCreatedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.createdTo = DateTimeText.parseDate(srcOpt.txtCreatedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
-		values.modifiedFrom = DateTimeText.parseDate(srcOpt.txtModifiedFrom.getText(), timeZone, Year.now().getValue(), 1, 1, 0, 0, 0, 0);
-		values.modifiedTo = DateTimeText.parseDate(srcOpt.txtModifiedTo.getText(), timeZone, Year.now().getValue(), 12, 31, 23, 59, 59, 999);
+		input.createdFrom = fieldText(srcOpt.txtCreatedFrom);
+		input.createdTo = fieldText(srcOpt.txtCreatedTo);
+		input.modifiedFrom = fieldText(srcOpt.txtModifiedFrom);
+		input.modifiedTo = fieldText(srcOpt.txtModifiedTo);
 
-		return values;
-	}
-
-	private ProcessCondition createProcessCondition(boolean dryRun) {
-
-		if (!showValidationResult(ProcessConditionValidator.validateSourceFolder(
-				fieldText(txtSrcFolder),
-				Messages.getString("MainFrame.src.folder")))) {
-			return null;
-		}
-		if (!rdoOperationTypeOverwrite.isSelected()
-				&& !showValidationResult(ProcessConditionValidator.validateDestinationFolder(
-						fieldText(txtDestFolder),
-						Messages.getString("MainFrame.dest.folder")))) {
-			return null;
-		}
-
-		ProcessConditionValues values = collectProcessConditionValues();
-
-		if (!showValidationResult(ProcessConditionValidator.validate(values))) {
-			return null;
-		}
-
-		if (!confirmDestructiveOperation(values, dryRun)) {
-			return null;
-		}
-
-		if (values.checkFileDigest && (values.changeFileExifDate || values.removeExifGps || values.removeExifAll)) {
-			int ret = JOptionPane.showConfirmDialog(
-					frame,
-					Messages.getString("message.confirm.change.file.with.checkFileDigest"),
-					null,
-					JOptionPane.YES_NO_OPTION,
-					JOptionPane.QUESTION_MESSAGE
-					);
-			if (ret == JOptionPane.NO_OPTION) {
-				return null;
-			}
-
-			values.checkFileDigest = false;
-		}
-
-		PictoPathFilter pathFilter = buildPathFilter(values);
-
-
-		String destSubFilePathPattern = values.destSubFilePathPattern.isBlank()
-				? EMPTY_DEST_SUB_FILE_PATH_PATTERN
-				: values.destSubFilePathPattern;
-		NanoTemplate destSubFilePathTemplate = new NanoTemplate(destSubFilePathPattern).timeZone(timeZone);
-
-		ProcessCondition processCondition = new ProcessCondition();
-		processCondition.setTimeZone(timeZone);
-		processCondition.setSrcFolder(values.srcFolder);
-		processCondition.setDestFolder(values.destFolder);
-		processCondition.setDepth(values.depth);
-		processCondition.setPathFilter(pathFilter);
-		processCondition.setFollowLinks(values.followLinks);
-		processCondition.setDestSubFilePathTemplate(destSubFilePathTemplate);
-		processCondition.setOperationType(values.operationType);
-		processCondition.setExistingFileMethod(values.existingFileMethod);
-		processCondition.setCheckFileDigest(values.checkFileDigest);
-		processCondition.setChangeFileCreationDate(values.changeFileCreationDate);
-		processCondition.setChangeFileModifiedDate(values.changeFileModifiedDate);
-		processCondition.setChangeFileAccessDate(values.changeFileAccessDate);
-		processCondition.setChangeFileExifDate(values.changeFileExifDate);
-		processCondition.setBaseDateType(values.baseDateType);
-		processCondition.setCustomBaseDate(values.customBaseDate);
-		processCondition.setAdjustmentType(values.adjustmentType);
-		processCondition.setAdjustmentYears(values.adjustmentYears);
-		processCondition.setAdjustmentMonths(values.adjustmentMonths);
-		processCondition.setAdjustmentDays(values.adjustmentDays);
-		processCondition.setAdjustmentHours(values.adjustmentHours);
-		processCondition.setAdjustmentMinutes(values.adjustmentMinutes);
-		processCondition.setAdjustmentSeconds(values.adjustmentSeconds);
-		processCondition.setRemoveExifGps(values.removeExifGps);
-		processCondition.setRemoveExifAll(values.removeExifAll);
-		processCondition.setDryRun(dryRun);
-
-		return processCondition;
-	}
-
-	private static PictoPathFilter buildPathFilter(ProcessConditionValues values) {
-		PictoPathFilter pathFilter = new PictoPathFilter();
-		pathFilter.setPathPattern(values.srcFileNamePattern, values.srcFolder, values.srcFileNamePatternSyntax);
-		pathFilter.setIncludeHiddenFiles(values.includeHiddenFiles);
-		pathFilter.setFileSizeRange(values.fileSizeFrom, values.fileSizeTo);
-		pathFilter.setCreatedRange(values.createdFrom, values.createdTo);
-		pathFilter.setModifiedRange(values.modifiedFrom, values.modifiedTo);
-//		pathFilter.setAccessRange(from, to);
-		return pathFilter;
+		return input;
 	}
 
 	private void matchCountLabelClicked() {
@@ -1450,9 +1382,16 @@ public class MainFrame extends JFrame {
 		if (!matchCountEnabled) {
 			return;
 		}
-		ProcessConditionValues values = collectProcessConditionValues();
+		ProcessConditionInput input = collectProcessConditionInput();
 
-		if (!Files.isDirectory(values.srcFolder)) {
+		Path srcFolder;
+		try {
+			srcFolder = Paths.get(input.srcFolder).normalize();
+		} catch (InvalidPathException e) {
+			srcFolder = null;
+		}
+
+		if (srcFolder == null || !Files.isDirectory(srcFolder)) {
 			if (sourceFileScanner != null) {
 				sourceFileScanner.cancel();
 				sourceFileScanner = null;
@@ -1465,16 +1404,16 @@ public class MainFrame extends JFrame {
 		}
 
 		PictoPathFilter pathFilter;
-		boolean includeSubfolders = values.depth != 1;
+		boolean includeSubfolders = input.includeSubfolders;
 		try {
-			pathFilter = buildPathFilter(values);
+			pathFilter = ProcessConditionBuilder.buildPathFilter(input, srcFolder, timeZone);
 		} catch (Exception e) {
 			srcOpt.lblMatchCount.setText("");
 			srcOpt.setMatchCountScanning(false);
 			return;
 		}
 
-		if (sourceFileScanner != null && !sourceFileScanner.srcFolder().equals(values.srcFolder)) {
+		if (sourceFileScanner != null && !sourceFileScanner.srcFolder().equals(srcFolder)) {
 			// The source folder changed while a count was enabled for the previous one; that opt-in doesn't
 			// carry over to a different folder (it could be much larger), so require an explicit re-click.
 			sourceFileScanner.cancel();
@@ -1495,7 +1434,7 @@ public class MainFrame extends JFrame {
 			SourceFileScanner[] holder = new SourceFileScanner[1];
 			try {
 				sourceFileScanner = new SourceFileScanner(
-						values.srcFolder, pathFilter, includeSubfolders,
+						srcFolder, pathFilter, includeSubfolders,
 						status -> SwingUtilities.invokeLater(() -> {
 							if (sourceFileScanner == holder[0]) {
 								renderMatchCount(status);
@@ -1528,25 +1467,16 @@ public class MainFrame extends JFrame {
 		}
 	}
 
-	private boolean confirmDestructiveOperation(ProcessConditionValues values, boolean dryRun) {
-		if (dryRun || values.operationType == OperationType.Copy) {
+	private boolean confirmDestructiveOperation(ProcessConditionInput input, boolean dryRun) {
+		if (dryRun || input.operationType == OperationType.Copy) {
 			return true;
 		}
-		String messageKey = switch (values.operationType) {
+		String messageKey = switch (input.operationType) {
 		case Move -> "message.confirm.destructive.move";
 		case Overwrite -> "message.confirm.destructive.overwrite";
-		case Copy -> throw new IllegalStateException(values.operationType.toString());
+		case Copy -> throw new IllegalStateException(input.operationType.toString());
 		};
 		return DialogSupport.confirmYesNo(frame, messageKey);
-	}
-
-	private boolean showValidationResult(ProcessConditionValidator.Result result) {
-		if (result == null) {
-			return true;
-		}
-		showValidationWarning(result.message());
-		focusValidationField(result.field());
-		return false;
 	}
 
 	private void showValidationWarning(String message) {
@@ -1558,7 +1488,7 @@ public class MainFrame extends JFrame {
 				);
 	}
 
-	private void focusValidationField(ProcessConditionValidator.Field field) {
+	private void focusValidationField(ProcessConditionBuilder.Field field) {
 		JTextField textField = switch (field) {
 		case SOURCE_FOLDER -> txtSrcFolder;
 		case DESTINATION_FOLDER -> txtDestFolder;
@@ -1569,35 +1499,6 @@ public class MainFrame extends JFrame {
 		if (textField != null) {
 			textField.requestFocusInWindow();
 			textField.selectAll();
-		}
-	}
-
-	private static Long convertSize(Long size, FileSizeUnit unit) {
-		if (size == null) {
-			return null;
-		}
-		return size * unit.getUnitBytes();
-	}
-
-	private static Integer parseInteger(String numberText) {
-		if (numberText == null || numberText.isEmpty()) {
-			return null;
-		}
-		try {
-			return Integer.valueOf(numberText);
-		} catch (NumberFormatException _) {
-			return null;
-		}
-	}
-
-	private static Long parseLong(String numberText) {
-		if (numberText == null || numberText.isEmpty()) {
-			return null;
-		}
-		try {
-			return Long.valueOf(numberText);
-		} catch (NumberFormatException _) {
-			return null;
 		}
 	}
 
