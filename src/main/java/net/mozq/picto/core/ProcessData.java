@@ -18,7 +18,7 @@ package net.mozq.picto.core;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Date;
+import java.time.Instant;
 
 import net.mozq.picto.enums.ProcessDataStatus;
 
@@ -31,7 +31,7 @@ public class ProcessData {
 	private String srcRelativePath;
 	private String destRelativePath;
 
-	private Date baseDate;
+	private Instant baseDate;
 
 	private volatile ProcessDataStatus status;
 
@@ -80,11 +80,11 @@ public class ProcessData {
 		this.destRelativePath = destRelativePath;
 	}
 
-	public Date getBaseDate() {
+	public Instant getBaseDate() {
 		return baseDate;
 	}
 
-	public void setBaseDate(Date baseDate) {
+	public void setBaseDate(Instant baseDate) {
 		this.baseDate = baseDate;
 	}
 

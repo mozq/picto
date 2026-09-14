@@ -19,7 +19,7 @@ package net.mozq.picto.core;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Date;
+import java.time.Instant;
 import java.util.function.Supplier;
 
 import org.apache.commons.imaging.common.ImageMetadata;
@@ -38,7 +38,7 @@ final class TemplateVariables {
 	private final BasicFileAttributes attrs;
 	private final Path rootRelativeSubPath;
 	private final Supplier<ImageMetadata> imageMetadataSupplier;
-	private final Date baseDate;
+	private final Instant baseDate;
 
 	TemplateVariables(
 			ProcessCondition processCondition,
@@ -46,7 +46,7 @@ final class TemplateVariables {
 			BasicFileAttributes attrs,
 			Path rootRelativeSubPath,
 			Supplier<ImageMetadata> imageMetadataSupplier,
-			Date baseDate) {
+			Instant baseDate) {
 		this.processCondition = processCondition;
 		this.file = file;
 		this.attrs = attrs;
@@ -57,16 +57,16 @@ final class TemplateVariables {
 
 	Object resolve(String varName) throws IOException {
 		switch (varName) {
-		case "Now": return new Date();
+		case "Now": return Instant.now();
 		case "SubFilePath": return processCondition.getSrcFolder().relativize(file).toString();
 		case "SubFolderPath": return rootRelativeSubPath.toString();
 		case "FileName": return file.getFileName().toString();
 		case "BaseName": return FileNameSupport.baseName(file.getFileName().toString());
 		case "Extension": return FileNameSupport.extension(file.getFileName().toString());
 		case "Size": return Long.valueOf(attrs.size());
-		case "CreationDate": return processCondition.isChangeFileCreationDate() ? baseDate : new Date(attrs.creationTime().toMillis());
-		case "ModifiedDate": return processCondition.isChangeFileModifiedDate() ? baseDate : new Date(attrs.lastModifiedTime().toMillis());
-		case "AccessDate": return processCondition.isChangeFileAccessDate() ? baseDate : new Date(attrs.lastAccessTime().toMillis());
+		case "CreationDate": return processCondition.isChangeFileCreationDate() ? baseDate : attrs.creationTime().toInstant();
+		case "ModifiedDate": return processCondition.isChangeFileModifiedDate() ? baseDate : attrs.lastModifiedTime().toInstant();
+		case "AccessDate": return processCondition.isChangeFileAccessDate() ? baseDate : attrs.lastAccessTime().toInstant();
 		case "TakenDate": return processCondition.isChangeFileExifDate() ? baseDate : ExifMetadataSupport.photoTakenDate(file, imageMetadata());
 		case "Width": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);
 		case "Height": return ExifMetadataSupport.intValue(imageMetadata(), ExifTagConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);

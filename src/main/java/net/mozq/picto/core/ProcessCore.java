@@ -28,12 +28,15 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.Year;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -122,7 +125,7 @@ public final class ProcessCore {
 
 						Supplier<ImageMetadata> imageMetadataSupplier = memoize(() -> ExifMetadataSupport.loadMetadata(file));
 
-						Date baseDate;
+						Instant baseDate;
 						if (processCondition.isChangeFileCreationDate()
 								|| processCondition.isChangeFileModifiedDate()
 								|| processCondition.isChangeFileAccessDate()
@@ -295,7 +298,7 @@ public final class ProcessCore {
 				} else if (processCondition.isRemoveExifAll()) {
 					ExifMetadataSupport.removeAll(processData.getSrcPath(), destTempPath);
 				} else if (processCondition.isChangeFileExifDate() || processCondition.isRemoveExifGps()) {
-					Date exifDate = processCondition.isChangeFileExifDate() ? processData.getBaseDate() : null;
+					Instant exifDate = processCondition.isChangeFileExifDate() ? processData.getBaseDate() : null;
 					ExifMetadataSupport.updateLossless(
 							processData.getSrcPath(),
 							destTempPath,
@@ -371,7 +374,7 @@ public final class ProcessCore {
 					|| processCondition.isChangeFileAccessDate()
 					) {
 				if (processData.getBaseDate() != null) {
-					FileTime baseFileTime = FileTime.fromMillis(processData.getBaseDate().getTime());
+					FileTime baseFileTime = FileTime.from(processData.getBaseDate());
 					if (processCondition.isChangeFileCreationDate()) {
 						creationFileTime = baseFileTime;
 					}
@@ -404,46 +407,50 @@ public final class ProcessCore {
 				: Files.createTempFile(prefix, null);
 	}
 
-	private static Date getBaseDate(
+	private static Instant getBaseDate(
 			ProcessCondition processCondition,
 			Path file, BasicFileAttributes attrs,
 			Supplier<ImageMetadata> imageMetadataSupplier
 			) throws IOException {
 
-		Date baseDate = switch (processCondition.getBaseDateType()) {
-		case CurrentDate -> new Date(System.currentTimeMillis());
-		case FileCreationDate -> toDate(attrs.creationTime());
-		case FileModifiedDate -> toDate(attrs.lastModifiedTime());
-		case FileAccessDate -> toDate(attrs.lastAccessTime());
+		Instant baseDate = switch (processCondition.getBaseDateType()) {
+		case CurrentDate -> Instant.now();
+		case FileCreationDate -> attrs.creationTime().toInstant();
+		case FileModifiedDate -> attrs.lastModifiedTime().toInstant();
+		case FileAccessDate -> attrs.lastAccessTime().toInstant();
 		case ExifDate -> ExifMetadataSupport.exifDate(imageMetadataSupplier.get());
 		case CustomDate -> processCondition.getCustomBaseDate();
 		};
 
 		if (baseDate != null) {
 			if (processCondition.getAdjustmentType() != DateModType.None) {
-				Calendar cal = Calendar.getInstance(processCondition.getTimeZone());
-				cal.setTime(baseDate);
+				ZonedDateTime zdt = baseDate.atZone(processCondition.getTimeZone().toZoneId());
 				switch (processCondition.getAdjustmentType()) {
 				case None -> {}
 				case Minus, Plus -> {
 					int signum = processCondition.getAdjustmentType() == DateModType.Minus ? -1 : 1;
-					addField(cal, Calendar.YEAR, processCondition.getAdjustmentYears(), signum);
-					addField(cal, Calendar.MONTH, processCondition.getAdjustmentMonths(), signum);
-					addField(cal, Calendar.DAY_OF_MONTH, processCondition.getAdjustmentDays(), signum);
-					addField(cal, Calendar.HOUR_OF_DAY, processCondition.getAdjustmentHours(), signum);
-					addField(cal, Calendar.MINUTE, processCondition.getAdjustmentMinutes(), signum);
-					addField(cal, Calendar.SECOND, processCondition.getAdjustmentSeconds(), signum);
+					zdt = plusField(zdt, processCondition.getAdjustmentYears(), signum, ChronoUnit.YEARS);
+					zdt = plusField(zdt, processCondition.getAdjustmentMonths(), signum, ChronoUnit.MONTHS);
+					zdt = plusField(zdt, processCondition.getAdjustmentDays(), signum, ChronoUnit.DAYS);
+					zdt = plusField(zdt, processCondition.getAdjustmentHours(), signum, ChronoUnit.HOURS);
+					zdt = plusField(zdt, processCondition.getAdjustmentMinutes(), signum, ChronoUnit.MINUTES);
+					zdt = plusField(zdt, processCondition.getAdjustmentSeconds(), signum, ChronoUnit.SECONDS);
 				}
 				case Overwrite -> {
-					setField(cal, Calendar.YEAR, processCondition.getAdjustmentYears());
-					setField(cal, Calendar.MONTH, processCondition.getAdjustmentMonths());
-					setField(cal, Calendar.DAY_OF_MONTH, processCondition.getAdjustmentDays());
-					setField(cal, Calendar.HOUR_OF_DAY, processCondition.getAdjustmentHours());
-					setField(cal, Calendar.MINUTE, processCondition.getAdjustmentMinutes());
-					setField(cal, Calendar.SECOND, processCondition.getAdjustmentSeconds());
+					// Each field is set by resetting to that field's own minimum (month 1, day 1, hour/minute/
+					// second 0) and adding the user's value as an offset from there, so an out-of-range value
+					// rolls into the next larger field instead of being rejected - matching Calendar.set's old
+					// lenient behavior (e.g. month 13 becomes January of the following year) with no risk of
+					// ZonedDateTime.with* throwing for an out-of-range field.
+					zdt = withField(zdt, processCondition.getAdjustmentYears(), (z, y) -> z.withYear(clamp(y, Year.MIN_VALUE, Year.MAX_VALUE)));
+					zdt = withField(zdt, processCondition.getAdjustmentMonths(), (z, m) -> z.withMonth(1).plusMonths(m - 1));
+					zdt = withField(zdt, processCondition.getAdjustmentDays(), (z, d) -> z.withDayOfMonth(1).plusDays(d - 1));
+					zdt = withField(zdt, processCondition.getAdjustmentHours(), (z, h) -> z.withHour(0).plusHours(h));
+					zdt = withField(zdt, processCondition.getAdjustmentMinutes(), (z, m) -> z.withMinute(0).plusMinutes(m));
+					zdt = withField(zdt, processCondition.getAdjustmentSeconds(), (z, s) -> z.withSecond(0).plusSeconds(s));
 				}
 				}
-				baseDate = cal.getTime();
+				baseDate = zdt.toInstant();
 			}
 		}
 
@@ -466,29 +473,16 @@ public final class ProcessCore {
 		};
 	}
 
-	private static Date toDate(FileTime fileTime) {
-		if (fileTime == null) {
-			return null;
-		}
-		return new Date(fileTime.toMillis());
+	private static ZonedDateTime plusField(ZonedDateTime zdt, Integer amount, int signum, ChronoUnit unit) {
+		return amount == null ? zdt : zdt.plus((long)signum * amount.intValue(), unit);
 	}
 
-	private static boolean addField(Calendar cal, int field, Integer amount, int signum) {
-		if (amount == null) {
-			return false;
-		}
-
-		cal.add(field, signum * amount.intValue());
-		return true;
+	private static ZonedDateTime withField(ZonedDateTime zdt, Integer amount, BiFunction<ZonedDateTime, Integer, ZonedDateTime> setter) {
+		return amount == null ? zdt : setter.apply(zdt, amount);
 	}
 
-	private static boolean setField(Calendar cal, int field, Integer amount) {
-		if (amount == null) {
-			return false;
-		}
-
-		cal.set(field, amount.intValue());
-		return true;
+	private static int clamp(int value, int min, int max) {
+		return Math.max(min, Math.min(max, value));
 	}
 
 }

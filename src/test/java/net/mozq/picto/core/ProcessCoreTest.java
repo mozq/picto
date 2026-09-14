@@ -32,10 +32,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -209,7 +210,7 @@ class ProcessCoreTest {
 	void changesFileModifiedDate() throws IOException {
 		Path src = Files.writeString(tempDir.resolve("source.txt"), "source");
 		Path dest = tempDir.resolve("dest.txt");
-		Date baseDate = new Date(1_735_689_600_000L);
+		Instant baseDate = Instant.ofEpochMilli(1_735_689_600_000L);
 		ProcessData data = processData(src, dest);
 		data.setBaseDate(baseDate);
 		ProcessCondition condition = condition(OperationType.Copy);
@@ -218,7 +219,7 @@ class ProcessCoreTest {
 		runSingle(condition, data, ignored -> ProcessDataStatus.Processing);
 
 		assertEquals(ProcessDataStatus.Success, data.getStatus());
-		assertEquals(baseDate.getTime(), Files.getLastModifiedTime(dest).toMillis());
+		assertEquals(baseDate.toEpochMilli(), Files.getLastModifiedTime(dest).toMillis());
 	}
 
 	@Test
@@ -291,7 +292,7 @@ class ProcessCoreTest {
 	void changesExifDateInJpeg() throws Exception {
 		Path src = jpegWithExif(tempDir.resolve("source.jpg"), "2026:08:20 12:34:56", 35.0, 139.0);
 		Path dest = tempDir.resolve("dest.jpg");
-		Date baseDate = parseUtc("2027-01-02 03:04:05");
+		Instant baseDate = parseUtc("2027-01-02 03:04:05");
 		ProcessData data = processData(src, dest);
 		data.setBaseDate(baseDate);
 		ProcessCondition condition = condition(OperationType.Copy);
@@ -510,7 +511,7 @@ class ProcessCoreTest {
 		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
 		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
 		Path source = plainJpeg(srcRoot.resolve("source.jpg"));
-		Files.setLastModifiedTime(source, FileTime.fromMillis(parseUtc("2026-08-20 12:34:56").getTime()));
+		Files.setLastModifiedTime(source, FileTime.from(parseUtc("2026-08-20 12:34:56")));
 		ProcessCondition condition = findCondition(srcRoot, destRoot, "${TakenDate:uuuu-MM-dd}.txt");
 		condition.getDestSubFilePathTemplate().timeZone(UTC);
 
@@ -576,6 +577,43 @@ class ProcessCoreTest {
 		ProcessData data = findFiles(condition).get(0);
 
 		assertEquals(parseUtc("2027-08-02 03:04:05"), data.getBaseDate());
+	}
+
+	@Test
+	void findFilesRollsOverwrittenMonthIntoNextYearInsteadOfThrowing() throws Exception {
+		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
+		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
+		Files.writeString(srcRoot.resolve("source.txt"), "source");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${FileName}");
+		condition.setChangeFileModifiedDate(true);
+		condition.setBaseDateType(DateType.CustomDate);
+		condition.setCustomBaseDate(parseUtc("2026-08-20 12:34:56"));
+		condition.setAdjustmentType(DateModType.Overwrite);
+		condition.setAdjustmentMonths(13);
+
+		ProcessData data = findFiles(condition).get(0);
+
+		// Month 13 doesn't exist - it rolls into January of the following year, the same way
+		// Calendar.set(MONTH, ...) used to roll an out-of-range value into the next field.
+		assertEquals(parseUtc("2027-01-20 12:34:56"), data.getBaseDate());
+	}
+
+	@Test
+	void findFilesRollsOverwrittenDayIntoNextMonthInsteadOfThrowing() throws Exception {
+		Path srcRoot = Files.createDirectories(tempDir.resolve("src"));
+		Path destRoot = Files.createDirectories(tempDir.resolve("dest"));
+		Files.writeString(srcRoot.resolve("source.txt"), "source");
+		ProcessCondition condition = findCondition(srcRoot, destRoot, "${FileName}");
+		condition.setChangeFileModifiedDate(true);
+		condition.setBaseDateType(DateType.CustomDate);
+		condition.setCustomBaseDate(parseUtc("2026-08-20 12:34:56"));
+		condition.setAdjustmentType(DateModType.Overwrite);
+		condition.setAdjustmentDays(32);
+
+		ProcessData data = findFiles(condition).get(0);
+
+		// August has 31 days, so day 32 rolls into September 1st.
+		assertEquals(parseUtc("2026-09-01 12:34:56"), data.getBaseDate());
 	}
 
 	private ProcessCondition condition(OperationType operationType) {
@@ -726,13 +764,11 @@ class ProcessCoreTest {
 		return ((JpegImageMetadata)metadata).getExif();
 	}
 
-	private Date parseUtc(String text) throws ParseException {
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		format.setTimeZone(UTC);
-		return format.parse(text);
+	private Instant parseUtc(String text) {
+		return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")).atZone(UTC.toZoneId()).toInstant();
 	}
 
-	private Date parseDefaultExifDate(String text) throws ParseException {
-		return new SimpleDateFormat("yyyy:MM:dd HH:mm:ss").parse(text);
+	private Instant parseDefaultExifDate(String text) {
+		return LocalDateTime.parse(text, DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")).atZone(ZoneId.systemDefault()).toInstant();
 	}
 }

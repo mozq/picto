@@ -19,7 +19,6 @@ package net.mozq.picto.view;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -36,7 +35,7 @@ class SubfolderTemplatePopup {
 	private static final int POPUP_MAX_HEIGHT = 280;
 	private static final int POPUP_MIN_WIDTH = 440;
 	private static final Map<String, Object> SAMPLE_VALUES = Map.ofEntries(
-			Map.entry("TakenDate", Date.from(Instant.parse("2023-04-05T10:20:30Z"))),
+			Map.entry("TakenDate", Instant.parse("2023-04-05T10:20:30Z")),
 			Map.entry("SubFilePath", "Trips/Kyoto/IMG_0123.jpg"),
 			Map.entry("SubFolderPath", "Trips/Kyoto"),
 			Map.entry("FileName", "IMG_0123.jpg"),

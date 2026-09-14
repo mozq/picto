@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.Year;
 import java.util.Map;
 import java.util.TimeZone;
@@ -238,7 +239,7 @@ final class ProcessConditionBuilder {
 		}
 	}
 
-	private static java.util.Date parseDate(
+	private static Instant parseDate(
 			String text, TimeZone timeZone, int defaultMonth, int defaultDay, int defaultHour, int defaultMin, int defaultSec, int defaultMsec) {
 		return DateTimeText.parseDate(text, timeZone, Year.now().getValue(), defaultMonth, defaultDay, defaultHour, defaultMin, defaultSec, defaultMsec);
 	}

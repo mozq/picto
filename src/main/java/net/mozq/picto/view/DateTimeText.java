@@ -16,10 +16,10 @@
  */
 package net.mozq.picto.view;
 
+import java.time.Instant;
 import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -83,7 +83,7 @@ final class DateTimeText {
 		return new DateParts(year, month, day);
 	}
 
-	static Date parseDate(
+	static Instant parseDate(
 			String text,
 			TimeZone timeZone,
 			int defaultYear,
@@ -113,15 +113,10 @@ final class DateTimeText {
 		int min = normalize(number(timeParts, 1, defaultMin), 0, 59);
 		int sec = normalize(number(timeParts, 2, defaultSec), 0, 59);
 
-		Calendar cal = Calendar.getInstance(timeZone);
-		cal.setTimeInMillis(defaultMsec);
-		cal.set(Calendar.YEAR, year);
-		cal.set(Calendar.MONTH, month - 1);
-		cal.set(Calendar.DAY_OF_MONTH, Math.min(day, cal.getActualMaximum(Calendar.DAY_OF_MONTH)));
-		cal.set(Calendar.HOUR_OF_DAY, hour);
-		cal.set(Calendar.MINUTE, min);
-		cal.set(Calendar.SECOND, sec);
-		return cal.getTime();
+		// Mirrors Calendar's own lenient day-of-month clamping (e.g. Feb 30 -> Feb 28/29); floored at 1 since
+		// ZonedDateTime.of, unlike Calendar, rejects a day below 1 instead of rolling into the previous month.
+		int dayOfMonth = Math.max(1, Math.min(day, YearMonth.of(year, month).lengthOfMonth()));
+		return ZonedDateTime.of(year, month, dayOfMonth, hour, min, sec, defaultMsec * 1_000_000, timeZone.toZoneId()).toInstant();
 	}
 
 	static boolean containsDigit(String text) {

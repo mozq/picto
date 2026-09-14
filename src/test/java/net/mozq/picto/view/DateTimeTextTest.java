@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
 
 import org.junit.jupiter.api.Test;
@@ -32,6 +32,7 @@ import net.mozq.picto.view.DateTimeText.DateParts;
 /** The masked date/time text parsing and formatting behind {@link DateTimeInputPopup}; pure logic, no Swing. */
 class DateTimeTextTest {
 	private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
+	private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(UTC.toZoneId());
 
 	@Test
 	void hasDateTimeTextRequiresAtLeastOneDigit() {
@@ -87,20 +88,16 @@ class DateTimeTextTest {
 
 	@Test
 	void parseDateFillsInMissingFieldsFromTheDefaults() throws Exception {
-		Date date = DateTimeText.parseDate("2026/09/__ 10:__:__", UTC, 2000, 1, 15, 0, 30, 45, 0);
+		Instant instant = DateTimeText.parseDate("2026/09/__ 10:__:__", UTC, 2000, 1, 15, 0, 30, 45, 0);
 
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		format.setTimeZone(UTC);
-		assertEquals("2026-09-15 10:30:45", format.format(date));
+		assertEquals("2026-09-15 10:30:45", FORMAT.format(instant));
 	}
 
 	@Test
 	void parseDateClampsOutOfRangeHourMinuteSecond() throws Exception {
-		Date date = DateTimeText.parseDate("2026/09/08 99:99:99", UTC, 2026, 1, 1, 0, 0, 0, 0);
+		Instant instant = DateTimeText.parseDate("2026/09/08 99:99:99", UTC, 2026, 1, 1, 0, 0, 0, 0);
 
-		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		format.setTimeZone(UTC);
-		assertEquals("2026-09-08 23:59:59", format.format(date));
+		assertEquals("2026-09-08 23:59:59", FORMAT.format(instant));
 	}
 
 	@Test

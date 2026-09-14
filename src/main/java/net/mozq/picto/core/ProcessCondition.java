@@ -17,7 +17,7 @@
 package net.mozq.picto.core;
 
 import java.nio.file.Path;
-import java.util.Date;
+import java.time.Instant;
 import java.util.TimeZone;
 
 import net.mozq.picto.enums.DateModType;
@@ -46,7 +46,7 @@ public class ProcessCondition {
 	private boolean changeFileAccessDate = false;
 	private boolean changeFileExifDate = false;
 	private DateType baseDateType;
-	private Date customBaseDate = null;
+	private Instant customBaseDate = null;
 	private DateModType adjustmentType = DateModType.None;
 	private Integer adjustmentYears = null;
 	private Integer adjustmentMonths = null;
@@ -178,11 +178,11 @@ public class ProcessCondition {
 		this.baseDateType = baseDateType;
 	}
 
-	public Date getCustomBaseDate() {
+	public Instant getCustomBaseDate() {
 		return customBaseDate;
 	}
 
-	public void setCustomBaseDate(Date customBaseDate) {
+	public void setCustomBaseDate(Instant customBaseDate) {
 		this.customBaseDate = customBaseDate;
 	}
 

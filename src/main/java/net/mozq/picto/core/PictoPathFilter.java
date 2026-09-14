@@ -27,7 +27,6 @@ import java.nio.file.PathMatcher;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
-import java.util.Date;
 
 import net.mozq.picto.enums.FilePatternSyntax;
 
@@ -76,10 +75,6 @@ public class PictoPathFilter implements Filter<Path> {
 		return setCreatedRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setCreatedRange(Date from, Date to) {
-		return setCreatedRange(toFileTime(from), toFileTime(to));
-	}
-
 	public PictoPathFilter setModifiedRange(FileTime from, FileTime to) {
 		this.modifiedRange = Range.of(from, to);
 		return this;
@@ -89,20 +84,12 @@ public class PictoPathFilter implements Filter<Path> {
 		return setModifiedRange(toFileTime(from), toFileTime(to));
 	}
 
-	public PictoPathFilter setModifiedRange(Date from, Date to) {
-		return setModifiedRange(toFileTime(from), toFileTime(to));
-	}
-
 	public PictoPathFilter setAccessRange(FileTime from, FileTime to) {
 		this.accessRange = Range.of(from, to);
 		return this;
 	}
 
 	public PictoPathFilter setAccessRange(Instant from, Instant to) {
-		return setAccessRange(toFileTime(from), toFileTime(to));
-	}
-
-	public PictoPathFilter setAccessRange(Date from, Date to) {
 		return setAccessRange(toFileTime(from), toFileTime(to));
 	}
 
@@ -137,10 +124,6 @@ public class PictoPathFilter implements Filter<Path> {
 
 	private static FileTime toFileTime(Instant instant) {
 		return instant != null ? FileTime.from(instant) : null;
-	}
-
-	private static FileTime toFileTime(Date date) {
-		return date != null ? FileTime.fromMillis(date.getTime()) : null;
 	}
 
 	@Override

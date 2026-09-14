@@ -22,11 +22,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
 import java.util.TimeZone;
 
 import org.apache.commons.imaging.Imaging;
@@ -64,9 +64,9 @@ final class ExifMetadataSupport {
 		}
 	}
 
-	static Date photoTakenDate(Path imagePath, ImageMetadata imageMetadata) {
-		Date photoTakenDate = exifDate(imageMetadata);
-		return photoTakenDate != null ? photoTakenDate : new Date(imagePath.toFile().lastModified());
+	static Instant photoTakenDate(Path imagePath, ImageMetadata imageMetadata) {
+		Instant photoTakenDate = exifDate(imageMetadata);
+		return photoTakenDate != null ? photoTakenDate : Instant.ofEpochMilli(imagePath.toFile().lastModified());
 	}
 
 	static void removeAll(Path sourcePath, Path destinationPath) throws IOException {
@@ -78,7 +78,7 @@ final class ExifMetadataSupport {
 		}
 	}
 
-	static void updateLossless(Path sourcePath, Path destinationPath, Date exifDate, TimeZone timeZone, boolean removeGps) throws IOException {
+	static void updateLossless(Path sourcePath, Path destinationPath, Instant exifDate, TimeZone timeZone, boolean removeGps) throws IOException {
 		ImageMetadata imageMetadata = loadMetadata(sourcePath);
 		TiffOutputSet outputSet = outputSet(imageMetadata);
 		if (outputSet == null) {
@@ -101,8 +101,8 @@ final class ExifMetadataSupport {
 		}
 	}
 
-	static Date exifDate(ImageMetadata imageMetadata) {
-		Date photoTakenDate = exifDateValue(imageMetadata, ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL, ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_ORIGINAL);
+	static Instant exifDate(ImageMetadata imageMetadata) {
+		Instant photoTakenDate = exifDateValue(imageMetadata, ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL, ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_ORIGINAL);
 		if (photoTakenDate == null) {
 			photoTakenDate = exifDateValue(imageMetadata, ExifTagConstants.EXIF_TAG_DATE_TIME_DIGITIZED, ExifTagConstants.EXIF_TAG_SUB_SEC_TIME_DIGITIZED);
 			if (photoTakenDate == null) {
@@ -196,9 +196,9 @@ final class ExifMetadataSupport {
 		return value < 10 ? "0" + value : Integer.toString(value);
 	}
 
-	private static void updateDate(TiffOutputSet outputSet, Date exifDate, TimeZone timeZone) {
-		String exifBaseDate = EXIF_DATE_FORMATTER.withZone(timeZone.toZoneId()).format(exifDate.toInstant());
-		String exifBaseSubsec = twoDigits((int)(exifDate.getTime() / 10) % 100);
+	private static void updateDate(TiffOutputSet outputSet, Instant exifDate, TimeZone timeZone) {
+		String exifBaseDate = EXIF_DATE_FORMATTER.withZone(timeZone.toZoneId()).format(exifDate);
+		String exifBaseSubsec = twoDigits((int)(exifDate.toEpochMilli() / 10) % 100);
 
 		try {
 			TiffOutputDirectory rootDirectory = outputSet.getRootDirectory();
@@ -267,7 +267,7 @@ final class ExifMetadataSupport {
 		return null;
 	}
 
-	private static Date exifDateValue(ImageMetadata imageMetadata, TagInfo tagInfo, TagInfo subTagInfo) {
+	private static Instant exifDateValue(ImageMetadata imageMetadata, TagInfo tagInfo, TagInfo subTagInfo) {
 		if (imageMetadata == null) {
 			return null;
 		}
@@ -276,10 +276,10 @@ final class ExifMetadataSupport {
 			return null;
 		}
 
-		Date date;
+		Instant instant;
 		try {
 			LocalDateTime ldt = LocalDateTime.parse(exifDateStr, EXIF_DATE_FORMATTER);
-			date = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+			instant = ldt.atZone(ZoneId.systemDefault()).toInstant();
 		} catch (DateTimeParseException _) {
 			return null;
 		}
@@ -287,10 +287,10 @@ final class ExifMetadataSupport {
 			String subSec = stringValue(imageMetadata, subTagInfo);
 			int millis = parseSubSecToMillis(subSec);
 			if (millis > 0) {
-				date = new Date(date.getTime() + millis);
+				instant = instant.plusMillis(millis);
 			}
 		}
-		return date;
+		return instant;
 	}
 
 	static int parseSubSecToMillis(String subSec) {
