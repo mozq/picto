@@ -244,7 +244,6 @@ public class MainFrame extends JFrame {
 		installOptionsSummaryListeners();
 		mainFrameSettings.load();
 		changeEnableDestConditions();
-		changeEnableFileDateModConditions();
 		restoreFrameState(state);
 		updateRunSummary();
 
@@ -558,7 +557,6 @@ public class MainFrame extends JFrame {
 				SECTION_PADDING,
 				INLINE_HGAP,
 				INLINE_VGAP,
-				this::changeEnableFileDateModConditions,
 				this::fitWindowToContent);
 
 		String changesTitle = Messages.getString("MainFrame.changes.title");
@@ -1044,44 +1042,6 @@ public class MainFrame extends JFrame {
 		btnDestFolderSelect.setEnabled(enabled);
 		btnDestOptions.setEnabled(enabled);
 		destOpt.setEnabled(enabled);
-		destOpt.lblSubFilePathPattern.setEnabled(enabled);
-		destOpt.txtSubFilePathPattern.setEnabled(enabled);
-		destOpt.lblExistingFileMethod.setEnabled(enabled);
-		destOpt.cmbExistingFileMethod.setEnabled(enabled);
-		destOpt.lblValidateFile.setEnabled(enabled);
-		destOpt.chkCheckFileDigest.setEnabled(enabled);
-	}
-
-	private void changeEnableFileDateModConditions() {
-		if (changes.filedate.chkCreationDate.isSelected()
-				|| changes.filedate.chkModifiedDate.isSelected()
-				|| changes.filedate.chkAccessDate.isSelected()
-				|| changes.filedate.chkExifDate.isSelected()) {
-			setEnableFileDateModConditions(true);
-		} else {
-			setEnableFileDateModConditions(false);
-		}
-	}
-
-	private void setEnableFileDateModConditions(boolean enabled) {
-		changes.filedate.lblBaseDate.setEnabled(enabled);
-		changes.filedate.cmbBaseDate.setEnabled(enabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtCustomBaseDate, enabled);
-		changes.filedate.lblAdjustment.setEnabled(enabled);
-		changes.filedate.cmbAdjustmentType.setEnabled(enabled);
-
-		boolean adjustmentEnabled = enabled && changes.filedate.cmbAdjustmentType.getSelectedItem() != DateModType.None;
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentYears, adjustmentEnabled);
-		changes.filedate.lblYearMonthSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMonths, adjustmentEnabled);
-		changes.filedate.lblMonthDaySeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentDays, adjustmentEnabled);
-		changes.filedate.lblDayHourSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentHours, adjustmentEnabled);
-		changes.filedate.lblHourMinuteSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentMinutes, adjustmentEnabled);
-		changes.filedate.lblMinuteSecondSeparator.setEnabled(adjustmentEnabled);
-		InputSupport.setTextFieldEnabled(changes.filedate.txtAdjustmentSeconds, adjustmentEnabled);
 	}
 
 	private void runProcess(boolean dryRun) {

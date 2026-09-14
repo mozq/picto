@@ -51,11 +51,11 @@ class ChangesPanel extends JPanel {
 	private Consumer<Boolean> onExpandedChanged = _ -> { };
 	private Runnable onContentChanged = () -> { };
 
-	ChangesPanel(int sectionPadding, int inlineHgap, int inlineVgap, Runnable enableChanged, Runnable layoutChanged) {
+	ChangesPanel(int sectionPadding, int inlineHgap, int inlineVgap, Runnable layoutChanged) {
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.putClientProperty("JTabbedPane.tabType", "card");
 
-		filedate = new ChangesFileDatePanel(sectionPadding, inlineHgap, inlineVgap, enableChanged, layoutChanged);
+		filedate = new ChangesFileDatePanel(sectionPadding, inlineHgap, inlineVgap, layoutChanged);
 		tabbedPane.addTab(Messages.getString("MainFrame.changes.filedate.title"), null, filedate, null);
 
 		exif = new ChangesExifPanel(sectionPadding);

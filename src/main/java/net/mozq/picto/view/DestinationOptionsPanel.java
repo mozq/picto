@@ -146,6 +146,12 @@ class DestinationOptionsPanel extends JPanel {
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
 		summaryView.setEnabled(enabled);
+		lblSubFilePathPattern.setEnabled(enabled);
+		txtSubFilePathPattern.setEnabled(enabled);
+		lblExistingFileMethod.setEnabled(enabled);
+		cmbExistingFileMethod.setEnabled(enabled);
+		lblValidateFile.setEnabled(enabled);
+		chkCheckFileDigest.setEnabled(enabled);
 	}
 
 	// CardLayout otherwise sizes the container to its largest card regardless of which one is showing,

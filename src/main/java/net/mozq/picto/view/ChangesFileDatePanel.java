@@ -60,7 +60,7 @@ class ChangesFileDatePanel extends JPanel {
 	final JLabel lblMinuteSecondSeparator;
 	final JTextField txtAdjustmentSeconds;
 
-	ChangesFileDatePanel(int sectionPadding, int inlineHgap, int inlineVgap, Runnable enableChanged, Runnable layoutChanged) {
+	ChangesFileDatePanel(int sectionPadding, int inlineHgap, int inlineVgap, Runnable layoutChanged) {
 		setBorder(new EmptyBorder(sectionPadding, sectionPadding, sectionPadding, sectionPadding));
 		GridBagLayout fileDateLayout = new GridBagLayout();
 		fileDateLayout.columnWidths = new int[]{0, 0, 0};
@@ -79,7 +79,7 @@ class ChangesFileDatePanel extends JPanel {
 
 		ChangeListener changeListener = new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				enableChanged.run();
+				updateEnabledState();
 			}
 		};
 		chkCreationDate = new JCheckBox(Messages.getString("MainFrame.changes.filedate.creationDate"));
@@ -147,7 +147,7 @@ class ChangesFileDatePanel extends JPanel {
 		lblAdjustment.setLabelFor(cmbAdjustmentType);
 		InputSupport.installLabelFocusAction(lblAdjustment, cmbAdjustmentType, LabelFocusBehavior.FOCUS_ONLY);
 		cmbAdjustmentType.setModel(new DefaultComboBoxModel<>(DateModType.values()));
-		cmbAdjustmentType.addItemListener(_ -> enableChanged.run());
+		cmbAdjustmentType.addItemListener(_ -> updateEnabledState());
 
 		txtAdjustmentYears = newAdjustmentField(4);
 		lblYearMonthSeparator = new JLabel("/");
@@ -176,6 +176,31 @@ class ChangesFileDatePanel extends JPanel {
 
 		add(lblAdjustment, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
 		add(pnlAdjustmentType, GridBagSupport.at(1, 2).fill(GridBagConstraints.HORIZONTAL).build());
+
+		updateEnabledState();
+	}
+
+	private void updateEnabledState() {
+		boolean enabled = chkCreationDate.isSelected() || chkModifiedDate.isSelected() || chkAccessDate.isSelected() || chkExifDate.isSelected();
+
+		lblBaseDate.setEnabled(enabled);
+		cmbBaseDate.setEnabled(enabled);
+		InputSupport.setTextFieldEnabled(txtCustomBaseDate, enabled);
+		lblAdjustment.setEnabled(enabled);
+		cmbAdjustmentType.setEnabled(enabled);
+
+		boolean adjustmentEnabled = enabled && cmbAdjustmentType.getSelectedItem() != DateModType.None;
+		InputSupport.setTextFieldEnabled(txtAdjustmentYears, adjustmentEnabled);
+		lblYearMonthSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(txtAdjustmentMonths, adjustmentEnabled);
+		lblMonthDaySeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(txtAdjustmentDays, adjustmentEnabled);
+		lblDayHourSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(txtAdjustmentHours, adjustmentEnabled);
+		lblHourMinuteSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(txtAdjustmentMinutes, adjustmentEnabled);
+		lblMinuteSecondSeparator.setEnabled(adjustmentEnabled);
+		InputSupport.setTextFieldEnabled(txtAdjustmentSeconds, adjustmentEnabled);
 	}
 
 	private static JTextField newAdjustmentField(int columns) {
