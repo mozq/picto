@@ -159,10 +159,10 @@ final class ProcessConditionBuilder {
 				convertSize(parseLong(input.fileSizeTo), input.fileSizeUnit));
 		pathFilter.setCreatedRange(
 				parseDate(input.createdFrom, timeZone, 1, 1, 0, 0, 0, 0),
-				parseDate(input.createdTo, timeZone, 12, 31, 23, 59, 59, 999));
+				parseDate(input.createdTo, timeZone, 12, 31, 23, 59, 59, 999_999_999));
 		pathFilter.setModifiedRange(
 				parseDate(input.modifiedFrom, timeZone, 1, 1, 0, 0, 0, 0),
-				parseDate(input.modifiedTo, timeZone, 12, 31, 23, 59, 59, 999));
+				parseDate(input.modifiedTo, timeZone, 12, 31, 23, 59, 59, 999_999_999));
 		return pathFilter;
 	}
 
@@ -240,8 +240,8 @@ final class ProcessConditionBuilder {
 	}
 
 	private static Instant parseDate(
-			String text, TimeZone timeZone, int defaultMonth, int defaultDay, int defaultHour, int defaultMin, int defaultSec, int defaultMsec) {
-		return DateTimeText.parseDate(text, timeZone, Year.now().getValue(), defaultMonth, defaultDay, defaultHour, defaultMin, defaultSec, defaultMsec);
+			String text, TimeZone timeZone, int defaultMonth, int defaultDay, int defaultHour, int defaultMin, int defaultSec, int defaultNanoOfSecond) {
+		return DateTimeText.parseDate(text, timeZone, Year.now().getValue(), defaultMonth, defaultDay, defaultHour, defaultMin, defaultSec, defaultNanoOfSecond);
 	}
 
 	private static Long convertSize(Long size, FileSizeUnit unit) {

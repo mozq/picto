@@ -92,7 +92,7 @@ final class DateTimeText {
 			int defaultHour,
 			int defaultMin,
 			int defaultSec,
-			int defaultMsec) {
+			int defaultNanoOfSecond) {
 		if (text == null || MASK_DEFAULT_VALUE.equals(text) || !containsDigit(text)) {
 			return null;
 		}
@@ -116,7 +116,7 @@ final class DateTimeText {
 		// Mirrors Calendar's own lenient day-of-month clamping (e.g. Feb 30 -> Feb 28/29); floored at 1 since
 		// ZonedDateTime.of, unlike Calendar, rejects a day below 1 instead of rolling into the previous month.
 		int dayOfMonth = Math.max(1, Math.min(day, YearMonth.of(year, month).lengthOfMonth()));
-		return ZonedDateTime.of(year, month, dayOfMonth, hour, min, sec, defaultMsec * 1_000_000, timeZone.toZoneId()).toInstant();
+		return ZonedDateTime.of(year, month, dayOfMonth, hour, min, sec, defaultNanoOfSecond, timeZone.toZoneId()).toInstant();
 	}
 
 	/**
