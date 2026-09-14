@@ -37,10 +37,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.TimeZone;
 
 import javax.swing.AbstractAction;
@@ -61,8 +57,6 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -76,7 +70,6 @@ import com.formdev.flatlaf.FlatClientProperties;
 
 import net.mozq.picto.App;
 import net.mozq.picto.AppMain;
-import net.mozq.picto.core.PictoPathFilter;
 import net.mozq.picto.core.ProcessCondition;
 import net.mozq.picto.enums.DateModType;
 import net.mozq.picto.enums.DateType;
@@ -105,7 +98,6 @@ public class MainFrame extends JFrame {
 	private static final int RUN_MENU_BUTTON_WIDTH = 28;
 	private static final int RUN_STATUS_ICON_SIZE = 24;
 	private static final int RUN_STATUS_ICON_PADDING = 8;
-	private static final int MATCH_COUNT_DEBOUNCE_MS = 400;
 
 	private TimeZone timeZone = TimeZone.getDefault();
 
@@ -143,10 +135,6 @@ public class MainFrame extends JFrame {
 	private DestinationOptionsPanel destOpt;
 	private JLabel lblRunSummary;
 	private boolean showingRunSummary;
-	private boolean matchCountEnabled;
-	private SourceFileScanner sourceFileScanner;
-	private SourceFileScanner.MatchCountStatus lastMatchCountStatus;
-	private Timer matchCountTimer;
 	private JMenuBar menuBar;
 	private JMenu mnSettings;
 	private JMenu mnLanguage;
@@ -234,9 +222,6 @@ public class MainFrame extends JFrame {
 		InputSupport.installClickAwayFocusClear();
 
 		installOperationListeners();
-
-		matchCountTimer = new Timer(MATCH_COUNT_DEBOUNCE_MS, _ -> updateMatchCountTarget());
-		matchCountTimer.setRepeats(false);
 
 		mainFrameSettings = new MainFrameSettings(txtSrcFolder, srcOpt, btngrpOperationType, txtDestFolder, destOpt, changes);
 		presetManager = new PresetManager(this, mnPresets, mainFrameSettings);
@@ -424,25 +409,13 @@ public class MainFrame extends JFrame {
 		pnlSrcConditions.add(lblSrcConditionsTitle, GridBagSupport.at(0, 0).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 8).build());
 		pnlSrcConditions.add(pnlSrcFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 
-		srcOpt = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
-		srcOpt.lblMatchCount.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				matchCountLabelClicked();
-			}
-		});
-		srcOpt.btnMatchCountStop.addActionListener(_ -> matchCountStopButtonClicked());
+		srcOpt = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP, timeZone);
 		String srcOptionsTitle = Messages.getString("MainFrame.src.options");
 		srcOpt.setOnExpandedChanged(expanded -> {
 			btnSrcOptions.setSelected(expanded);
 			setOptionsToggleButtonText(btnSrcOptions, srcOptionsTitle, expanded);
 		});
-		srcOpt.setOnContentChanged(() -> {
-			fitWindowToContent();
-			if (matchCountEnabled) {
-				matchCountTimer.restart();
-			}
-		});
+		srcOpt.setOnContentChanged(this::fitWindowToContent);
 		btnSrcOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				srcOpt.setExpanded(btnSrcOptions.isSelected());
@@ -772,12 +745,10 @@ public class MainFrame extends JFrame {
 
 	private void applySettingsImmediately() {
 		MainFrameState state = captureFrameState();
-		if (sourceFileScanner != null) {
-			// This frame is about to be discarded for a replacement with the new language/theme; without
-			// this, the scan's background thread would keep walking the folder tree indefinitely (nothing
-			// else ever stops it) purely to update a disposed, invisible frame's label.
-			sourceFileScanner.cancel();
-		}
+		// This frame is about to be discarded for a replacement with the new language/theme; without this,
+		// a scan still running in the background would keep walking the folder tree indefinitely (nothing
+		// else ever stops it) purely to update a disposed, invisible frame's label.
+		srcOpt.cancelMatchCountScan();
 		AppMain.applyConfiguredUiSettings();
 		MainFrame nextFrame = new MainFrame(state);
 		nextFrame.setVisible(true);
@@ -980,9 +951,7 @@ public class MainFrame extends JFrame {
 
 	private void srcFolderChanged() {
 		runSummaryChanged();
-		if (matchCountEnabled) {
-			matchCountTimer.restart();
-		}
+		srcOpt.setSrcFolder(SummaryTextSupport.fieldText(txtSrcFolder));
 	}
 
 	private void runSummaryChanged() {
@@ -1186,119 +1155,6 @@ public class MainFrame extends JFrame {
 		input.modifiedTo = SummaryTextSupport.fieldText(srcOpt.txtModifiedTo);
 
 		return input;
-	}
-
-	private void matchCountLabelClicked() {
-		if (sourceFileScanner == null) {
-			matchCountEnabled = true;
-			updateMatchCountTarget();
-			return;
-		}
-
-		SourceFileScanner.MatchCountStatus status = lastMatchCountStatus;
-		if (status == null) {
-			return;
-		}
-		switch (status.state()) {
-		case SCANNING -> sourceFileScanner.stop();
-		case PAUSED -> sourceFileScanner.resume();
-		case EXACT -> { }
-		}
-	}
-
-	private void matchCountStopButtonClicked() {
-		if (sourceFileScanner != null) {
-			sourceFileScanner.stop();
-		}
-	}
-
-	private void updateMatchCountTarget() {
-		if (!matchCountEnabled) {
-			return;
-		}
-		ProcessConditionInput input = collectProcessConditionInput();
-
-		Path srcFolder;
-		try {
-			srcFolder = Paths.get(input.srcFolder).normalize();
-		} catch (InvalidPathException e) {
-			srcFolder = null;
-		}
-
-		if (srcFolder == null || !Files.isDirectory(srcFolder)) {
-			if (sourceFileScanner != null) {
-				sourceFileScanner.cancel();
-				sourceFileScanner = null;
-			}
-			matchCountEnabled = false;
-			lastMatchCountStatus = null;
-			srcOpt.lblMatchCount.setText(Messages.getString("MainFrame.src.matchCount.prompt"));
-			srcOpt.setMatchCountScanning(false);
-			return;
-		}
-
-		PictoPathFilter pathFilter;
-		boolean includeSubfolders = input.includeSubfolders;
-		try {
-			pathFilter = ProcessConditionBuilder.buildPathFilter(input, srcFolder, timeZone);
-		} catch (Exception e) {
-			srcOpt.lblMatchCount.setText("");
-			srcOpt.setMatchCountScanning(false);
-			return;
-		}
-
-		if (sourceFileScanner != null && !sourceFileScanner.srcFolder().equals(srcFolder)) {
-			// The source folder changed while a count was enabled for the previous one; that opt-in doesn't
-			// carry over to a different folder (it could be much larger), so require an explicit re-click.
-			sourceFileScanner.cancel();
-			sourceFileScanner = null;
-			matchCountEnabled = false;
-			lastMatchCountStatus = null;
-			srcOpt.lblMatchCount.setText(Messages.getString("MainFrame.src.matchCount.prompt"));
-			srcOpt.setMatchCountScanning(false);
-			return;
-		}
-
-		if (sourceFileScanner == null) {
-			lastMatchCountStatus = null;
-			// A status callback already in flight when this scanner is later cancelled and replaced
-			// (e.g. the source folder changes again) would otherwise still reach renderMatchCount() and
-			// overwrite the reset UI with stale SCANNING/PAUSED/EXACT text. The holder lets the callback
-			// check, at delivery time, whether it's still the current scanner before touching the UI.
-			SourceFileScanner[] holder = new SourceFileScanner[1];
-			try {
-				sourceFileScanner = new SourceFileScanner(
-						srcFolder, pathFilter, includeSubfolders,
-						status -> SwingUtilities.invokeLater(() -> {
-							if (sourceFileScanner == holder[0]) {
-								renderMatchCount(status);
-							}
-						}));
-			} catch (IOException e) {
-				sourceFileScanner = null;
-				srcOpt.lblMatchCount.setText("");
-				srcOpt.setMatchCountScanning(false);
-				return;
-			}
-			holder[0] = sourceFileScanner;
-			sourceFileScanner.start();
-		} else {
-			sourceFileScanner.updateTarget(pathFilter, includeSubfolders);
-		}
-	}
-
-	private void renderMatchCount(SourceFileScanner.MatchCountStatus status) {
-		lastMatchCountStatus = status;
-		String text = switch (status.state()) {
-		case SCANNING -> Messages.getString("MainFrame.src.matchCount.scanning", status.count());
-		case PAUSED -> Messages.getString("MainFrame.src.matchCount.paused", status.count());
-		case EXACT -> Messages.getString("MainFrame.src.matchCount", status.count());
-		};
-		srcOpt.lblMatchCount.setText(text);
-		srcOpt.setMatchCountScanning(status.state() == SourceFileScanner.MatchCountStatus.State.SCANNING);
-		if (status.state() == SourceFileScanner.MatchCountStatus.State.PAUSED) {
-			srcOpt.lblMatchCount.setToolTipText(Messages.getString("MainFrame.src.matchCount.resume"));
-		}
 	}
 
 	private boolean confirmDestructiveOperation(ProcessConditionInput input, boolean dryRun) {

@@ -29,8 +29,14 @@ import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.function.Consumer;
 
 import javax.swing.DefaultComboBoxModel;
@@ -42,6 +48,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeListener;
@@ -50,6 +57,7 @@ import javax.swing.event.DocumentListener;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
+import net.mozq.picto.core.PictoPathFilter;
 import net.mozq.picto.enums.FilePatternSyntax;
 import net.mozq.picto.enums.FileSizeUnit;
 
@@ -59,6 +67,7 @@ class SourceOptionsPanel extends JPanel {
 	private static final String[] MATCH_COUNT_SPINNER_FRAMES = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
 	private static final int MATCH_COUNT_SPINNER_INTERVAL_MS = 80;
 	private static final String MATCH_COUNT_STOP_GLYPH = "■";
+	private static final int MATCH_COUNT_DEBOUNCE_MS = 400;
 	private static final String CARD_FIELDS = "fields";
 	private static final String CARD_SUMMARY = "summary";
 	private static final int FIELDS_TOP_PADDING_WITH_MATCH_COUNT = 4;
@@ -69,6 +78,12 @@ class SourceOptionsPanel extends JPanel {
 	private int matchCountSpinnerFrame;
 	private boolean matchCountHovered;
 	private boolean matchCountScanning;
+	private final TimeZone timeZone;
+	private final Timer matchCountTimer;
+	private boolean matchCountEnabled;
+	private SourceFileScanner sourceFileScanner;
+	private SourceFileScanner.MatchCountStatus lastMatchCountStatus;
+	private String srcFolderText = "";
 	final JLabel lblFileNamePattern;
 	final JTextField txtFileNamePattern;
 	final JComboBox<FilePatternSyntax> cmbFileNamePatternSyntax;
@@ -95,7 +110,8 @@ class SourceOptionsPanel extends JPanel {
 	private Consumer<Boolean> onExpandedChanged = _ -> { };
 	private Runnable onContentChanged = () -> { };
 
-	SourceOptionsPanel(int inlineHgap, int inlineVgap) {
+	SourceOptionsPanel(int inlineHgap, int inlineVgap, TimeZone timeZone) {
+		this.timeZone = timeZone;
 		fieldsView = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
 		layout.columnWidths = new int[]{0, 0, 0};
@@ -135,6 +151,8 @@ class SourceOptionsPanel extends JPanel {
 				btnMatchCountStop.setText(MATCH_COUNT_SPINNER_FRAMES[matchCountSpinnerFrame]);
 			}
 		});
+		matchCountTimer = new Timer(MATCH_COUNT_DEBOUNCE_MS, _ -> updateMatchCountTarget());
+		matchCountTimer.setRepeats(false);
 
 		MouseAdapter matchCountHoverListener = new MouseAdapter() {
 			@Override
@@ -148,7 +166,14 @@ class SourceOptionsPanel extends JPanel {
 			}
 		};
 		lblMatchCount.addMouseListener(matchCountHoverListener);
+		lblMatchCount.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				matchCountLabelClicked();
+			}
+		});
 		btnMatchCountStop.addMouseListener(matchCountHoverListener);
+		btnMatchCountStop.addActionListener(_ -> matchCountStopButtonClicked());
 		btnMatchCountStop.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
@@ -395,6 +420,153 @@ class SourceOptionsPanel extends JPanel {
 		summaryView.setText(text);
 		setVisible(expanded || !text.isEmpty());
 		onContentChanged.run();
+		if (matchCountEnabled) {
+			matchCountTimer.restart();
+		}
+	}
+
+	/** Called by {@code MainFrame} whenever the source folder text (which it owns) changes. */
+	void setSrcFolder(String srcFolderText) {
+		this.srcFolderText = srcFolderText;
+		if (matchCountEnabled) {
+			matchCountTimer.restart();
+		}
+	}
+
+	void cancelMatchCountScan() {
+		if (sourceFileScanner != null) {
+			sourceFileScanner.cancel();
+		}
+	}
+
+	private void matchCountLabelClicked() {
+		if (sourceFileScanner == null) {
+			matchCountEnabled = true;
+			updateMatchCountTarget();
+			return;
+		}
+
+		SourceFileScanner.MatchCountStatus status = lastMatchCountStatus;
+		if (status == null) {
+			return;
+		}
+		switch (status.state()) {
+		case SCANNING -> sourceFileScanner.stop();
+		case PAUSED -> sourceFileScanner.resume();
+		case EXACT -> { }
+		}
+	}
+
+	private void matchCountStopButtonClicked() {
+		if (sourceFileScanner != null) {
+			sourceFileScanner.stop();
+		}
+	}
+
+	private void updateMatchCountTarget() {
+		if (!matchCountEnabled) {
+			return;
+		}
+
+		Path srcFolder;
+		try {
+			srcFolder = Paths.get(srcFolderText).normalize();
+		} catch (InvalidPathException e) {
+			srcFolder = null;
+		}
+
+		if (srcFolder == null || !Files.isDirectory(srcFolder)) {
+			if (sourceFileScanner != null) {
+				sourceFileScanner.cancel();
+				sourceFileScanner = null;
+			}
+			matchCountEnabled = false;
+			lastMatchCountStatus = null;
+			lblMatchCount.setText(Messages.getString("MainFrame.src.matchCount.prompt"));
+			setMatchCountScanning(false);
+			return;
+		}
+
+		PictoPathFilter pathFilter;
+		boolean includeSubfolders = chkIncludeSubfolders.isEnabled() && chkIncludeSubfolders.isSelected();
+		try {
+			pathFilter = ProcessConditionBuilder.buildPathFilter(sourceFieldsAsInput(), srcFolder, timeZone);
+		} catch (Exception e) {
+			lblMatchCount.setText("");
+			setMatchCountScanning(false);
+			return;
+		}
+
+		if (sourceFileScanner != null && !sourceFileScanner.srcFolder().equals(srcFolder)) {
+			// The source folder changed while a count was enabled for the previous one; that opt-in doesn't
+			// carry over to a different folder (it could be much larger), so require an explicit re-click.
+			sourceFileScanner.cancel();
+			sourceFileScanner = null;
+			matchCountEnabled = false;
+			lastMatchCountStatus = null;
+			lblMatchCount.setText(Messages.getString("MainFrame.src.matchCount.prompt"));
+			setMatchCountScanning(false);
+			return;
+		}
+
+		if (sourceFileScanner == null) {
+			lastMatchCountStatus = null;
+			// A status callback already in flight when this scanner is later cancelled and replaced
+			// (e.g. the source folder changes again) would otherwise still reach renderMatchCount() and
+			// overwrite the reset UI with stale SCANNING/PAUSED/EXACT text. The holder lets the callback
+			// check, at delivery time, whether it's still the current scanner before touching the UI.
+			SourceFileScanner[] holder = new SourceFileScanner[1];
+			try {
+				sourceFileScanner = new SourceFileScanner(
+						srcFolder, pathFilter, includeSubfolders,
+						status -> SwingUtilities.invokeLater(() -> {
+							if (sourceFileScanner == holder[0]) {
+								renderMatchCount(status);
+							}
+						}));
+			} catch (IOException e) {
+				sourceFileScanner = null;
+				lblMatchCount.setText("");
+				setMatchCountScanning(false);
+				return;
+			}
+			holder[0] = sourceFileScanner;
+			sourceFileScanner.start();
+		} else {
+			sourceFileScanner.updateTarget(pathFilter, includeSubfolders);
+		}
+	}
+
+	private void renderMatchCount(SourceFileScanner.MatchCountStatus status) {
+		lastMatchCountStatus = status;
+		String text = switch (status.state()) {
+		case SCANNING -> Messages.getString("MainFrame.src.matchCount.scanning", status.count());
+		case PAUSED -> Messages.getString("MainFrame.src.matchCount.paused", status.count());
+		case EXACT -> Messages.getString("MainFrame.src.matchCount", status.count());
+		};
+		lblMatchCount.setText(text);
+		setMatchCountScanning(status.state() == SourceFileScanner.MatchCountStatus.State.SCANNING);
+		if (status.state() == SourceFileScanner.MatchCountStatus.State.PAUSED) {
+			lblMatchCount.setToolTipText(Messages.getString("MainFrame.src.matchCount.resume"));
+		}
+	}
+
+	/** A minimal {@link ProcessConditionInput}, populated only with the fields {@link ProcessConditionBuilder#buildPathFilter}
+	 * actually reads - all of which live on this panel - so match counting doesn't need the full, cross-section
+	 * input {@code MainFrame} collects for validation and running. */
+	private ProcessConditionInput sourceFieldsAsInput() {
+		ProcessConditionInput input = new ProcessConditionInput();
+		input.srcFileNamePattern = SummaryTextSupport.fieldText(txtFileNamePattern);
+		input.srcFileNamePatternSyntax = selectedFilePatternSyntax();
+		input.includeHiddenFiles = chkIncludeHiddenFiles.isEnabled() && chkIncludeHiddenFiles.isSelected();
+		input.fileSizeFrom = SummaryTextSupport.fieldText(txtFileSizeFrom);
+		input.fileSizeTo = SummaryTextSupport.fieldText(txtFileSizeTo);
+		input.fileSizeUnit = (FileSizeUnit)cmbFileSizeUnit.getSelectedItem();
+		input.createdFrom = SummaryTextSupport.fieldText(txtCreatedFrom);
+		input.createdTo = SummaryTextSupport.fieldText(txtCreatedTo);
+		input.modifiedFrom = SummaryTextSupport.fieldText(txtModifiedFrom);
+		input.modifiedTo = SummaryTextSupport.fieldText(txtModifiedTo);
+		return input;
 	}
 
 	private String computeSummary() {
