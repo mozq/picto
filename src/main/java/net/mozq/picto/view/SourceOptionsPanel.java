@@ -468,11 +468,18 @@ class SourceOptionsPanel extends JPanel {
 			return;
 		}
 
+		// Paths.get("") resolves to the current working directory (a real, existing directory) rather than
+		// throwing, so a blank field has to be ruled out explicitly before it reaches Files.isDirectory -
+		// otherwise it would scan and show a count for the working directory instead of "no folder".
 		Path srcFolder;
-		try {
-			srcFolder = Paths.get(srcFolderText).normalize();
-		} catch (InvalidPathException e) {
+		if (srcFolderText.isBlank()) {
 			srcFolder = null;
+		} else {
+			try {
+				srcFolder = Paths.get(srcFolderText).normalize();
+			} catch (InvalidPathException e) {
+				srcFolder = null;
+			}
 		}
 
 		if (srcFolder == null || !Files.isDirectory(srcFolder)) {
