@@ -27,6 +27,8 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -208,6 +210,18 @@ final class InputSupport {
 
 	static void installDateTimeInputPopup(JFormattedTextField field, boolean endOfRange) {
 		new DateTimeInputPopup(field, endOfRange, Locale.getDefault());
+	}
+
+	static void installDateTimeNormalizeOnFocusLost(JFormattedTextField field) {
+		field.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				String normalized = DateTimeText.normalizeText(field.getText());
+				if (!normalized.equals(field.getText())) {
+					field.setText(normalized);
+				}
+			}
+		});
 	}
 
 	static MaskFormatter newMaskFormatter(String mask) {

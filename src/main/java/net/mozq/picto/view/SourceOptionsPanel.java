@@ -617,6 +617,7 @@ class SourceOptionsPanel extends JPanel {
 		textField.setHorizontalAlignment(JTextField.CENTER);
 		textField.setToolTipText(tooltip);
 		InputSupport.installDateTimeInputPopup(textField, endOfRange);
+		InputSupport.installDateTimeNormalizeOnFocusLost(textField);
 		textField.setFocusLostBehavior(JFormattedTextField.COMMIT);
 		return textField;
 	}

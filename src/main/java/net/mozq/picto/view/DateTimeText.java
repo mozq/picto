@@ -119,6 +119,56 @@ final class DateTimeText {
 		return ZonedDateTime.of(year, month, dayOfMonth, hour, min, sec, defaultMsec * 1_000_000, timeZone.toZoneId()).toInstant();
 	}
 
+	/**
+	 * Clamps whichever of month/day/hour/minute/second are actually filled in, leaving the year and any
+	 * still-blank field's placeholder untouched - so e.g. an hour typed as "99" is corrected in place
+	 * without needing every other field to be filled first. The day is clamped against the real length of
+	 * its year/month when both are known, or against 1-31 (the widest any month gets) otherwise.
+	 */
+	static String normalizeText(String text) {
+		if (text == null || !containsDigit(text)) {
+			return text;
+		}
+
+		String[] dateTimeParts = text.split(" ", 2);
+		String dateText = dateTimeParts.length > 0 ? dateTimeParts[0] : "";
+		String timeText = dateTimeParts.length > 1 ? dateTimeParts[1] : "";
+		String[] dateParts = dateText.split("/", -1);
+		String[] timeParts = timeText.split(":", -1);
+
+		Integer year = number(dateParts, 0);
+		Integer month = number(dateParts, 1);
+		Integer day = number(dateParts, 2);
+
+		Integer normalizedMonth = normalizeOrNull(month, 1, 12);
+		Integer normalizedDay = null;
+		if (day != null) {
+			int maxDay = year != null && normalizedMonth != null
+					? YearMonth.of(year.intValue(), normalizedMonth.intValue()).lengthOfMonth()
+					: 31;
+			normalizedDay = normalizeOrNull(day, 1, maxDay);
+		}
+
+		replacePart(dateParts, 1, normalizedMonth);
+		replacePart(dateParts, 2, normalizedDay);
+		replacePart(timeParts, 0, normalizeOrNull(number(timeParts, 0), 0, 23));
+		replacePart(timeParts, 1, normalizeOrNull(number(timeParts, 1), 0, 59));
+		replacePart(timeParts, 2, normalizeOrNull(number(timeParts, 2), 0, 59));
+
+		return String.join("/", dateParts) + " " + String.join(":", timeParts);
+	}
+
+	private static Integer normalizeOrNull(Integer value, int min, int max) {
+		return value == null ? null : Integer.valueOf(normalize(value.intValue(), min, max));
+	}
+
+	private static void replacePart(String[] parts, int index, Integer value) {
+		if (value == null || index >= parts.length) {
+			return;
+		}
+		parts[index] = String.format("%02d", value);
+	}
+
 	static boolean containsDigit(String text) {
 		for (int i = 0; i < text.length(); i++) {
 			if (Character.isDigit(text.charAt(i))) {

@@ -101,6 +101,34 @@ class DateTimeTextTest {
 	}
 
 	@Test
+	void normalizeTextLeavesInRangeValuesAndBlankFieldsUntouched() {
+		assertEquals("2026/09/08 10:20:30", DateTimeText.normalizeText("2026/09/08 10:20:30"));
+		assertEquals(DateTimeText.MASK_DEFAULT_VALUE, DateTimeText.normalizeText(DateTimeText.MASK_DEFAULT_VALUE));
+	}
+
+	@Test
+	void normalizeTextClampsEachFilledFieldIndependently() {
+		// Year and day are left blank; month/hour/minute/second are each clamped on their own.
+		assertEquals("____/12/__ 23:59:59", DateTimeText.normalizeText("____/13/__ 99:99:99"));
+	}
+
+	@Test
+	void normalizeTextClampsDayToTheActualMonthLengthWhenYearAndMonthAreBothFilled() {
+		// 2024 is a leap year: February clamps to 29, not 28.
+		assertEquals("2024/02/29 __:__:__", DateTimeText.normalizeText("2024/02/30 __:__:__"));
+		// 2023 is not a leap year: February clamps to 28.
+		assertEquals("2023/02/28 __:__:__", DateTimeText.normalizeText("2023/02/30 __:__:__"));
+	}
+
+	@Test
+	void normalizeTextClampsDayToThirtyOneWhenYearOrMonthIsMissing() {
+		// September only has 30 days, but with the year missing there's no month length to check
+		// against, so the day falls back to the widest possible bound (31) instead.
+		assertEquals("____/09/31 __:__:__", DateTimeText.normalizeText("____/09/35 __:__:__"));
+		assertEquals("2024/__/31 __:__:__", DateTimeText.normalizeText("2024/__/35 __:__:__"));
+	}
+
+	@Test
 	void numberIgnoresPlaceholderCharactersAndFallsBackOnInvalidInput() {
 		String[] values = {"20_6", "__", "abc"};
 		assertEquals(206, DateTimeText.number(values, 0, -1)); // the placeholder is stripped, not treated as a digit

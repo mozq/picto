@@ -121,6 +121,7 @@ class ChangesFileDatePanel extends JPanel {
 		txtCustomBaseDate.setColumns(20);
 		txtCustomBaseDate.setVisible(false);
 		InputSupport.installDateTimeInputPopup(txtCustomBaseDate, false);
+		InputSupport.installDateTimeNormalizeOnFocusLost(txtCustomBaseDate);
 		txtCustomBaseDate.setFocusLostBehavior(JFormattedTextField.COMMIT);
 
 		cmbBaseDate.addItemListener(e -> {
