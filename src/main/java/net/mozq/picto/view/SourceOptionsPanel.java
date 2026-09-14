@@ -16,6 +16,7 @@
  */
 package net.mozq.picto.view;
 
+import java.awt.CardLayout;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -28,6 +29,9 @@ import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -36,9 +40,13 @@ import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import com.formdev.flatlaf.FlatClientProperties;
 
@@ -51,6 +59,9 @@ class SourceOptionsPanel extends JPanel {
 	private static final String[] MATCH_COUNT_SPINNER_FRAMES = {"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"};
 	private static final int MATCH_COUNT_SPINNER_INTERVAL_MS = 80;
 	private static final String MATCH_COUNT_STOP_GLYPH = "■";
+	private static final String CARD_FIELDS = "fields";
+	private static final String CARD_SUMMARY = "summary";
+	private static final int FIELDS_TOP_PADDING_WITH_MATCH_COUNT = 4;
 
 	final JLabel lblMatchCount;
 	final JButton btnMatchCountStop;
@@ -77,13 +88,22 @@ class SourceOptionsPanel extends JPanel {
 	final JLabel lblModifiedTo;
 	final JFormattedTextField txtModifiedTo;
 
+	private final JPanel fieldsView;
+	private final CardLayout cardLayout;
+	private final JTextArea summaryView;
+	private boolean expanded;
+	private Consumer<Boolean> onExpandedChanged = _ -> { };
+	private Runnable onContentChanged = () -> { };
+
 	SourceOptionsPanel(int inlineHgap, int inlineVgap) {
+		fieldsView = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
 		layout.columnWidths = new int[]{0, 0, 0};
 		layout.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
 		layout.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
 		layout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		setLayout(layout);
+		fieldsView.setLayout(layout);
+		PanelStyleSupport.stylizeOptionsBody(fieldsView, FIELDS_TOP_PADDING_WITH_MATCH_COUNT);
 
 		// No horizontal gap: a gap here is dead space that belongs to neither the label nor the stop
 		// button, so hovering into it drops out of both of their mouseEntered/mouseExited pairs and
@@ -144,7 +164,7 @@ class SourceOptionsPanel extends JPanel {
 		matchCountPanel.add(lblMatchCount);
 		matchCountPanel.add(btnMatchCountStop);
 
-		add(matchCountPanel, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
+		fieldsView.add(matchCountPanel, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
 
 		lblFileNamePattern = new JLabel(Messages.getString("MainFrame.src.fileNamePattern"));
 
@@ -175,14 +195,14 @@ class SourceOptionsPanel extends JPanel {
 		pnlFileNamePattern.add(txtFileNamePattern, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 0, 5).build());
 		pnlFileNamePattern.add(cmbFileNamePatternSyntax, GridBagSupport.at(1, 0).anchor(GridBagConstraints.WEST).build());
 
-		add(lblFileNamePattern, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
-		add(pnlFileNamePattern, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+		fieldsView.add(lblFileNamePattern, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		fieldsView.add(pnlFileNamePattern, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		chkIncludeSubfolders = new JCheckBox(Messages.getString("MainFrame.src.includeSubfolders"));
-		add(chkIncludeSubfolders, GridBagSupport.at(1, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 0).build());
+		fieldsView.add(chkIncludeSubfolders, GridBagSupport.at(1, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 0).build());
 
 		chkIncludeHiddenFiles = new JCheckBox(Messages.getString("MainFrame.src.includeHiddenFiles"));
-		add(chkIncludeHiddenFiles, GridBagSupport.at(1, 3).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+		fieldsView.add(chkIncludeHiddenFiles, GridBagSupport.at(1, 3).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		lblFileSize = new JLabel(Messages.getString("MainFrame.src.fileSize"));
 
@@ -212,8 +232,8 @@ class SourceOptionsPanel extends JPanel {
 		pnlFileSize.add(txtFileSizeTo);
 		pnlFileSize.add(cmbFileSizeUnit);
 
-		add(lblFileSize, GridBagSupport.at(0, 4).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
-		add(pnlFileSize, GridBagSupport.at(1, 4).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+		fieldsView.add(lblFileSize, GridBagSupport.at(0, 4).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		fieldsView.add(pnlFileSize, GridBagSupport.at(1, 4).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		lblCreated = new JLabel(Messages.getString("MainFrame.src.created"));
 
@@ -233,8 +253,8 @@ class SourceOptionsPanel extends JPanel {
 		pnlCreated.add(lblCreatedTo);
 		pnlCreated.add(txtCreatedTo);
 
-		add(lblCreated, GridBagSupport.at(0, 5).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
-		add(pnlCreated, GridBagSupport.at(1, 5).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+		fieldsView.add(lblCreated, GridBagSupport.at(0, 5).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		fieldsView.add(pnlCreated, GridBagSupport.at(1, 5).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		lblModified = new JLabel(Messages.getString("MainFrame.src.modified"));
 
@@ -254,8 +274,61 @@ class SourceOptionsPanel extends JPanel {
 		pnlModified.add(lblModifiedTo);
 		pnlModified.add(txtModifiedTo);
 
-		add(lblModified, GridBagSupport.at(0, 6).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
-		add(pnlModified, GridBagSupport.at(1, 6).fill(GridBagConstraints.BOTH).build());
+		fieldsView.add(lblModified, GridBagSupport.at(0, 6).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
+		fieldsView.add(pnlModified, GridBagSupport.at(1, 6).fill(GridBagConstraints.BOTH).build());
+
+		summaryView = SummaryTextSupport.newSummaryText();
+		SummaryTextSupport.installSummaryClickToExpand(summaryView, () -> {
+			if (isEnabled()) {
+				setExpanded(true);
+			}
+		});
+
+		cardLayout = new CardLayout();
+		setOpaque(false);
+		setLayout(cardLayout);
+		add(fieldsView, CARD_FIELDS);
+		add(summaryView, CARD_SUMMARY);
+
+		installSummaryListeners();
+		refreshSummary();
+	}
+
+	void setOnExpandedChanged(Consumer<Boolean> listener) {
+		onExpandedChanged = listener;
+	}
+
+	void setOnContentChanged(Runnable listener) {
+		onContentChanged = listener;
+	}
+
+	boolean isExpanded() {
+		return expanded;
+	}
+
+	void setExpanded(boolean expanded) {
+		this.expanded = expanded;
+		cardLayout.show(this, expanded ? CARD_FIELDS : CARD_SUMMARY);
+		setVisible(expanded || !summaryView.getText().isEmpty());
+		onExpandedChanged.accept(expanded);
+		onContentChanged.run();
+	}
+
+	// CardLayout otherwise sizes the container to its largest card regardless of which one is showing,
+	// which would keep this panel fields-view-tall even while only the one-line summary is displayed.
+	@Override
+	public Dimension getPreferredSize() {
+		return isPreferredSizeSet() ? super.getPreferredSize() : sizeWithInsets((expanded ? fieldsView : summaryView).getPreferredSize());
+	}
+
+	@Override
+	public Dimension getMinimumSize() {
+		return isMinimumSizeSet() ? super.getMinimumSize() : sizeWithInsets((expanded ? fieldsView : summaryView).getMinimumSize());
+	}
+
+	private Dimension sizeWithInsets(Dimension size) {
+		Insets insets = getInsets();
+		return new Dimension(size.width + insets.left + insets.right, size.height + insets.top + insets.bottom);
 	}
 
 	FilePatternSyntax selectedFilePatternSyntax() {
@@ -283,6 +356,79 @@ class SourceOptionsPanel extends JPanel {
 		}
 		matchCountHovered = hovered;
 		btnMatchCountStop.setText(hovered ? MATCH_COUNT_STOP_GLYPH : MATCH_COUNT_SPINNER_FRAMES[matchCountSpinnerFrame]);
+	}
+
+	private void installSummaryListeners() {
+		DocumentListener documentListener = new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) {
+				refreshSummary();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				refreshSummary();
+			}
+
+			public void changedUpdate(DocumentEvent e) {
+				refreshSummary();
+			}
+		};
+		for (JTextField field : new JTextField[]{txtFileNamePattern, txtFileSizeFrom, txtFileSizeTo, txtCreatedFrom, txtCreatedTo, txtModifiedFrom, txtModifiedTo}) {
+			field.getDocument().addDocumentListener(documentListener);
+		}
+		ChangeListener changeListener = _ -> refreshSummary();
+		chkIncludeSubfolders.addChangeListener(changeListener);
+		chkIncludeHiddenFiles.addChangeListener(changeListener);
+		cmbFileNamePatternSyntax.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				refreshSummary();
+			}
+		});
+		cmbFileSizeUnit.addItemListener(e -> {
+			if (e.getStateChange() == ItemEvent.SELECTED) {
+				refreshSummary();
+			}
+		});
+	}
+
+	private void refreshSummary() {
+		String text = computeSummary();
+		summaryView.setText(text);
+		setVisible(expanded || !text.isEmpty());
+		onContentChanged.run();
+	}
+
+	private String computeSummary() {
+		List<String> items = new ArrayList<>();
+		String pattern = SummaryTextSupport.fieldText(txtFileNamePattern);
+		if (!pattern.isEmpty()) {
+			if (selectedFilePatternSyntax() == FilePatternSyntax.Regex) {
+				pattern += " (" + FilePatternSyntax.Regex + ")";
+			}
+			items.add(SummaryTextSupport.summaryItem(Messages.getString("MainFrame.src.fileNamePattern"), pattern));
+		}
+		if (chkIncludeSubfolders.isEnabled() && chkIncludeSubfolders.isSelected()) {
+			items.add(SummaryTextSupport.checkedItem(Messages.getString("MainFrame.src.includeSubfolders")));
+		}
+		if (chkIncludeHiddenFiles.isEnabled() && chkIncludeHiddenFiles.isSelected()) {
+			items.add(SummaryTextSupport.checkedItem(Messages.getString("MainFrame.src.includeHiddenFiles")));
+		}
+		String fileSizeFrom = SummaryTextSupport.fieldText(txtFileSizeFrom);
+		String fileSizeTo = SummaryTextSupport.fieldText(txtFileSizeTo);
+		if (!fileSizeFrom.isEmpty() || !fileSizeTo.isEmpty()) {
+			String range = SummaryTextSupport.rangeText(fileSizeFrom, fileSizeTo);
+			items.add(SummaryTextSupport.summaryItem(Messages.getString("MainFrame.src.fileSize"), range + " " + cmbFileSizeUnit.getSelectedItem()));
+		}
+		String createdFrom = SummaryTextSupport.dateFieldText(SummaryTextSupport.fieldText(txtCreatedFrom));
+		String createdTo = SummaryTextSupport.dateFieldText(SummaryTextSupport.fieldText(txtCreatedTo));
+		if (!createdFrom.isEmpty() || !createdTo.isEmpty()) {
+			items.add(SummaryTextSupport.summaryItem(Messages.getString("MainFrame.src.created"), SummaryTextSupport.rangeText(createdFrom, createdTo)));
+		}
+		String modifiedFrom = SummaryTextSupport.dateFieldText(SummaryTextSupport.fieldText(txtModifiedFrom));
+		String modifiedTo = SummaryTextSupport.dateFieldText(SummaryTextSupport.fieldText(txtModifiedTo));
+		if (!modifiedFrom.isEmpty() || !modifiedTo.isEmpty()) {
+			items.add(SummaryTextSupport.summaryItem(Messages.getString("MainFrame.src.modified"), SummaryTextSupport.rangeText(modifiedFrom, modifiedTo)));
+		}
+		return SummaryTextSupport.joinOptionsSummary(items);
 	}
 
 	private static JFormattedTextField newDateTimeField(String tooltip, boolean endOfRange) {

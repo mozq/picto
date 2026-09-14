@@ -32,8 +32,6 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -47,7 +45,6 @@ import java.util.TimeZone;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -60,7 +57,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
@@ -109,12 +105,6 @@ public class MainFrame extends JFrame {
 	private static final int RUN_MENU_BUTTON_WIDTH = 28;
 	private static final int RUN_STATUS_ICON_SIZE = 24;
 	private static final int RUN_STATUS_ICON_PADDING = 8;
-	private static final int OPTIONS_BODY_PADDING = 12;
-	private static final int OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT = 4;
-	private static final int OPTIONS_BODY_ARC = 12;
-	private static final int OPTIONS_BODY_SHADE_LIGHT = -11;
-	private static final int OPTIONS_BODY_SHADE_DARK = -8;
-	private static final int MID_BRIGHTNESS = 128;
 	private static final int MATCH_COUNT_DEBOUNCE_MS = 400;
 
 	private TimeZone timeZone = TimeZone.getDefault();
@@ -151,9 +141,6 @@ public class MainFrame extends JFrame {
 	private JLabel lblDestConditionsTitle;
 	private SourceOptionsPanel srcOpt;
 	private DestinationOptionsPanel destOpt;
-	private JTextArea txtSrcOptionsSummary;
-	private JTextArea txtDestOptionsSummary;
-	private JTextArea txtChangesSummary;
 	private JLabel lblRunSummary;
 	private boolean showingRunSummary;
 	private boolean matchCountEnabled;
@@ -259,7 +246,7 @@ public class MainFrame extends JFrame {
 		changeEnableDestConditions();
 		changeEnableFileDateModConditions();
 		restoreFrameState(state);
-		updateOptionsSummaries();
+		updateRunSummary();
 
 		frame = this;
 		windowLayoutReady = true;
@@ -392,9 +379,9 @@ public class MainFrame extends JFrame {
 		contentPane.setBorder(new EmptyBorder(WINDOW_PADDING, WINDOW_PADDING, WINDOW_PADDING, WINDOW_PADDING));
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{427, 0};
-		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
 		gbl_contentPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
+		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
 		setContentPane(contentPane);
 	}
@@ -439,7 +426,6 @@ public class MainFrame extends JFrame {
 		pnlSrcConditions.add(pnlSrcFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 
 		srcOpt = new SourceOptionsPanel(INLINE_HGAP, INLINE_VGAP);
-		stylizeOptionsBody(srcOpt, OPTIONS_BODY_TOP_PADDING_WITH_MATCH_COUNT);
 		srcOpt.lblMatchCount.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -447,16 +433,24 @@ public class MainFrame extends JFrame {
 			}
 		});
 		srcOpt.btnMatchCountStop.addActionListener(_ -> matchCountStopButtonClicked());
-		btnSrcOptions.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"), btnSrcOptions.isSelected());
+		String srcOptionsTitle = Messages.getString("MainFrame.src.options");
+		srcOpt.setOnExpandedChanged(expanded -> {
+			btnSrcOptions.setSelected(expanded);
+			setOptionsToggleButtonText(btnSrcOptions, srcOptionsTitle, expanded);
+		});
+		srcOpt.setOnContentChanged(() -> {
+			fitWindowToContent();
+			if (matchCountEnabled) {
+				matchCountTimer.restart();
 			}
 		});
-		setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"), false);
+		btnSrcOptions.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				srcOpt.setExpanded(btnSrcOptions.isSelected());
+			}
+		});
+		srcOpt.setExpanded(false);
 		pnlSrcConditions.add(srcOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
-
-		txtSrcOptionsSummary = newOptionsSummaryText(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"));
-		pnlSrcConditions.add(txtSrcOptionsSummary, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
 
 		getContentPane().add(pnlSrcConditions, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).anchor(GridBagConstraints.NORTH).insets(0, 0, SECTION_GAP, 0).build());
 	}
@@ -538,17 +532,19 @@ public class MainFrame extends JFrame {
 		pnlDestConditions.add(pnlDestFolder, GridBagSupport.at(1, 0).insets(0, 0, 5, 0).fill(GridBagConstraints.BOTH).build());
 
 		destOpt = new DestinationOptionsPanel();
-		stylizeOptionsBody(destOpt);
+		String destOptionsTitle = Messages.getString("MainFrame.dest.options");
+		destOpt.setOnExpandedChanged(expanded -> {
+			btnDestOptions.setSelected(expanded);
+			setOptionsToggleButtonText(btnDestOptions, destOptionsTitle, expanded);
+		});
+		destOpt.setOnContentChanged(this::fitWindowToContent);
 		btnDestOptions.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"), btnDestOptions.isSelected());
+				destOpt.setExpanded(btnDestOptions.isSelected());
 			}
 		});
-		setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"), false);
+		destOpt.setExpanded(false);
 		pnlDestConditions.add(destOpt, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).gridwidth(2).insets(0, 0, 5, 0).build());
-
-		txtDestOptionsSummary = newOptionsSummaryText(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"));
-		pnlDestConditions.add(txtDestOptionsSummary, GridBagSupport.at(1, 1).fill(GridBagConstraints.HORIZONTAL).gridwidth(2).insets(0, 0, 5, 0).build());
 
 		getContentPane().add(pnlDestConditions, GridBagSupport.at(0, 2).insets(0, 0, SECTION_GAP, 0).anchor(GridBagConstraints.NORTH).fill(GridBagConstraints.HORIZONTAL).build());
 	}
@@ -565,18 +561,21 @@ public class MainFrame extends JFrame {
 				this::changeEnableFileDateModConditions,
 				this::fitWindowToContent);
 
-		txtChangesSummary = newOptionsSummaryText(btnChanges, changes, Messages.getString("MainFrame.changes.title"));
-
-		setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changes.title"), false);
+		String changesTitle = Messages.getString("MainFrame.changes.title");
+		changes.setOnExpandedChanged(expanded -> {
+			btnChanges.setSelected(expanded);
+			setOptionsToggleButtonText(btnChanges, changesTitle, expanded);
+		});
+		changes.setOnContentChanged(this::fitWindowToContent);
+		changes.setExpanded(false);
 		btnChanges.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changes.title"), btnChanges.isSelected());
+				changes.setExpanded(btnChanges.isSelected());
 			}
 		});
 
 		contentPane.add(btnChanges, GridBagSupport.at(0, 3).anchor(GridBagConstraints.WEST).insets(0, 0, SECTION_HEADER_GAP, 0).build());
-		contentPane.add(changes, GridBagSupport.at(0, 5).insets(0, 0, SECTION_GAP, 0).fill(GridBagConstraints.BOTH).build());
-		contentPane.add(txtChangesSummary, GridBagSupport.at(0, 4).fill(GridBagConstraints.HORIZONTAL).insets(0, MAIN_LABEL_WIDTH + 8, SECTION_GAP, 0).build());
+		contentPane.add(changes, GridBagSupport.at(0, 4).insets(0, 0, SECTION_GAP, 0).fill(GridBagConstraints.BOTH).build());
 	}
 
 	private void buildControlsPanel() {
@@ -634,7 +633,7 @@ public class MainFrame extends JFrame {
 		lblRunStatus.setOpaque(true);
 		lblRunStatus.putClientProperty(FlatClientProperties.STYLE, "arc: " + runStatusDiameter);
 		Color runStatusBackground = lblRunStatus.getBackground();
-		Color runStatusHoverBackground = shade(color("Panel.background", new Color(0xf2f2f2)));
+		Color runStatusHoverBackground = PanelStyleSupport.shade(PanelStyleSupport.color("Panel.background", new Color(0xf2f2f2)));
 		lblRunStatus.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -664,7 +663,7 @@ public class MainFrame extends JFrame {
 		pnlControls.add(pnlRunButton, BorderLayout.CENTER);
 		pnlControls.add(lblRunSummary, BorderLayout.SOUTH);
 
-		getContentPane().add(pnlControls, GridBagSupport.at(0, 6).anchor(GridBagConstraints.SOUTH).fill(GridBagConstraints.HORIZONTAL).build());
+		getContentPane().add(pnlControls, GridBagSupport.at(0, 5).anchor(GridBagConstraints.SOUTH).fill(GridBagConstraints.HORIZONTAL).build());
 	}
 
 	private void installKeyboardShortcuts() {
@@ -794,7 +793,7 @@ public class MainFrame extends JFrame {
 				btnSrcOptions.isSelected(),
 				btnDestOptions.isSelected(),
 				btnChanges.isSelected(),
-				changes.getSelectedIndex());
+				changes.selectedTabIndex());
 	}
 
 	private void restoreFrameState(MainFrameState state) {
@@ -804,12 +803,10 @@ public class MainFrame extends JFrame {
 		if (state.bounds != null) {
 			setBounds(state.bounds);
 		}
-		setOptionsExpanded(btnSrcOptions, srcOpt, Messages.getString("MainFrame.src.options"), state.srcOptionsExpanded);
-		setOptionsExpanded(btnDestOptions, destOpt, Messages.getString("MainFrame.dest.options"), state.destOptionsExpanded);
-		setOptionsExpanded(btnChanges, changes, Messages.getString("MainFrame.changes.title"), state.changesExpanded);
-		if (state.changesTabIndex >= 0 && state.changesTabIndex < changes.getTabCount()) {
-			changes.setSelectedIndex(state.changesTabIndex);
-		}
+		srcOpt.setExpanded(state.srcOptionsExpanded);
+		destOpt.setExpanded(state.destOptionsExpanded);
+		changes.setExpanded(state.changesExpanded);
+		changes.setSelectedTabIndex(state.changesTabIndex);
 		if (state.extendedState != Frame.NORMAL) {
 			setExtendedState(state.extendedState);
 		}
@@ -885,9 +882,9 @@ public class MainFrame extends JFrame {
 	}
 
 	private static void configureFolderSelectButton(JButton button) {
-		Color textFieldBackground = color("TextField.background", new Color(0xffffff));
-		Color buttonBackground = color("Button.background", new Color(0xf3f3f3));
-		Color buttonHoverBackground = color("Button.hoverBackground", buttonBackground);
+		Color textFieldBackground = PanelStyleSupport.color("TextField.background", new Color(0xffffff));
+		Color buttonBackground = PanelStyleSupport.color("Button.background", new Color(0xf3f3f3));
+		Color buttonHoverBackground = PanelStyleSupport.color("Button.hoverBackground", buttonBackground);
 		Color normalBackground = blend(textFieldBackground, buttonBackground, 0.45f);
 		Color hoverBackground = blend(normalBackground, buttonHoverBackground, 0.45f);
 
@@ -910,74 +907,12 @@ public class MainFrame extends JFrame {
 		});
 	}
 
-	private static void stylizeOptionsBody(JPanel optionsBody) {
-		stylizeOptionsBody(optionsBody, OPTIONS_BODY_PADDING);
-	}
-
-	private static void stylizeOptionsBody(JPanel optionsBody, int topPadding) {
-		Color panelBackground = color("Panel.background", new Color(0xf2f2f2));
-		optionsBody.setOpaque(true);
-		optionsBody.setBackground(shade(panelBackground));
-		optionsBody.setBorder(BorderFactory.createEmptyBorder(
-				topPadding, OPTIONS_BODY_PADDING, OPTIONS_BODY_PADDING, OPTIONS_BODY_PADDING));
-		optionsBody.putClientProperty(FlatClientProperties.STYLE, "arc: " + OPTIONS_BODY_ARC);
-	}
-
-	private static Color shade(Color base) {
-		boolean isLight = (base.getRed() + base.getGreen() + base.getBlue()) / 3 >= MID_BRIGHTNESS;
-		int delta = isLight ? OPTIONS_BODY_SHADE_LIGHT : OPTIONS_BODY_SHADE_DARK;
-		return new Color(
-				clamp(base.getRed() + delta),
-				clamp(base.getGreen() + delta),
-				clamp(base.getBlue() + delta));
-	}
-
-	private static int clamp(int value) {
-		return Math.max(0, Math.min(255, value));
-	}
-
-	private static Color color(String key, Color fallback) {
-		Color color = UIManager.getColor(key);
-		return color != null ? color : fallback;
-	}
-
 	private static Color blend(Color base, Color overlay, float overlayRatio) {
 		float baseRatio = 1.0f - overlayRatio;
 		return new Color(
 				Math.round(base.getRed() * baseRatio + overlay.getRed() * overlayRatio),
 				Math.round(base.getGreen() * baseRatio + overlay.getGreen() * overlayRatio),
 				Math.round(base.getBlue() * baseRatio + overlay.getBlue() * overlayRatio));
-	}
-
-	private JTextArea newOptionsSummaryText(JToggleButton button, JComponent optionsBody, String title) {
-		JTextArea summary = newSummaryText();
-		summary.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		summary.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (button.isEnabled()) {
-					setOptionsExpanded(button, optionsBody, title, true);
-				}
-			}
-		});
-		return summary;
-	}
-
-	private JTextArea newSummaryText() {
-		JTextArea summary = new JTextArea();
-		summary.setEditable(false);
-		summary.setFocusable(false);
-		summary.setLineWrap(true);
-		summary.setWrapStyleWord(true);
-		summary.setOpaque(false);
-		summary.setBorder(new EmptyBorder(1, 4, 2, 4));
-		summary.setFont(summary.getFont().deriveFont(summary.getFont().getSize2D() - 1.0f));
-		Color foreground = UIManager.getColor("Label.disabledForeground");
-		if (foreground == null) {
-			foreground = UIManager.getColor("Label.foreground");
-		}
-		summary.setForeground(foreground);
-		return summary;
 	}
 
 	private JLabel newRunSummaryLabel() {
@@ -1008,102 +943,53 @@ public class MainFrame extends JFrame {
 		});
 	}
 
-	private void setOptionsExpanded(JToggleButton button, JComponent optionsBody, String title, boolean expanded) {
-		button.setSelected(expanded);
-		setOptionsToggleButtonText(button, title, expanded);
-		optionsBody.setVisible(expanded);
-		updateOptionsSummaries();
-		fitWindowToContent();
-	}
-
+	/** Wires the fields that no single options panel owns (the folders, the operation type) to the run
+	 * summary and the match-count preview - each options panel keeps its own fields' summary and
+	 * content-changed notifications to itself. */
 	private void installOptionsSummaryListeners() {
-		DocumentListener documentListener = new DocumentListener() {
+		txtSrcFolder.getDocument().addDocumentListener(new DocumentListener() {
 			public void insertUpdate(DocumentEvent e) {
-				optionsSummaryChanged();
+				srcFolderChanged();
 			}
 
 			public void removeUpdate(DocumentEvent e) {
-				optionsSummaryChanged();
+				srcFolderChanged();
 			}
 
 			public void changedUpdate(DocumentEvent e) {
-				optionsSummaryChanged();
+				srcFolderChanged();
+			}
+		});
+		DocumentListener destFolderListener = new DocumentListener() {
+			public void insertUpdate(DocumentEvent e) {
+				runSummaryChanged();
+			}
+
+			public void removeUpdate(DocumentEvent e) {
+				runSummaryChanged();
+			}
+
+			public void changedUpdate(DocumentEvent e) {
+				runSummaryChanged();
 			}
 		};
-		ChangeListener changeListener = _ -> optionsSummaryChanged();
-		ItemListener itemListener = e -> {
-			if (e.getStateChange() == ItemEvent.SELECTED) {
-				optionsSummaryChanged();
-			}
-		};
-
-		addDocumentListener(documentListener,
-				srcOpt.txtFileNamePattern,
-				srcOpt.txtFileSizeFrom,
-				srcOpt.txtFileSizeTo,
-				srcOpt.txtCreatedFrom,
-				srcOpt.txtCreatedTo,
-				srcOpt.txtModifiedFrom,
-				srcOpt.txtModifiedTo,
-				txtSrcFolder,
-				txtDestFolder,
-				destOpt.txtSubFilePathPattern,
-				changes.filedate.txtCustomBaseDate,
-				changes.filedate.txtAdjustmentYears,
-				changes.filedate.txtAdjustmentMonths,
-				changes.filedate.txtAdjustmentDays,
-				changes.filedate.txtAdjustmentHours,
-				changes.filedate.txtAdjustmentMinutes,
-				changes.filedate.txtAdjustmentSeconds);
-		addChangeListener(changeListener,
-				srcOpt.chkIncludeSubfolders,
-				srcOpt.chkIncludeHiddenFiles,
-				destOpt.chkCheckFileDigest,
-				changes.filedate.chkCreationDate,
-				changes.filedate.chkModifiedDate,
-				changes.filedate.chkAccessDate,
-				changes.filedate.chkExifDate,
-				changes.exif.chkRemoveGps,
-				changes.exif.chkRemoveAll,
-				rdoOperationTypeCopy,
-				rdoOperationTypeMove,
-				rdoOperationTypeOverwrite);
-		srcOpt.cmbFileNamePatternSyntax.addItemListener(itemListener);
-		srcOpt.cmbFileSizeUnit.addItemListener(itemListener);
-		destOpt.cmbExistingFileMethod.addItemListener(itemListener);
-		changes.filedate.cmbBaseDate.addItemListener(itemListener);
-		changes.filedate.cmbAdjustmentType.addItemListener(itemListener);
+		txtDestFolder.getDocument().addDocumentListener(destFolderListener);
+		ChangeListener operationTypeListener = _ -> runSummaryChanged();
+		rdoOperationTypeCopy.addChangeListener(operationTypeListener);
+		rdoOperationTypeMove.addChangeListener(operationTypeListener);
+		rdoOperationTypeOverwrite.addChangeListener(operationTypeListener);
 	}
 
-	private static void addDocumentListener(DocumentListener listener, JTextField... fields) {
-		for (JTextField field : fields) {
-			field.getDocument().addDocumentListener(listener);
-		}
-	}
-
-	private static void addChangeListener(ChangeListener listener, AbstractButton... buttons) {
-		for (AbstractButton button : buttons) {
-			button.addChangeListener(listener);
-		}
-	}
-
-	private void optionsSummaryChanged() {
-		updateOptionsSummaries();
-		fitWindowToContent();
+	private void srcFolderChanged() {
+		runSummaryChanged();
 		if (matchCountEnabled) {
 			matchCountTimer.restart();
 		}
 	}
 
-	private void updateOptionsSummaries() {
-		if (txtSrcOptionsSummary == null || txtDestOptionsSummary == null || txtChangesSummary == null || btnStart == null || btnStartMenu == null || lblRunSummary == null) {
-			return;
-		}
-		ProcessConditionInput input = collectProcessConditionInput();
-		updateOptionsSummary(txtSrcOptionsSummary, srcOpt, ConditionSummaryFormatter.sourceOptionsSummary(input));
-		updateOptionsSummary(txtDestOptionsSummary, destOpt, ConditionSummaryFormatter.destinationOptionsSummary(input));
-		updateOptionsSummary(txtChangesSummary, changes, ConditionSummaryFormatter.changesSummary(input));
-		updateRunSummary(input);
+	private void runSummaryChanged() {
+		updateRunSummary();
+		fitWindowToContent();
 	}
 
 	private void updateRunSummary() {
@@ -1121,21 +1007,11 @@ public class MainFrame extends JFrame {
 	}
 
 	private void showRunSummary(ProcessConditionInput input) {
-		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(ConditionSummaryFormatter.runSummary(input), lblRunSummary.getWidth() - 8, lblRunSummary));
+		lblRunSummary.setText(PathTextSupport.abbreviateMiddle(SummaryTextSupport.runSummary(input), lblRunSummary.getWidth() - 8, lblRunSummary));
 	}
 
 	private void clearRunSummary() {
 		lblRunSummary.setText(" ");
-	}
-
-	private static void updateOptionsSummary(JTextArea summary, JComponent optionsBody, String text) {
-		summary.setText(text);
-		summary.setVisible(!optionsBody.isVisible() && !text.isEmpty());
-	}
-
-	private static String fieldText(JTextField field) {
-		String text = field.getText();
-		return text == null ? "" : text.trim();
 	}
 
 	private void fitWindowToContent() {
@@ -1167,9 +1043,7 @@ public class MainFrame extends JFrame {
 		txtDestFolder.setEnabled(enabled);
 		btnDestFolderSelect.setEnabled(enabled);
 		btnDestOptions.setEnabled(enabled);
-		if (txtDestOptionsSummary != null) {
-			txtDestOptionsSummary.setEnabled(enabled);
-		}
+		destOpt.setEnabled(enabled);
 		destOpt.lblSubFilePathPattern.setEnabled(enabled);
 		destOpt.txtSubFilePathPattern.setEnabled(enabled);
 		destOpt.lblExistingFileMethod.setEnabled(enabled);
@@ -1296,7 +1170,7 @@ public class MainFrame extends JFrame {
 			return;
 		}
 		lblRunStatus.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		Color runStatusIconColor = color("Label.foreground", Color.BLACK);
+		Color runStatusIconColor = PanelStyleSupport.color("Label.foreground", Color.BLACK);
 		if (lastProcessDialog.isProcessing()) {
 			lblRunStatus.setIcon(IconSupport.loadIcon("net/mozq/picto/resources/icons/icon-run-processing.png", RUN_STATUS_ICON_SIZE, runStatusIconColor));
 			lblRunStatus.setToolTipText(Messages.getString("MainFrame.runStatus.processing"));
@@ -1311,8 +1185,8 @@ public class MainFrame extends JFrame {
 	private ProcessConditionInput collectProcessConditionInput() {
 		ProcessConditionInput input = new ProcessConditionInput();
 
-		input.srcFolder = fieldText(txtSrcFolder);
-		input.srcFileNamePattern = fieldText(srcOpt.txtFileNamePattern);
+		input.srcFolder = SummaryTextSupport.fieldText(txtSrcFolder);
+		input.srcFileNamePattern = SummaryTextSupport.fieldText(srcOpt.txtFileNamePattern);
 		input.srcFileNamePatternSyntax = srcOpt.selectedFilePatternSyntax();
 		input.includeHiddenFiles = srcOpt.chkIncludeHiddenFiles.isEnabled() && srcOpt.chkIncludeHiddenFiles.isSelected();
 		input.followLinks = false;
@@ -1320,8 +1194,8 @@ public class MainFrame extends JFrame {
 
 		input.operationType = MainFrameSettings.selectedEnumValue(btngrpOperationType, OperationType.class, OperationType.Copy);
 
-		input.destFolder = fieldText(txtDestFolder);
-		input.destSubFilePathPattern = fieldText(destOpt.txtSubFilePathPattern);
+		input.destFolder = SummaryTextSupport.fieldText(txtDestFolder);
+		input.destSubFilePathPattern = SummaryTextSupport.fieldText(destOpt.txtSubFilePathPattern);
 		input.existingFileMethod = (ExistingFileMethod)destOpt.cmbExistingFileMethod.getSelectedItem();
 		input.checkFileDigest = destOpt.chkCheckFileDigest.isEnabled() && destOpt.chkCheckFileDigest.isSelected();
 
@@ -1330,26 +1204,26 @@ public class MainFrame extends JFrame {
 		input.changeFileAccessDate = changes.filedate.chkAccessDate.isEnabled() && changes.filedate.chkAccessDate.isSelected();
 		input.changeFileExifDate = changes.filedate.chkExifDate.isEnabled() && changes.filedate.chkExifDate.isSelected();
 		input.baseDateType = (DateType)changes.filedate.cmbBaseDate.getSelectedItem();
-		input.customBaseDate = fieldText(changes.filedate.txtCustomBaseDate);
+		input.customBaseDate = SummaryTextSupport.fieldText(changes.filedate.txtCustomBaseDate);
 		input.adjustmentType = (DateModType)changes.filedate.cmbAdjustmentType.getSelectedItem();
-		input.adjustmentYears = fieldText(changes.filedate.txtAdjustmentYears);
-		input.adjustmentMonths = fieldText(changes.filedate.txtAdjustmentMonths);
-		input.adjustmentDays = fieldText(changes.filedate.txtAdjustmentDays);
-		input.adjustmentHours = fieldText(changes.filedate.txtAdjustmentHours);
-		input.adjustmentMinutes = fieldText(changes.filedate.txtAdjustmentMinutes);
-		input.adjustmentSeconds = fieldText(changes.filedate.txtAdjustmentSeconds);
+		input.adjustmentYears = SummaryTextSupport.fieldText(changes.filedate.txtAdjustmentYears);
+		input.adjustmentMonths = SummaryTextSupport.fieldText(changes.filedate.txtAdjustmentMonths);
+		input.adjustmentDays = SummaryTextSupport.fieldText(changes.filedate.txtAdjustmentDays);
+		input.adjustmentHours = SummaryTextSupport.fieldText(changes.filedate.txtAdjustmentHours);
+		input.adjustmentMinutes = SummaryTextSupport.fieldText(changes.filedate.txtAdjustmentMinutes);
+		input.adjustmentSeconds = SummaryTextSupport.fieldText(changes.filedate.txtAdjustmentSeconds);
 
 		input.removeExifGps = changes.exif.chkRemoveGps.isEnabled() && changes.exif.chkRemoveGps.isSelected();
 		input.removeExifAll = changes.exif.chkRemoveAll.isEnabled() && changes.exif.chkRemoveAll.isSelected();
 
-		input.fileSizeFrom = fieldText(srcOpt.txtFileSizeFrom);
-		input.fileSizeTo = fieldText(srcOpt.txtFileSizeTo);
+		input.fileSizeFrom = SummaryTextSupport.fieldText(srcOpt.txtFileSizeFrom);
+		input.fileSizeTo = SummaryTextSupport.fieldText(srcOpt.txtFileSizeTo);
 		input.fileSizeUnit = (FileSizeUnit)srcOpt.cmbFileSizeUnit.getSelectedItem();
 
-		input.createdFrom = fieldText(srcOpt.txtCreatedFrom);
-		input.createdTo = fieldText(srcOpt.txtCreatedTo);
-		input.modifiedFrom = fieldText(srcOpt.txtModifiedFrom);
-		input.modifiedTo = fieldText(srcOpt.txtModifiedTo);
+		input.createdFrom = SummaryTextSupport.fieldText(srcOpt.txtCreatedFrom);
+		input.createdTo = SummaryTextSupport.fieldText(srcOpt.txtCreatedTo);
+		input.modifiedFrom = SummaryTextSupport.fieldText(srcOpt.txtModifiedFrom);
+		input.modifiedTo = SummaryTextSupport.fieldText(srcOpt.txtModifiedTo);
 
 		return input;
 	}
