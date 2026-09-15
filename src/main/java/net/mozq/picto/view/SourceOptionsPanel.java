@@ -87,6 +87,7 @@ class SourceOptionsPanel extends JPanel {
 	final JLabel lblFileNamePattern;
 	final JTextField txtFileNamePattern;
 	final JComboBox<FilePatternSyntax> cmbFileNamePatternSyntax;
+	final JLabel lblInclude;
 	final JCheckBox chkIncludeSubfolders;
 	final JCheckBox chkIncludeHiddenFiles;
 	final JLabel lblFileSize;
@@ -115,9 +116,9 @@ class SourceOptionsPanel extends JPanel {
 		fieldsView = new JPanel();
 		GridBagLayout layout = new GridBagLayout();
 		layout.columnWidths = new int[]{0, 0, 0};
-		layout.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0};
+		layout.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0};
 		layout.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		layout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		layout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		fieldsView.setLayout(layout);
 		PanelStyleSupport.stylizeOptionsBody(fieldsView, FIELDS_TOP_PADDING_WITH_MATCH_COUNT);
 
@@ -223,11 +224,20 @@ class SourceOptionsPanel extends JPanel {
 		fieldsView.add(lblFileNamePattern, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
 		fieldsView.add(pnlFileNamePattern, GridBagSupport.at(1, 1).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
-		chkIncludeSubfolders = new JCheckBox(Messages.getString("MainFrame.src.includeSubfolders"));
-		fieldsView.add(chkIncludeSubfolders, GridBagSupport.at(1, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 0).build());
+		lblInclude = new JLabel(Messages.getString("MainFrame.src.include"));
 
+		JPanel pnlInclude = new JPanel();
+		pnlInclude.setOpaque(false);
+		pnlInclude.setLayout(new FlowLayout(FlowLayout.LEFT, inlineHgap, inlineVgap));
+
+		chkIncludeSubfolders = new JCheckBox(Messages.getString("MainFrame.src.includeSubfolders"));
 		chkIncludeHiddenFiles = new JCheckBox(Messages.getString("MainFrame.src.includeHiddenFiles"));
-		fieldsView.add(chkIncludeHiddenFiles, GridBagSupport.at(1, 3).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+
+		pnlInclude.add(chkIncludeSubfolders);
+		pnlInclude.add(chkIncludeHiddenFiles);
+
+		fieldsView.add(lblInclude, GridBagSupport.at(0, 2).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		fieldsView.add(pnlInclude, GridBagSupport.at(1, 2).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		lblFileSize = new JLabel(Messages.getString("MainFrame.src.fileSize"));
 
@@ -257,8 +267,8 @@ class SourceOptionsPanel extends JPanel {
 		pnlFileSize.add(txtFileSizeTo);
 		pnlFileSize.add(cmbFileSizeUnit);
 
-		fieldsView.add(lblFileSize, GridBagSupport.at(0, 4).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
-		fieldsView.add(pnlFileSize, GridBagSupport.at(1, 4).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+		fieldsView.add(lblFileSize, GridBagSupport.at(0, 3).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		fieldsView.add(pnlFileSize, GridBagSupport.at(1, 3).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		lblCreated = new JLabel(Messages.getString("MainFrame.src.created"));
 
@@ -278,8 +288,8 @@ class SourceOptionsPanel extends JPanel {
 		pnlCreated.add(lblCreatedTo);
 		pnlCreated.add(txtCreatedTo);
 
-		fieldsView.add(lblCreated, GridBagSupport.at(0, 5).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
-		fieldsView.add(pnlCreated, GridBagSupport.at(1, 5).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
+		fieldsView.add(lblCreated, GridBagSupport.at(0, 4).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
+		fieldsView.add(pnlCreated, GridBagSupport.at(1, 4).fill(GridBagConstraints.BOTH).insets(0, 0, 5, 0).build());
 
 		lblModified = new JLabel(Messages.getString("MainFrame.src.modified"));
 
@@ -299,8 +309,8 @@ class SourceOptionsPanel extends JPanel {
 		pnlModified.add(lblModifiedTo);
 		pnlModified.add(txtModifiedTo);
 
-		fieldsView.add(lblModified, GridBagSupport.at(0, 6).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
-		fieldsView.add(pnlModified, GridBagSupport.at(1, 6).fill(GridBagConstraints.BOTH).build());
+		fieldsView.add(lblModified, GridBagSupport.at(0, 5).anchor(GridBagConstraints.WEST).insets(0, 0, 0, 5).build());
+		fieldsView.add(pnlModified, GridBagSupport.at(1, 5).fill(GridBagConstraints.BOTH).build());
 
 		summaryView = SummaryTextSupport.newSummaryText();
 		SummaryTextSupport.installSummaryClickToExpand(summaryView, () -> {
