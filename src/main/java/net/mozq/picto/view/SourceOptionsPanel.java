@@ -218,7 +218,9 @@ class SourceOptionsPanel extends JPanel {
 			}
 		});
 
-		pnlFileNamePattern.add(txtFileNamePattern, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, 0, 0, 5).build());
+		// Left inset matches the implicit left margin FlowLayout(LEFT, inlineHgap, ...) gives every other
+		// row's first field (Include/Size/Created/Modified), so File name's field starts at the same x.
+		pnlFileNamePattern.add(txtFileNamePattern, GridBagSupport.at(0, 0).fill(GridBagConstraints.HORIZONTAL).insets(0, inlineHgap, 0, 5).build());
 		pnlFileNamePattern.add(cmbFileNamePatternSyntax, GridBagSupport.at(1, 0).anchor(GridBagConstraints.WEST).build());
 
 		fieldsView.add(lblFileNamePattern, GridBagSupport.at(0, 1).anchor(GridBagConstraints.WEST).insets(0, 0, 5, 5).build());
