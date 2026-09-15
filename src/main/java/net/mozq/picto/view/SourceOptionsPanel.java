@@ -204,6 +204,7 @@ class SourceOptionsPanel extends JPanel {
 		pnlFileNamePattern.setLayout(fileNamePatternLayout);
 
 		txtFileNamePattern = new JTextField();
+		txtFileNamePattern.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
 		txtFileNamePattern.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, UIManager.getIcon("FileView.fileIcon"));
 		lblFileNamePattern.setLabelFor(txtFileNamePattern);
 		InputSupport.installLabelFocusAction(lblFileNamePattern, txtFileNamePattern, LabelFocusBehavior.CARET_END);
